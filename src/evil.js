@@ -12,7 +12,7 @@ function stripNonRenderableTex(tex) {
  */
 function loadTex(url) {
   fetch(url).then(function(response) {
-    var text = stripNonRenderableTex(document.createTextNode(response));
+    var text = stripNonRenderableTex(document.createTextNode(response.text()));
     var content = document.createElement('p').appendChild(text);
 
     // Add the content to the body
@@ -32,7 +32,7 @@ function loadTex(url) {
 
 // Load the correct TeX file
 if (window.pathname != "/") {
-  loadTex("posts/" + math.window.pathname + ".tex");
+  loadTex("posts" + math.window.pathname + ".tex");
 } else {
   console.log("I am home!")
 }
