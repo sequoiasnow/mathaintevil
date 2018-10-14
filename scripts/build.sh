@@ -30,3 +30,7 @@ done
 # Move the html templates
 
 cp *.html docs/
+
+# Move the CNAME record
+
+cp CNAME docs/
