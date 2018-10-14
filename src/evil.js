@@ -16,7 +16,7 @@ function loadTex(url) {
     var content = document.createElement('p').appendChild(text);
 
     // Add the content to the body
-    document.body.addChild(content)
+    document.body.addChild(content);
 
     // Refresh the mathjax
     MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
@@ -24,7 +24,7 @@ function loadTex(url) {
     if (url != "posts/404.tex") {
       loadTex("posts/404.tex");
     } else {
-      body.innerHTML = "Something is terribly, terribly wrong!"
+      document.body.innerHTML = "Something is terribly, terribly wrong!"
     }
   });
 }
