@@ -2,9 +2,7 @@
    Strip TeX that can't be rendered by MathJax
  */
 function stripNonRenderableTex(tex) {
-  return tex.split("\n").filter(function(line) {
-    return line.indexOf("usepackage") == -1 
-  }).join("\n");
+  return tex;
 }
 
 /**
