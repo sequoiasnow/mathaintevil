@@ -34,6 +34,9 @@ nav: |
 $template_nav
 ---
 EOF
+    
+    # Leaving the unmodified file there is dangerous
+    rm $url.html
 done
 
 # Move the source code
