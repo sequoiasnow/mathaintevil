@@ -18,10 +18,10 @@ function loadTex(url) {
       var content = document.createElement('p').appendChild(text);
 
       // Add the content to the body
-      document.body.addChild(content);
+      document.body.appendChild(content);
 
-    // Refresh the mathjax
-    MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
+      // Refresh the mathjax
+      MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
   }).catch(function(error) {
     console.warn(error);
     if (url != "posts/404.tex") {
