@@ -17,6 +17,7 @@
     list-style-type: none;
     
     display: flex;
+    flex-direction: column;
     text-align: center;
     padding: 0;
     justify-content:center;
@@ -53,12 +54,15 @@ $fractal-color-hover : $color__purple;
 .navigation .page-link a {
     color: $color__black;
     font-size: $font__big;
-    padding: 5px 20px; 
     text-decoration: none;
-    border-top: 1px solid $color__black;
     transition: all 0.2s ease;
 
     &:hover {
         letter-spacing: 2px;
     }
-    }
+}
+
+.navigation .page-link {
+    border-top: 1px solid $color__black;
+    padding: 5px;
+}
