@@ -11,12 +11,14 @@ function stripNonRenderableTex(tex) {
    Load the apropriate page to the site
  */
 function loadTex(url) {
-  fetch(url).then(function(response) {
-    var text = stripNonRenderableTex(document.createTextNode(response.text()));
-    var content = document.createElement('p').appendChild(text);
+  fetch(url)
+    .then(function(r) { return r.text() })
+    .then(function(raw) {
+      var text = stripNonRenderableTex(document.createTextNode(raw));
+      var content = document.createElement('p').appendChild(text);
 
-    // Add the content to the body
-    document.body.addChild(content);
+      // Add the content to the body
+      document.body.addChild(content);
 
     // Refresh the mathjax
     MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
