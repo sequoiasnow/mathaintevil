@@ -16,11 +16,30 @@ body{
 
 body {
     display: flex;
+    flex-direction: column;
     justify-content: center;
     padding: 0 10px;
 }
 
-body > p{
+.nav-container {
+    display: flex;
+    justify-content: center;
+    padding: 30px;
+    margin: 10px;
+    width: 100%;
+    border-bottom: 1px solid black;
+    border-top: 1px solid black;
+}
+
+.nav-container {
+    maring: 0 10px;
+    text-decoration: none;
+    font-size: 20px;
+}
+
+
+
+body .content {
     width: 100%;
     max-width: 600px;
 }
