@@ -3,7 +3,7 @@
  */
 function stripNonRenderableTex(tex) {
   return tex.split("\n").filter(function(line) {
-    return line.strip()
+    return line.indexOf("usepackage") == -1 
   }).join("\n");
 }
 
