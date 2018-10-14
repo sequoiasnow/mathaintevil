@@ -21,6 +21,7 @@ function loadTex(url) {
     // Refresh the mathjax
     MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
   }).catch(function(error) {
+    console.warn(error);
     if (url != "posts/404.tex") {
       loadTex("posts/404.tex");
     } else {
