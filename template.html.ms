@@ -4,7 +4,7 @@
 </head>
 <body>
   <div class="nav-container">
-    {{ nav }}
+    {{{nav}}}
   </div>
   <div class="content">
     {{{content}}}
