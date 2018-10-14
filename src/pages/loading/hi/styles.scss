@@ -1,0 +1,15 @@
+@import 'variables';
+
+
+#hi-section {
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-begin;
+    font-size: 8em;
+    font-family: $font__edgy;
+} 
+
+#hi-section .letter {
+
+    transition: all 3s ease;
+}

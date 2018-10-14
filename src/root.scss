@@ -1,0 +1,16 @@
+@import 'variables';
+
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: $color__white;   /* Seen only when scrolled past edges */
+    font-family: $font__curvy;         /* The standard serif font for the site */
+    min-height: 100vh;
+}
+
+.root {
+    height: 100%;
+}

@@ -1,0 +1,38 @@
+{
+    "name": "me",
+    "version": "1.0.0",
+    "description": "This is really just a fun site. It serves little purpose but to make its  creator happy and enjoy playing with the internet :-].",
+    "main": "webpack.config.js",
+    "scripts": {
+        "build": "webpack --mode production --progress",
+        "start": "webpack-dev-server --mode development --hot",
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "devDependencies": {
+        "autoprefixer": "^8.4.1",
+        "babel-core": "^6.26.3",
+        "babel-loader": "^7.1.4",
+        "babel-preset-env": "^1.7.0",
+        "babel-preset-react": "^6.24.1",
+        "babel-preset-stage-2": "^6.24.1",
+        "copy-webpack-plugin": "^4.5.1",
+        "css-loader": "^0.28.11",
+        "cssnano": "^3.10.0",
+        "mini-css-extract-plugin": "^0.4.0",
+        "node-sass": "^4.9.0",
+        "postcss-loader": "^2.1.5",
+        "sass-loader": "^7.0.1",
+        "style-loader": "^0.21.0",
+        "webpack": "^4.8.3",
+        "webpack-cli": "^2.1.3",
+        "webpack-dev-server": "^3.1.4"
+    },
+    "dependencies": {
+        "domready": "^1.0.8",
+        "react": "^16.3.2",
+        "react-dom": "^16.3.2"
+    }
+}

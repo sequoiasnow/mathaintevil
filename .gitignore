@@ -5,3 +5,4 @@ posts/auto
 posts/*.html
 *.log
 *.aux
+node_modules
