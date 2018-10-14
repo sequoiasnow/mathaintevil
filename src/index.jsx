@@ -1,15 +1,11 @@
 import ReactDOM from 'react-dom'
 import domready from 'domready'
 import './root.scss'
-import App from './app'
+import Navigation from './components/Navigation'
 
 function init() {
-  let root = document.createElement('div')
-  root.classList.add('root')
-  document.body.appendChild(root)
-
   // Let'r rip!
-  ReactDOM.render(<App />, root)
+  ReactDOM.render(<Navigation />, document.getElementById('nav'))
 }
 
 domready(init)

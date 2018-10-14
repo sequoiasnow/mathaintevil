@@ -11,15 +11,15 @@ module.exports = (env, argv) => {
     entry: './src/index.jsx',
     watch: mode == 'production' ? false : true,
     output: {
-      filename: 'my.js',
+      filename: 'evil.js',
       publicPath: '/',
-      path: path.resolve(__dirname, 'dist')
+      path: path.resolve(__dirname, 'docs')
     },
     resolve: {
       extensions: ['*', '.js', '.jsx'] 
     },
     devServer: {
-      contentBase: path.join(__dirname, "dist"), 
+      contentBase: path.join(__dirname, "docs"), 
       port: 3000,
       historyApiFallback: true,
       hot: true
@@ -66,10 +66,6 @@ module.exports = (env, argv) => {
     },
     plugins: [
       new webpack.HotModuleReplacementPlugin(),
-      new CopyWebpackPlugin([{
-        from: './src/index.html',
-        to: './dist/index.html'
-      }]),
       new webpack.NamedModulesPlugin(),
       new webpack.NoEmitOnErrorsPlugin(),
       // Automatically provide react in every file.
@@ -78,7 +74,7 @@ module.exports = (env, argv) => {
       }),
       // Bundle css
       new MiniCssExtractPlugin({
-        filename: "my.css",
+        filename: "evil.css",
       })
     ]
     

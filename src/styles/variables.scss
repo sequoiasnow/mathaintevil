@@ -2,24 +2,29 @@
  * Fonts
  */
 
-@import url('https://fonts.googleapis.com/css?family=Josefin+Slab');
-@import url('https://fonts.googleapis.com/css?family=Cormorant+Garamond');
 
-$font__edgy: 'Josefin Slab', serif;
-$font__curvy: 'Cormorant Garamond', serif;
+@import url('https://fonts.googleapis.com/css?family=Libre+Baskerville');
+
+$font__main: 'Libre Baskerville', serif;
 
 /**
  * Colorscheme
  */
 $color__red: #EA4240;
 $color__black: #292929;
-$color__white: #F4E7D4;
+$color__white: white;
+$color__offwhite: #F2F7F2;
 $color__blue: #316C9F;
 $color__purple: #9D3669;
 
 /**
  * Font Sizes
  */
+
+$font__Big: 2em;
+$font__big: 1.5em;
+$font__normal: 0.9em;
+$font__small: 0.6em;
 
 
 

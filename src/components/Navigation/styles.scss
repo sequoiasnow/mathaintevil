@@ -1,0 +1,64 @@
+@import '../../styles/variables.scss';
+
+.navigation {
+    width: 100%;
+    margin-right: 45px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.navigation svg {
+    width: 100%;
+}
+
+.navigation .pages {
+    list-style-type: none;
+    
+    display: flex;
+    text-align: center;
+    padding: 0;
+    justify-content:center;
+}
+
+$fractal-color : $color__red;
+$fractal-color-hover : $color__purple;
+
+.navigation svg path {
+    transition: all 0.2s ease;
+    fill: $fractal-color;
+    stroke: $fractal-color;
+}
+
+
+.navigation .fractal-container {
+    cursor: pointer;
+    
+    &:hover path {
+        fill: $fractal-color-hover;
+        stroke: $fractal-color-hover;
+    }
+}
+
+
+.navigation .title {
+    font-size: $font__Big;
+    text-align: center;
+    width: 100%;
+    margin-top: 10px;
+    display: block;
+}
+
+.navigation .page-link a {
+    color: $color__black;
+    font-size: $font__big;
+    padding: 5px 20px; 
+    text-decoration: none;
+    border-top: 1px solid $color__black;
+    transition: all 0.2s ease;
+
+    &:hover {
+        letter-spacing: 2px;
+    }
+    }

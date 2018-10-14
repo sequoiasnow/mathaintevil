@@ -4,8 +4,8 @@
     "description": "This is really just a fun site. It serves little purpose but to make its  creator happy and enjoy playing with the internet :-].",
     "main": "webpack.config.js",
     "scripts": {
-        "build": "webpack --mode production --progress",
-        "start": "webpack-dev-server --mode development --hot",
+        "build": "./scripts/build.sh && webpack --mode production --progress",
+        "start": "./scripts/build.sh && webpack-dev-server --mode development --hot",
         "test": "echo \"Error: no test specified\" && exit 1"
     },
     "keywords": [],

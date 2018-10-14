@@ -1,10 +1,5 @@
 #!/bin/sh
 
-template_nav=$(cat <<EOF | sed 's/^/  /'
-<a href="/">Home</a>
-EOF
-)
-
 # Out with the old...
 rm -rf docs
 
@@ -27,20 +22,11 @@ for filename in posts/*.tex; do
 ---
 content: | 
 $contents 
-nav: |
-$template_nav
+title: $(basename $filename .tex)
 ---
 EOF
 done
 
-# Move the source code
-
-mkdir -p docs/js
-mkdir -p docs/css
-
-cp src/evil.js docs/js/
-cp src/evil.css docs/css/
-
-# Move the index templates
+# Move the html templates
 
 cp *.html docs/

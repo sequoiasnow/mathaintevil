@@ -1,9 +1,0 @@
-@import url(https://fonts.googleapis.com/css?family=Josefin+Slab);
-@import url(https://fonts.googleapis.com/css?family=Cormorant+Garamond);
-@import url(https://fonts.googleapis.com/css?family=Josefin+Slab);
-@import url(https://fonts.googleapis.com/css?family=Cormorant+Garamond);
-body,html{margin:0;padding:0}body{background-color:#f4e7d4;font-family:Cormorant Garamond,serif;min-height:100vh}.root{height:100%}
-#hi-section{display:flex;flex-direction:row;justify-content:flex-begin;font-size:8em;font-family:Josefin Slab,serif}#hi-section .letter{transition:all 3s ease}
-.loading.page{display:flex;justify-content:center;align-items:center}
-.page{width:100vw;height:100vh}
-.fractal-container{width:100%;height:100%;display:flex;justify-content:center;align-items:center}
