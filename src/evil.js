@@ -22,7 +22,7 @@ function loadTex(url) {
     MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
   }).catch(function(error) {
     if (url != "posts/404.tex") {
-      loadTex("post/404.tex");
+      loadTex("posts/404.tex");
     } else {
       body.innerHTML = "Something is terribly, terribly wrong!"
     }
