@@ -31,11 +31,15 @@ function loadTex(url) {
 
 
 // Load the correct TeX file
-path = window.location.pathname.split('/').pop()
+function start() {
+  path = window.location.pathname.split('/').pop()
 
-if (path != "/") {
-  loadTex("posts/" + path + ".tex");
-} else {
-  console.log("I am home!")
+  if (path != "/") {
+    loadTex("posts/" + path + ".tex");
+  } else {
+    console.log("I am home!")
+  }
 }
+
+window.onload = start;
 
