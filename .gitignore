@@ -2,3 +2,6 @@
 .DS_Store
 .texpadtmp
 posts/auto
+posts/*.html
+*.log
+*.aux
