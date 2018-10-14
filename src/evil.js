@@ -20,12 +20,18 @@ function loadTex(url) {
 
     // Refresh the mathjax
     MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
+  }).catch(function(error) {
+    if (url != "posts/404.tex") {
+      loadTex("post/404.tex");
+    } else {
+      body.innerHTML = "Something is terribly, terribly wrong!"
+    }
   });
 }
 
 
 // Load the correct TeX file
-if (math.window.pathname != "/") {
+if (window.pathname != "/") {
   loadTex("posts/" + math.window.pathname + ".tex");
 } else {
   console.log("I am home!")
