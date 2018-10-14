@@ -34,7 +34,7 @@ function loadTex(url) {
 function start() {
   path = window.location.pathname.split('/').pop()
 
-  if (path != "/") {
+  if (path) {
     loadTex("posts/" + path + ".tex");
   } else {
     console.log("I am home!")
