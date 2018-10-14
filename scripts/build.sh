@@ -21,7 +21,7 @@ for filename in posts/*.tex; do
     mkdir -p docs/$url
 
     # Remove everything but the body
-    contents=$(pandoc $filename --mathjax | sed 's/{aligned}/{align}/g' | sed 's/^/  /')
+    contents=$(pandoc $filename --ascii --mathjax | sed 's/{aligned}/{align}/g' | sed 's/^/  /')
 
     cat <<EOF | mustache - template.html.ms > docs/$url/index.html
 ---
