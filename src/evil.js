@@ -14,7 +14,7 @@ function loadTex(url) {
   fetch(url)
     .then(function(r) { return r.text() })
     .then(function(raw) {
-      var text = stripNonRenderableTex(document.createTextNode(raw));
+      var text = document.createTextNode(stripNonRenderableTex(raw));
       var content = document.createElement('p').appendChild(text);
 
       // Add the content to the body
