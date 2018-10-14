@@ -1,3 +1,4 @@
 export default {
-  'example': 'example'
+  'Example': 'example',
+  'The Infinite Square Well': 'the-infinite-square-well'
 }

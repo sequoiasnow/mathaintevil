@@ -11,18 +11,18 @@ for filename in posts/*.tex; do
                     | sed 's/ /-/g')
     url=$(basename $sanitized .tex)
 
-    echo "Writing $url..."
+    echo "Writing $filename to $url..."
     
     mkdir -p docs/$url
 
     # Remove everything but the body
-    contents=$(pandoc $filename --ascii --mathjax | sed 's/{aligned}/{align}/g' | sed 's/^/  /')
+    contents=$(pandoc "$filename" --ascii --mathjax | sed 's/{aligned}/{align}/g' | sed 's/^/  /')
 
     cat <<EOF | mustache - template.html.ms > docs/$url/index.html
 ---
+title: $(basename "$filename" .tex)
 content: | 
 $contents 
-title: $(basename $filename .tex)
 ---
 EOF
 done
