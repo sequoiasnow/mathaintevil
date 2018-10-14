@@ -20,11 +20,8 @@ for filename in posts/*.tex; do
     
     mkdir -p docs/$url
 
-    # Make the actual file...
-    pandoc $filename -s --mathjax -o docs/$url.html 
-
     # Remove everything but the body
-    contents=$(cat docs/$url.html | sed -n '/<body>/,/<\/body>/p' | sed '/body/d' | sed 's/^/  /')
+    contents=$(pandoc $filename --mathjax | sed 's/^/  /')
 
     cat <<EOF | mustache - template.html.ms > docs/$url/index.html
 ---
@@ -34,9 +31,6 @@ nav: |
 $template_nav
 ---
 EOF
-    
-    # Leaving the unmodified file there is dangerous
-    rm $url.html
 done
 
 # Move the source code
