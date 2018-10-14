@@ -32,7 +32,7 @@ function loadTex(url) {
 
 // Load the correct TeX file
 if (window.pathname != "/") {
-  loadTex("posts" + math.window.pathname + ".tex");
+  loadTex("posts" + window.pathname + ".tex");
 } else {
   console.log("I am home!")
 }
