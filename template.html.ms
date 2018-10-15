@@ -9,7 +9,10 @@
     {{{content}}}
   </div>
   <script type="text/x-mathjax-config">
-   MathJax.Hub.Config({ TeX: { extensions: ["[Contrib]/physics/physics.js"] }});
+   MathJax.Hub.Config({
+     extensions: ["tex2jax.js", "TeX/AMSmath.js", "[Contrib]/physics/physics.js"],
+     jax: ["input/TeX", "output/SVG"],
+   })
   </script>
   <script type="text/javascript" async
           src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML">
