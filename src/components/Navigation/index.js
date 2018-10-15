@@ -15,7 +15,7 @@ const Navigation = () => (
       <span className="title">Posts</span>
       <ul className="pages">
         {Object.keys(pages).map((name) => (
-          <li className="page-link" key={pages[name]}><a href={pages[name]}>{name}</a></li>
+          <li className="page-link" key={pages[name]}><a href={'/' + pages[name]}>{name}</a></li>
         ))}
       </ul>
     </div>
