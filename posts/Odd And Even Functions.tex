@@ -1,0 +1,136 @@
+\documentclass[10pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{mathrsfs}
+\usepackage{amssymb} 
+\usepackage{mathtools}
+\usepackage{physics}
+\usepackage{tikz-cd}
+\usepackage{scalerel}
+\usepackage{cancel}
+
+% Set the margins 
+
+\usepackage [
+  a4paper,
+  hmargin=4.5cm
+]{geometry}
+
+% Avoid inline equation breaking 
+
+\binoppenalty=\maxdimen
+\relpenalty=\maxdimen
+
+% Set the main fonts
+
+\usepackage[lf]{Baskervaldx} % lining figures
+\usepackage[bigdelims,vvarbb]{newtxmath} % math italic letters from Nimbus Roman
+\usepackage[cal=boondoxo]{mathalfa} % mathcal from STIX, unslanted a bit
+%\renewcommand*\oldstylenums[1]{{\textosf{#1}}}
+
+% Create a freespace command
+
+\newcommand{\freespace}[1] {{\F\langle #1 \rangle}}
+
+% Create a vectorspace command 
+
+\newcommand{\vecspace}[1]{{V\langle #1 \rangle}}
+
+
+% Large plus command
+
+\DeclareMathOperator*{\bigplus}{\scalerel*{+}{\textstyle\sum}}
+
+% Create the power set equation
+
+\newcommand{\powerset}[0] {\textbf{P}}
+
+% Create better title sections
+
+\newcommand{\exercise}[1] {\vspace{0.25in}\large\textit{Exercise #1\quad}}
+
+% Better mapsto and \to command
+
+\renewcommand{\mapsto}[0]{\longmapsto}
+\renewcommand{\to}[0]{\longrightarrow}
+
+% Create a category command
+
+\newcommand{\cat}[1]{{\textbf{#1}}}
+
+% Create a better and command 
+
+\newcommand{\writeand}[0]{{\quad \textrm{and} \quad}}
+
+% Create a better iff command 
+
+\newcommand{\writeiff}[0]{{\qquad \textrm{iff} \qquad}}
+
+% Create a category command
+
+
+% Create a better set command
+
+\DeclarePairedDelimiterX\set[1]\lbrace\rbrace{\def\given{\;\delimsize\vert\;}\,#1\,}
+
+% Define common variables
+
+\newcommand{\N}{{\mathbb{N}}}
+\newcommand{\Z}{{\mathbb{Z}}}
+\newcommand{\C}{{\mathbb{C}}} 
+\newcommand{\R}{{\mathbb{R}}}
+\newcommand{\Q}{{\mathbb{Q}}}
+\newcommand{\F}{{\mathbb{F}}}
+
+
+% Better EmptySet
+
+\let\oldemptyset\emptyset
+\let\emptyset\varnothing
+
+\linespread{1.3}
+
+
+\begin{document}
+
+A common theme in physics is the classification of odd and even functions. Often these concepts are referred to without reference and can confuse aspiring undergrads, myself included. In this article I'll try to shine some light on a method of solving differential equations that is often used, but rarely understood. 
+
+Suppose we are trying to solve the following differential equation where $V(x)$ is a symetric potential.
+\[
+  \psi'' + V(x)\psi + C\psi = 0
+\]
+Here $C \in \mathbb{R}$ is a constant and $V(x)$ is symmetric, meaning that 
+\[
+  V(x) = V(-x).
+\] 
+Some examples of symmetric potentials include parabolas, the $\cos$ function, potential wells, etc... In fact any \textbf{even} function is symmetric. We define \textbf{even} exactly as stated above. So what is odd? 
+
+Odd is a function such as $x^3$ that flips orientation about the y-axis. Stated simply, and \textbf{odd} function satisfies 
+\[
+  f(-x) = -f(x).
+\]
+Some examples include $\sin$, potential jumps, ``odd'' polynomials, etc... So how can we use this property to solve our differential equation? 
+
+The main idea here is that any function can be broken into odd and even components. Given a function $f$ we can break it into the even component $f_+$ and $f_-$ as follows.
+\[
+  f_+ \equiv \frac{f(x) + f(-x)}{2} \qquad\qquad 
+ f_- \equiv \frac{f(x) - f(-x)}{2}
+\]
+Note that these functions are most certainly even and odd by construction. Where $f$ is not even $f_+$ is zero. Where $f$ is not odd, $f_-$ is zero. Thus, if we just add these functions we get 
+\[
+  f_+ + f_- = f.
+\]
+We can trivially note that these functions are unique. The proof follows by contradiction. Suppose that another even function $f_+'$ existed that agrees with $f$ at every point $x$ where $f$ is even and is zero at all other points. Then $f_+' = f_+$. The proof for the uniqueness of $f_-$ is just as simple. 
+
+So how do we use these functions to simplify our equation? Because differentiation is linear we can break apart our differential equation into two components, one for the even function and one for the odd. 
+
+\begin{gather*}
+  \psi''_+ + V(x)\psi_+ + C\psi_+ = 0 \\
+  \psi''_- + V(x)\psi_- + C\psi_- = 0
+\end{gather*}
+
+Each of these can prove much easier to solve than the equation as a whole. Moreover, in the case of physics this can give rise to quantization of even and odd functions that can be added together where an explicit form might not easily be found. 
+
+In practice this also allows us to examine only one half of the boundary conditions at a time leading to a smaller number of coefficients that need to be solved for. 
+\end{document}
