@@ -1,0 +1,13 @@
+* {
+    box-sizing: border-box;
+}
+
+html {
+    margin: 0;
+    padding: 0;
+}
+
+/*
+  Set our default styles from TeX for the document as a whole.
+*/
+
