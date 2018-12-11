@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<head>
+  <!-- Global site tag (gtag.js) - Google Analytics -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=UA-127642687-1"></script>
+  <script>
+   window.dataLayer = window.dataLayer || [];
+   function gtag(){dataLayer.push(arguments);}
+   gtag('js', new Date());
+
+   gtag('config', 'UA-127642687-1');
+  </script>
+  <link rel="stylesheet" type="text/css" href="../evil.css" />
+</head>
+<body>
+  <div id="nav"></div>
+  <div class="content">
+    <span class="post-title">The Harmonic Oscilator</span>
+    <p>One of the most famous and most applicable models of quantum mechanics is the quantum harmonic oscillator. It is a very simple model that is nonetheless highly accurate in predicting much more complicated behavior. The idea is to consider a particle of mass <span class="math inline">\(m\)</span> in a potential well <span class="math display">\[V(x) = \frac{1}{2} kx^2.\]</span> Here <span class="math inline">\(k\)</span> could be thought of as the spring constant in the classical sense, indeed this problem is known as the quantum &#8220;harmonic&#8221; oscillator precisely because the potential <span class="math inline">\(V(x)\)</span> is that of a harmonic oscillator. Although this gives some interesting background to the problem, we could just as accurately have stated that the quantum harmonic oscillator is described by the following differential equation: <span class="math display">\[-\frac{\hbar^2}{2m} \psi&#39;&#39;(x) + \frac{1}{2}kx^2 \psi(x) = E\psi(x).\]</span> It&#8217;s important to note that the equation above captures everything we can find out about our system. It describes all properties of <span class="math inline">\(\psi\)</span> that we will later wish to examine, which are all observables of our system. Though this formalization of a state function which emits data may seem strange on first encounter with quantum mechanics, it is actually similar to classical formalisms. In newtonian mechanics we could express our state function for the classical harmonic oscillator as <span class="math display">\[\dv{\psi}{p} = m \dv{\psi}{x}\]</span>. To solve the quantum harmonic oscillator, we return to the above equation, One immediate simplification we can make is a change of variables to dispense with some of the constants. <span class="math display">\[\omega = \qty(\frac{k}{\hbar})^2, \qquad \alpha = \qty(\frac{mk}{\hbar^2})^\frac{1}{4} = \qty(\frac{m\omega}{\hbar})^\frac{1}{2}, \qquad 
+  \lambda = \frac{2E}{\hbar \omega}, \qquad 
+   \xi = \alpha x\]</span> We can now substitute these variables into our equation, <span class="math display">\[-\psi&#39;&#39;(x) + \frac{2m}{2\hbar^2}kx^2 \psi(x) = \frac{2mE}{\hbar^2}\psi(x).\]</span> Firstly, note that <span class="math display">\[\dv[2]{\psi(\xi)}{x} 
+  = \dv{x} \qty[  \dv{\psi(\xi)}{\xi} \dv{\xi}{x}  ]
+  =  \dv[2]{\psi(\xi)}{\xi} \dv{\xi}{x}  +  \dv{\psi(\xi)}{\xi} \dv[2]{\xi}{x} 
+  =  \alpha \dv[2]{\psi(\xi)}{\xi}.\]</span> Thus if we substitute into our equation we get <span class="math display">\[-\alpha \psi&#39;&#39;(\xi) + \alpha^2 \xi^2 \psi(\xi) = \lambda \alpha^2 \psi(\xi).\]</span> This simplifies to the expression <span class="math display">\[\psi&#39;&#39;(\xi ) + (\lambda - \xi^2) \psi(\xi) = 0\]</span></p> 
+
+  </div>
+  <script type="text/x-mathjax-config">
+   MathJax.Hub.Config({
+     extensions: ["tex2jax.js", "TeX/AMSmath.js", "[Contrib]/physics/physics.js", "TeX/autoload-all.js"],
+     jax: ["input/TeX", "output/SVG"],
+   })
+  </script>
+  <script type="text/javascript" async
+          src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=default">
+  </script>
+  <script type="text/javascript" src="../evil.js"></script>
+</body>

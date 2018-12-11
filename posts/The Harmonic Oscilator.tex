@@ -1,0 +1,154 @@
+\documentclass[10pt]{article}
+
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{mathrsfs}
+\usepackage{amssymb} 
+\usepackage{mathtools}
+\usepackage{physics}
+\usepackage{tikz-cd}
+\usepackage{scalerel}
+\usepackage{cancel}
+
+% Set the margins 
+
+\usepackage
+[
+        a4paper,
+        hmargin=4.5cm
+]
+{geometry}
+
+% Mathematical columns
+\newcolumntype{C}{>{$}c<{$}}
+
+% Avoid inline equation breaking 
+
+\binoppenalty=\maxdimen
+\relpenalty=\maxdimen
+
+% Set the main fonts
+
+\usepackage[lf]{Baskervaldx} % lining figures
+\usepackage[bigdelims,vvarbb]{newtxmath} % math italic letters from Nimbus Roman
+\usepackage[cal=boondoxo]{mathalfa} % mathcal from STIX, unslanted a bit
+%\renewcommand*\oldstylenums[1]{{\textosf{#1}}}
+
+% Create a freespace command
+
+\newcommand{\freespace}[1] {{\F\langle #1 \rangle}}
+
+% Create a vectorspace command 
+
+\newcommand{\vecspace}[1]{{V\langle #1 \rangle}}
+
+
+% Large plus command
+
+\DeclareMathOperator*{\bigplus}{\scalerel*{+}{\textstyle\sum}}
+
+% Create the power set equation
+
+\newcommand{\powerset}[0] {\textbf{P}}
+
+% Create better title sections
+
+\newcommand{\exercise}[1] {\vspace{0.25in}\large\textit{Exercise #1\quad}}
+
+% Better mapsto and \to command
+
+\renewcommand{\mapsto}[0]{\longmapsto}
+\renewcommand{\to}[0]{\longrightarrow}
+
+% Create a category command
+
+\newcommand{\cat}[1]{{\textbf{#1}}}
+
+% Create a better and command 
+
+\newcommand{\writeand}[0]{{\quad \textrm{and} \quad}}
+
+% Create a better iff command 
+
+\newcommand{\writeiff}[0]{{\qquad \textrm{iff} \qquad}}
+
+% Create a category command
+
+
+% Create a better set command
+
+\DeclarePairedDelimiterX\set[1]\lbrace\rbrace{\def\given{\;\delimsize\vert\;}\,#1\,}
+
+% Define common variables
+
+\newcommand{\N}{{\mathbb{N}}}
+\newcommand{\Z}{{\mathbb{Z}}}
+\newcommand{\C}{{\mathbb{C}}} 
+\newcommand{\R}{{\mathbb{R}}}
+\newcommand{\Q}{{\mathbb{Q}}}
+\newcommand{\F}{{\mathbb{F}}}
+
+
+% Better EmptySet
+
+\let\oldemptyset\emptyset
+\let\emptyset\varnothing
+
+\linespread{1.3}
+
+% Define the title separate from the rest of the document
+
+\title{
+\vspace{2in}
+\textmd{\textbf{Homework 6}}\\
+\vspace{0.11in}\large{\textit{Linear Algebra H110}}
+\vspace{3in}
+}
+
+\author{\textbf{Sequoia Snow}}
+
+% Remove the date
+
+\date{}
+
+\begin{document}
+
+One of the most famous and most applicable models of quantum mechanics is the quantum harmonic oscillator. It is a very simple model that is nonetheless highly accurate in predicting much more complicated behavior. The idea is to consider a particle of mass $m$ in a potential well 
+\[
+  V(x) = \frac{1}{2} kx^2.
+\]
+Here $k$ could be thought of as the spring constant in the classical sense, indeed this problem is known as the quantum ``harmonic'' oscillator precisely because the potential $V(x)$ is that of a harmonic oscillator. Although this gives some interesting background to the problem, we could just as accurately have stated that the quantum harmonic oscillator is described by the following differential equation:
+\[
+  -\frac{\hbar^2}{2m} \psi''(x) + \frac{1}{2}kx^2 \psi(x) = E\psi(x).
+\]
+It's important to note that the equation above captures everything we can find out about our system. It describes all properties of $\psi$ that we will later wish to examine, which are all observables of our system. Though this formalization of a state function which emits data may seem strange on first encounter with quantum mechanics, it is actually similar to classical formalisms. In newtonian mechanics we could express our state function for the classical harmonic oscillator as 
+\[
+  \dv{\psi}{p} = m \dv{\psi}{x}
+\].
+To solve the quantum harmonic oscillator, we return to the above equation, One immediate simplification we can make is a change of variables to dispense with some of the constants.
+\[
+  \omega = \qty(\frac{k}{\hbar})^2, \qquad \alpha = \qty(\frac{mk}{\hbar^2})^\frac{1}{4} = \qty(\frac{m\omega}{\hbar})^\frac{1}{2}, \qquad 
+  \lambda = \frac{2E}{\hbar \omega}, \qquad 
+   \xi = \alpha x
+\] 
+We can now substitute these variables into our equation,
+\[
+-\psi''(x) + \frac{2m}{2\hbar^2}kx^2 \psi(x) = \frac{2mE}{\hbar^2}\psi(x).
+\]
+Firstly, note that 
+\[
+  \dv[2]{\psi(\xi)}{x} 
+  = \dv{x} \qty[  \dv{\psi(\xi)}{\xi} \dv{\xi}{x}  ]
+  =  \dv[2]{\psi(\xi)}{\xi} \dv{\xi}{x}  +  \dv{\psi(\xi)}{\xi} \dv[2]{\xi}{x} 
+  =  \alpha \dv[2]{\psi(\xi)}{\xi}.
+\]
+Thus if we substitute into our equation we get
+\[
+  -\alpha \psi''(\xi) + \alpha^2 \xi^2 \psi(\xi) = \lambda \alpha^2 \psi(\xi).
+\]
+This simplifies to the expression 
+\[
+  \psi''(\xi ) + (\lambda - \xi^2) \psi(\xi) = 0
+\]
+
+\end{document}

@@ -25,7 +25,14 @@ content: |
 $contents 
 ---
 EOF
+
+   # Fix images 
+   sed -i '' -E 's|src="figures/([^ ]+)"|src="../figures/\1.svg"|g' "docs/$url/index.html"
 done
+
+# Move the images
+
+cp -R posts/figures docs/
 
 # Move the html templates
 

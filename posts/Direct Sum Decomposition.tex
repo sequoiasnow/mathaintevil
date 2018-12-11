@@ -1,0 +1,286 @@
+\documentclass[12pt]{extarticle}
+
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{mathrsfs}
+\usepackage{amssymb} 
+\usepackage{mathtools}
+\usepackage{braket}
+\usepackage{physics}
+\usepackage{tikz-cd}
+\usepackage{scalerel}
+\usepackage[bottom]{footmisc}
+\usepackage{cancel}
+\usepackage{todonotes}
+\usepackage{graphics}
+\usepackage{tabularx}
+\usepackage[english]{babel}
+\usepackage{blindtext}
+
+% Set the title
+\def \articletile {Direct Sum Decomposition}
+
+% Set the margins 
+
+\usepackage
+[
+        a4paper,
+        hmargin=2.5cm
+]
+{geometry}
+
+% Some Theorems
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{corollary}{Corollary}[theorem]
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem*{lemma*}{Lemma}
+
+% Better tables
+
+\newcolumntype{C}{>{$}c<{$}} 
+\newcolumntype{L}{>{$}l<{$}} 
+
+% Flip command
+
+\newcommand{\flip}[1]{\reflectbox{\,$#1$\,}}
+
+% Avoid inline equation breaking 
+
+\binoppenalty=999
+\relpenalty=999
+
+% Set the main fonts
+
+\usepackage[T1]{fontenc}
+\usepackage{fourier}
+\usepackage{baskervald}
+
+% Create a freespace command
+
+\newcommand{\freespace}[1] {{\F\langle #1 \rangle}}
+
+% Create a vectorspace command 
+
+\newcommand{\vecspace}[1]{{V\langle #1 \rangle}}
+
+\newcommand{\iproduct}[1]{\langle #1 \rangle}
+
+% The best command
+
+\newcommand{\otherwise}[0]{\text{otherwise}}
+
+% Large plus command
+
+\DeclareMathOperator*{\bigplus}{\scalerel*{+}{\textstyle\sum}}
+
+% Create the power set equation
+
+\newcommand{\powerset}[0] {\textbf{P}}
+
+% Create better title sections
+
+\newcommand{\exercise}[1] {\setcounter{equation}{0}\vspace{0.25in}\large\textbf{Exercise #1.\quad}}
+\newenvironment{lexercise}[1]{\exercise{#1}\begin{it}}{\end{it}}
+
+% Better mapsto and \to command
+
+\renewcommand{\mapsto}[0]{\longmapsto}
+\renewcommand{\to}[0]{\longrightarrow}
+
+% Create a category command
+
+\newcommand{\cat}[1]{{\textbf{#1}}}
+
+% Create a better and command 
+
+\newcommand{\writeand}[0]{{\quad \textrm{and} \quad}}
+
+% Create a better iff command 
+
+\newcommand{\writeiff}[0]{{\qquad \textrm{iff} \qquad}}
+
+% Define common variables
+
+\newcommand{\N}{{\mathbb{N}}}
+\newcommand{\Z}{{\mathbb{Z}}}
+\newcommand{\C}{{\mathbb{C}}} 
+\newcommand{\R}{{\mathbb{R}}}
+\newcommand{\Q}{{\mathbb{Q}}}
+\newcommand{\F}{{\mathbb{F}}}
+\newcommand{\A}{{\mathscr{A}}}
+
+
+% Better EmptySet
+
+\let\oldemptyset\emptyset
+\let\emptyset\varnothing
+
+\linespread{1.2}
+
+% Heading
+
+\pagestyle{headings}
+\markright{Sequoia Snow\hfill \small\textnormal{\uppercase{\articletile}} \hfill}
+
+% Define the title separate from the rest of the document
+
+\title{
+\textmd{\textbf{\articletile}}\\
+}
+
+\author{\textbf{Sequoia Snow}}
+
+% Remove the date
+
+\date{}
+
+\begin{document}
+
+\maketitle
+
+The basic idea of direction sum decomposition is given in the name, it's a way to turn a vector space into various coordinates. Consider the plane $\mathbb{R}^2$, we know that every element of the plane can be expressed by its coordinates $(x,y)$ where $x \in \R$ and $y \in \R$. Thus $\R^2$ can be expressed as the direct sum of the $x$ and $y$ axis, we often write this explicitly as $\R \times \R$ to indicate that every element of $\R^2$ is simply a coordinstewise extension of $\R$. 
+
+So how do we relate this to the concept of direct sum decompositions? Well in their simplest form direct sum decompositions are simply a way of expressing a vector space in terms of an arbitrary (potentially infinite) number of subspaces. 
+
+\section{The infinite cartesian product} 
+
+The cartesian product of two sets is typically given as 
+\[
+  X \times Y = \Set{ (x,y) \mid x \in X, y \in Y}.
+\]
+However, we can just as easily express every element of the cross product by coordinstewise functions. For each $(x, y) \in X \times Y$ we define $f : \Set{0,1} \to X \cup Y$ by $0 \mapsto x$ and $1 \mapsto y$. This function gives us the same information as the coordinate $(x,y)$, and as every coordinate can be uniqley defined by such a function we find that 
+\[
+  \Set{ f : \Set{0,1} \to X \cup Y \mid f(0) \in X, f(1) \in Y}
+\]
+perfectly defines the set $X \times Y$. We can now extend this definition as follows.
+
+\begin{definition}
+  For an indexed collection of sets $(X_i)_{i \in I}$ we define the \textbf{cartesian product} to be the set 
+  \[
+    \bigtimes_{i \in I} X_i = \Set{ f : I \to \bigcup_{i \in I} X_i \mid f(j) \in X_j }. 
+  \]
+\end{definition}
+
+This definition allows us to handle the case of an infinite product of cartesian products. Note that you can express this definition in terms of a \textit{universal property}. 
+
+\begin{theorem}[Universal Property of Cartesian Product]
+  Let $X$ be as set which is the union of subsets $(X_i)_{i \in I}$. For any function $f : X_i \to Y$ there exists a unique function $\Hat{f} : X \to Y$ such that $\Hat{f} \circ \iota_i = f$ where $\iota : X_i \to X$ is the natural inclusion map. In other words, the following diagram commutes.
+  \begin{center}
+      \begin{tikzcd}[column sep=large, row sep=large]
+      X_i \arrow[d,"\iota_i"] \arrow[rd, "f"] & \\
+      X \arrow[r, dashed, "\exists !\Hat{f}"]& Y
+  \end{tikzcd}
+  \end{center}
+
+\end{theorem}  
+
+\begin{proof}
+  The natural inclusion map $\iota_i$ is given by 
+  \[
+    \iota(x) = j \mapsto \begin{cases}
+      x & j = i \\
+      0 & j \neq i.
+    \end{cases}
+  \]
+  Hence, clearly $\Hat{f}(\iota_i(x)) = f(x)$, meaning $\Hat{f}$ is defined as $h \mapsto f(h(i))$. It remains to show that $\Hat{f}$ is unique (up to isomorphism). Suppose $g \circ \iota_i = f$ then clearly $g(h) = \Hat{f}(h) = f(h(i))$ for all $h \in X$ so $g = \Hat{f}$.
+\end{proof}
+
+This is a very simple universal construction, indeed every component of the above takes place in the category of sets, however it serves as a good backdrop upon which to begin our discussion of direct sums.
+
+\section{Direct Products}
+
+A direct product is a vector space defined on the cartesian product as follows. For every $f, g \in \bigoplus_{i \in I} V_i$  where the $V_i$ are vector spaces over a field $\F$, let $f + g$ be the mapping $i \mapsto f(i) + f(i)$ and scalar multiplication be defined as $(cf)(i) = cf(i)$. This is clearly a well defined vector space which inherits the underlying properties of the vector spaces $V_i$. 
+
+The direct product of a collection of a vector spaces $(V_i)_{i \in I}$ is denoted 
+\[
+  \prod_{i \in I} V_i 
+\]
+
+\section{Direct Sums}
+
+A direct sum is given as the subspace of the direct product where every function has finite support, that is to say, is nonzero on only a finite subset of the domain.
+
+\[
+  \bigoplus_{i \in I} V_i = \Set{ f \in \prod_{i \in I} V_i \mid \text{$f$ has finite support} }.
+\]
+
+\begin{proof}
+  The proof that the direct sum is a subspace of the direct product is straightforward as a scalar multiple of a finitely supported function is finitely supported it is closed under scalar multiplication. The addition of two finitely supported functions is similarly finitely supported on the union of the function's domains as the union of finite sets is finite.
+\end{proof}
+
+Direct sums appear in a variety of contexts, for instance the polynomials over a field $\F$ can be represented as a direct sum of monomials over $\F$. In many cases we will see that direct sums over subspaces are of extreme importance, in these cases it helps us to define the set 
+\[
+  \bigplus_{i \in I} V_i = \Set{ \sum_{j \in I} v_j \mid \text{ $v_j \in V_j$ with only finitely $v_j$ nonzero. } }.
+\]
+where $V_i$ is a collection of subspaces of $V$. Now let us define the \textbf{codiagonal map} of a direct sum decomposition as follows. 
+
+\begin{definition}
+  The \textbf{codiagonal map} of the direct sum decomposition of a collection $(V_i)_{i \in I}$ of vector subspaces of a vector space $V$ is the function
+  \[
+    \nabla: \bigoplus_{i \in I} V_i \to V
+  \]
+  which maps 
+  \[
+    \nabla(f) = \sum_{i \in 1}^s f(\alpha_i)
+  \]
+  where $\alpha$ is a finite subset of the indexed set $I$ where $f$ is supported.
+\end{definition}
+
+As every function is finitely supported this mapping is well defined. Often we do not consider the underlying structure of direct sum decompositions and instead use standard coordinates to represent the underlying function, thus it is not uncommon to see $\nabla(x, y, z ) = x + y +z$. 
+
+Now that we have defined a notion of direct product on vector spaces, we can consider a similar abstraction for vector space homomorphism. Let $\qty(T_i : V_i \to W_i)_{i \in I}$ be a set of vector space homomorphism where $(V_i)_{i \in I}$ and $(W_i)_{i \in I}$ are subspaces of vector spaces $V$ and $W$ respectively. We define the direct product of homomorphisms 
+\[
+  \bigoplus_{i \in I} T_i : \bigoplus_{i \in I} V_i \to \bigoplus_{i \in I} W_i
+\]
+as the mapping $f \mapsto \qty(i \mapsto T_i(f(i)))$. Again this underlying functional form is often dropped so that we often simply write $(x, y, z) \mapsto \qty(T_1(x), T_2(y), T_3(z))$. This leads us to the universal property of direct sums, 
+
+\begin{theorem}[The Universal Property of Direct Sums]
+    Let $(V_i)_{i \in I}$ a collection of subspaces of a vector space $V$ and $W$ a vector space. For a collection of vector space homomorphisms $\qty(T_i : V_i \to W)_{i \in I}$ there exists a unique homorphism $g : \bigoplus_{i \in I} V_i \to W$ such that $g \circ \iota_i = T_i$ where $\iota_i : V_i \to \bigoplus_{i \in I} V_i$ is the inclusion map. In other words the following diagram commutes for each $i \in I$.
+    
+
+  \begin{center}
+      \begin{tikzcd}[column sep=large, row sep=large]
+      V_i \arrow[d,"\iota_i"] \arrow[rd, "T_i"] & \\
+      \bigoplus_{i \in I} V_i \arrow[r, dashed, "\exists! g"]& W
+  \end{tikzcd}
+  \end{center}
+\end{theorem}
+
+\begin{proof}
+  The inclusion map $\iota_i$ is defined in the natural way, 
+  \[
+    \iota_i(v) = j \mapsto \begin{cases}
+      v & j = i \\
+      0 & j \neq i.
+    \end{cases}
+  \]
+  First consider $g = \nabla \circ \bigoplus_{i \in I} T_i$. Let $f  = \iota_i(v)$ for some $v \in V_i$, then $g(f) = \nabla(k \mapsto T_k(f(k))$. Since $f$ is zero for all $k \neq i$ then $g(f) = T_i(f(i)) = T_i(v)$ as desired.
+  
+  To prove uniqueness consider that any function $\Hat{g}$ such that $\Hat{g} \circ \iota_i = T_i$ must satisfy $\Hat{g}(f) = T_i(v)$, hence $\Hat{g} = g$. 
+\end{proof}
+
+Universal property in hand we can now consider the direct sum decomposition of a vector space $V$. Let us define it as follows. 
+
+\begin{definition}
+  The subspaces $U, W \sqsubseteq V$ are said to be a direct sum decomposition of $V$ if the codiagonal map $\nabla: U \oplus W \to V$ is an isomorphism.
+\end{definition}
+
+An important result of this definition is that for any subspace $U \sqsubseteq V$ there exists a subspace $W \sqsubseteq V$ such that $U \oplus W \cong V$. This is known as the \textbf{complementary subspace theorem}.
+
+\begin{proof}
+  Let $U$ a subspace of a vector space $V$. Define $P = \Set{ S \sqsubseteq V \mid S \cap U = \set{0} }$ a set partially ordered by inclusion. Let $C \subset P$ be a totally ordered chain\footnote{A chain is a set of totally ordered elements of a set} in $P$. We show that  
+  \[
+    Q = \bigcup_{C \in S} S
+  \]
+  is an upper bound of $C$. Clearly $C \in P$, we now wish to show that $Q$ is a subspace of $V$. Let $u, v \in Q$, then by definition $u \in S_1, v \in S_2$ where $S_1, S_2 \in C$. Since $C$ is totally ordered, one of the $S_1, S_2$ is contained in each other, thus $u, v \in S \sqsubseteq Q$ and thus $Q$ is closed under addition, and similarly closed under scalar multiplication and hence a valid subspace of $V$.
+  
+  Furthermore, $Q \cap U = \set{0}$ which follows simply by contradiction. Suppose $v \in Q \cap U$, then $v \in Q$ then there exists a subspace $S \in C$ such that $v \in C$ but by construction $S \cap Q = \set{0}$ thus $v = 0$.
+  
+  Now we apply Zorn's lemma\footnote{Zorn's lemma is an application of the axiom of choice which states that a partially ordered set in which every chain has an upper bound contains at least one maximal element. } to find a maximal element $W \in P$. As $W$ is the upper bound of a chain in $P$ it is a subspace of $V$ with $W \cap U = \set{0}$. It remains to show that $W + U = V$. Suppose there exists $v \in V$ such that $v \notin W + U$ then as $v \notin U$ it is a member of a subspace of $V$. But as a $W$ is maximal then $v \in W$ and we have a contradiction. 
+  
+  Thus $U + W = V$ and $U \cap W = \set{0}$. This implies that $\nabla: U \oplus W \to V$ is an isomorphism as it is clearly surjective ($U + W = V$) and every $v \in V$ either belongs to $U$ or $W$ hence $\nabla$ is injective. This completes the proof.
+\end{proof}
+
+\end{document}

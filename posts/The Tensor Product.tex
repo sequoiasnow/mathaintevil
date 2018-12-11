@@ -1,0 +1,379 @@
+\documentclass[12pt]{extarticle}
+
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{mathrsfs}
+\usepackage{amssymb} 
+\usepackage{mathtools}
+\usepackage{braket}
+\usepackage{physics}
+\usepackage{tikz-cd}
+\usepackage{scalerel}
+\usepackage[bottom]{footmisc}
+\usepackage{cancel}
+\usepackage{todonotes}
+\usepackage{graphics}
+\usepackage{tabularx}
+\usepackage[english]{babel}
+\usepackage{blindtext}
+
+% Set the title
+\def \articletile {The Tensor Product}
+
+% Set the margins 
+
+\usepackage
+[
+        a4paper,
+        hmargin=2.5cm
+]
+{geometry}
+
+% Some Theorems
+
+\newtheorem*{theorem}{Theorem}
+\newtheorem*{corollary}{Corollary}
+\newtheorem*{lemma}{Lemma}
+
+% Better tables
+
+\newcolumntype{C}{>{$}c<{$}} 
+\newcolumntype{L}{>{$}l<{$}} 
+
+% Flip command
+
+\newcommand{\flip}[1]{\reflectbox{\,$#1$\,}}
+
+% Avoid inline equation breaking 
+
+\binoppenalty=999
+\relpenalty=999
+
+% Set the main fonts
+
+\usepackage[T1]{fontenc}
+\usepackage{fourier}
+\usepackage{baskervald}
+
+% Create a freespace command
+
+\newcommand{\freespace}[1] {{\F\langle #1 \rangle}}
+
+% Create a vectorspace command 
+
+\newcommand{\vecspace}[1]{{V\langle #1 \rangle}}
+
+\newcommand{\iproduct}[1]{\langle #1 \rangle}
+
+% The best command
+
+\newcommand{\otherwise}[0]{\text{otherwise}}
+
+% Large plus command
+
+\DeclareMathOperator*{\bigplus}{\scalerel*{+}{\textstyle\sum}}
+
+% Create the power set equation
+
+\newcommand{\powerset}[0] {\textbf{P}}
+
+% Create better title sections
+
+\newcommand{\exercise}[1] {\setcounter{equation}{0}\vspace{0.25in}\large\textbf{Exercise #1.\quad}}
+\newenvironment{lexercise}[1]{\exercise{#1}\begin{it}}{\end{it}}
+
+% Better mapsto and \to command
+
+\renewcommand{\mapsto}[0]{\longmapsto}
+\renewcommand{\to}[0]{\longrightarrow}
+
+% Create a category command
+
+\newcommand{\cat}[1]{{\textbf{#1}}}
+
+% Create a better and command 
+
+\newcommand{\writeand}[0]{{\quad \textrm{and} \quad}}
+
+% Create a better iff command 
+
+\newcommand{\writeiff}[0]{{\qquad \textrm{iff} \qquad}}
+
+% Define common variables
+
+\newcommand{\N}{{\mathbb{N}}}
+\newcommand{\Z}{{\mathbb{Z}}}
+\newcommand{\C}{{\mathbb{C}}} 
+\newcommand{\R}{{\mathbb{R}}}
+\newcommand{\Q}{{\mathbb{Q}}}
+\newcommand{\F}{{\mathbb{F}}}
+\newcommand{\A}{{\mathscr{A}}}
+
+
+% Better EmptySet
+
+\let\oldemptyset\emptyset
+\let\emptyset\varnothing
+
+\linespread{1.2}
+
+% Heading
+
+\pagestyle{headings}
+\markright{Sequoia Snow\hfill \small\textnormal{\uppercase{\articletile}} \hfill}
+
+% Define the title separate from the rest of the document
+
+\title{
+\textmd{\textbf{\articletile}}\\
+}
+
+\author{\textbf{Sequoia Snow}}
+
+% Remove the date
+
+\date{}
+
+\begin{document}
+
+\maketitle
+
+Before we dive into the tensor product, let's build up several universal properties which will allow us to define the tensor product with relative ease. Let's begin by considering the category of sets.
+
+\section*{The Free Space}
+
+For a given set $X$ and a field $\F$, the \textbf{free space} is defined to be the vector space $\freespace{X}$ over the field $\F$ given by the set of all functions from $X \to \F$,
+\[
+  \freespace{X} = \Set{ f : X \to \F \mid \text{$f$ has finite support} }
+\]
+
+The free space also comes equipped with a standard basis namely the Dirac delta functions $\delta_x$ defined to be 
+\[
+  \delta_x(y) = \begin{cases}
+    1 & y = x \\
+    0 & y \neq x
+  \end{cases},
+\]
+As every function $f \in \freespace{X}$ has finite support, it is trivially obvious that it is a finite combination of delta functions,
+\[
+  f = \sum_{s \in S \subset X} c_s \delta_s.
+\]
+This allows us to construct an inclusion map into the free space denoted $\iota: X \to \freespace{X}$ which takes elements $x \in X$ to the delta function $\delta_x$.
+
+\begin{theorem}{The Universal Property of Free Vector Spaces}
+  Let $X$ be a nonempty set and $V$ a vector space over a field $\F$. If $g : X \to V$ is a function between sets then there exists a unique morphism of vector spaces $\Hat{g} : \freespace{X} \to V$ given by $\Hat{g} \circ \iota = g$. In other words the following diagram commutes. 
+  
+  \begin{center}
+    \begin{tikzcd}[column sep=large, row sep=large]
+        X \arrow[rd, "g"] \arrow[d, "\iota"] & \\
+        \freespace{X} \arrow[r, dashed, "\Hat{g}"] & V
+    \end{tikzcd}
+  \end{center}
+\end{theorem}
+
+\begin{proof}
+  We begin by defining $\Hat{g}$ in terms of the basis of the free space, $\Hat{g}(\delta_x) = g(x)$. Note that for every $x \in X$ clearly $\Hat{g}(\delta_x) = g(x)$ thus $\Hat{g}$ satisfies the criteria given above. 
+  
+  We show uniqueness by contradiction. Suppose $f$ satisfies $f \circ \iota = g$ for every $x \in X$. Then $f(\delta_x) = g(\delta_x)$. Since both functions act identically on a basis of $\freespace{X}$ they must be identical.
+\end{proof}
+
+This leads to a corollary which provides a simple example of the notion of \textbf{pushforward}. Simply put, we have a natural transformation between the identity functor in the category of sets and a the free space functor to the category $\cat{Vec}_\F$. This is illustrated by the following commutative diagram. 
+
+\begin{center}
+  \begin{tikzcd}[column sep=large, row sep=large]
+      X \arrow[r, "g"] \arrow[d, "\iota_X"] & Y \arrow[d, "\iota_Y"]\\
+      \freespace{X} \arrow[r, dashed, "\tilde{g}"] & \freespace{Y}
+  \end{tikzcd}
+\end{center}
+
+\begin{proof}
+  By the universal property of free spaces there exists a morphism $\tilde{g}: \freespace{X} \to \freespace{Y}$ such that $\tilde{g} \circ \iota_x = \iota_y \circ g$. 
+\end{proof}
+
+This universal construction gives an introduction to many powerful features in mathematics, note how we get linear structure from a non linear function. In a sense universal property is one that extends a morphism in one category to more functionality in another. We will see similar examines when we consider the quotient spaces. 
+
+\section*{Quotient Spaces} 
+
+Let us begin with a simple definition. The \textbf{affine subset} of a subspace $U \sqsubseteq V$ is given as $v + U = \Set{ v + u \mid u \in U}$ for any subspace $U$. It can be thought of as the translation of a subspace by a given vector $v$. Notably two affine subsets $v + U$ and $w + U$ are equal iff $v - w \in U$.
+
+\begin{proof}
+  Suppose $v - w \in U$, then for every $u \in U$, there exists $u' = u - (v - w)$ such that $u' + (v - w) = u$. Thus every $w + u = w + u' + (v - w) = v + u'$. Hence every element of $v + U \sqsubseteq w + U$. Similarly, as $U$ is closed under additive inverses $w - v \in U$ and hence $w + U \sqsubseteq v + U$ and thus $v + U = w + U$.
+  
+  Conversely, suppose $v + U = w + U$. Then for every $v + u \in U$ there exists $w + u' \in w + U$ such that $v + u = w + u'$ hence $v - w = u' - u \in U$.
+\end{proof}
+
+We can now use our notion of quotient spaces to define the following universal propertie.
+
+\begin{theorem}[The Universal Property of Quotient Spaces]
+  Let $T : V \to W$ be a homomorphism between vector spaces $V$ and $W$ and let $U \sqsubseteq ker(T)$ be a subspace of the kernel of $T$. Then there exists a unique map $\Hat{T} : V / U \to W$ such that $\Hat{T} \circ \pi_U = T$ where $\pi_U : V \to V / U$ is the projection map given by $v \mapsto v + U$. In other words, the following diagram commutes. 
+  
+  \begin{center}
+    \begin{tikzcd}[column sep=large, row sep=large]
+        V \arrow[rd, "T"] \arrow[d, "\pi_U"] & \\
+        V/U \arrow[r, dashed, "\Hat{T}"] & W
+    \end{tikzcd}
+  \end{center}
+\end{theorem}
+
+\begin{proof} 
+
+Let us define $\Hat{T}$ in the natural way, $\Hat{T}(v + U) = T(v)$. Clearly this map satisfies $\Hat{g} \circ \pi_U = T$, thus it remains only to show that it is well defined. 
+
+Now suppose that $v + U = v' + U$. We have previously shown that this is equivalent to $v - v' \in U$. Thus 
+\[
+  \Hat{T}(v + U) - \Hat{v' + U} = T(v - v') = 0
+\]
+as $v - v' \in ker(T)$. Furthermore, we see that $T$ is a morphism of vector spaces as for $v, y \in V$ and $\lambda \in \F$ we get 
+\[
+  \Hat{T}(c([v] + [u])) = T(c(v + u)) = cT(v) + cT(u) = c\Hat{T}([v]) + c\Hat{T}([u]).
+\]
+Lastly, we show uniqueness. Consider any other morphism $S$ such that $S \circ \pi_U = T$. Then naturally $S(v + U) = T(v)$ and thus $S$ is exactly $\Hat{T}$.
+\end{proof}
+
+This universal property gives several important results fundamental to linear algebra. Perhaps the most famous is the first isomorphism theorem. 
+
+\begin{theorem}{First Isomorphism Theorem}
+    For a given homomorphism of vector spaces $T : V \to W$, 
+    \[
+      V / ker(T) \cong ran(T).
+    \]
+\end{theorem}
+\begin{proof}
+  By the universal property of quotient spaces there exists a homomorphism $\Hat{T} : V / ker(T) \to ran(T)$. This map is clearly surjective and hence an epimorphism. Furthermore it is injective as $\Hat{T}(v) = 0$ if and only if $T(v) = 0$ which is true for $v \in ker(T)$ and thus $[v] = [0]$, thus $ker(\Hat{T}) = 0$. Thus as the morphism is a bijection, $V/ker(T)$ is isomorphic to $ran(T)$.
+\end{proof}
+
+Note how the use of the universal property vastly simplifies this proof. This also allows us a simple calculation of the second, third and fourth isomorphism theorems. Before diving into such constructions though, it behoves us to note that this theory can be somewhat generalized by the notion of groups. 
+
+\section*{Quotient Groups}
+
+ We define a quotient group by first considering the notion of normal subgroup. Normal subgroups give us a key insight into why affine subspaces were required for quotient spaces. Simply put, a normal subgroup $S$ of a group $G$ is a subgroups such that 
+\[
+  gsg^{-1} \in S\qquad \qquad \forall s \in S, g \in G.
+\]
+Thus we can define the quotient of a group by a normal subgroup is defined to be the set of all  cosets in $G$, namely 
+\[
+  G/S = \Set{ gS \mid g \in G}
+\]
+with associative group operation $(gS)(g'S) = (gg')S$.
+
+This shows us why we need the restriction that $S$ is a normal subgroup. Consider that for $gS, g'S \in G /S$ where $g'S = x'S$ and $gS = xS$ our group operation is well defined if
+\[
+  (gS)(g'S) = (gg')S = (xx')S = (xS)(x'S).
+\]  
+Clearly if $S$ is normal, then as $gS = Sg$ we see that 
+\[
+  g(g'S) = g(x'S) = g(Sx') = (gS)x' = (xS)x' = (xx')S
+\] 
+as desired. However, if $S$ were not normal, this operation would not be well defined, and hence the $G/S$ would not be a group. 
+
+This leads to a number of interesting corollaries of group theory, for instance, for any group homomorphism $T : G \to H$, $ker(T)$ is a normal subgroup of $G$ as for every $s \in ker(T), g \in G$, 
+\[
+  T(gsg^{-1}) = T(g)T(s)T(g^{-1}) = T(g)1(T(g))^{-1} = 1 \quad \implies gsg^{-1} \in ker(T).
+\]
+This leads to an analogous universal property for group homomorphisms. 
+
+\begin{theorem}[The Universal Property of Quotient Groups]
+  Let $T : G \to H$ a group homomorphism, then for a normal subgroup $N \lhd ker(T)$ there exists a unique morphism $\Hat{T} : G/N \to H$ such that $\Hat{T} \circ \pi_N = T$ where $\pi_N$ is the canonical projection $g \mapsto gN$. In other words, the following diagram commutes. 
+  
+  \begin{center}
+    \begin{tikzcd}[column sep=large, row sep=large]
+        G \arrow[rd, "T"] \arrow[d, "\pi_N"] & \\
+        G/N \arrow[r, dashed, "\Hat{T}"] & H
+    \end{tikzcd}
+  \end{center}
+\end{theorem}
+\begin{proof}
+  The proof is identical to the case of quotient subspaces. Let $\Hat{T}(gN) = T(g)$, clearly the map is well defined as $\Hat{T}(gN) = \Hat{T}(g'N)$ for $g'N = gN$ as $g' = ng$ for some $n \in N$ and $T(g') = T(gn) = T(g)T(n) = T(g)$. The proof that $\Hat{T}$ is a morphism, and unique follows identically to the previous case and thus is ommited.
+\end{proof}
+
+This naturally leads to the same corollaries as before, namely 
+\[
+  V / ker(T) \cong ran(T)
+\]
+for $T: V \to W$. 
+
+However, the key insight gleaned from group theory is the necessity of a \textit{normal} subgroup for a quotient to exist, something which will play a role when we discuss quotients of algebras.
+
+\section*{Algebraic Ideals}
+
+An \textbf{Algebra} is a vector space equipped with a bilinear operation, in terms of algebra it is a ring over a vector space. Recall a bilinear mapping is one that is linear in each argument. For a bilinear operation $f$, then for $\lambda \in \F$ and $u, v, w \in A$,
+\[
+  f(\lambda v, u + w) = \lambda f(v, u + w)  = f(\lambda(v,u)) + f(\lambda (v,w)).
+\]
+Now we want to define the quotient space of $A$ by some sub algebra $I$. For the quotient space to be a well defined algebra it must respect the following properties 
+\[
+  (a + I) + (a' + I) = (a + a') + I, \qquad \lambda(x + I) = (\lambda x) +I , (r + I)(r' + I) = (rr' + I)
+\]
+In order that these operations are well defined we require that $I$ satisfy 
+\[
+    rx \in I \writeand xr \in I, \qquad \forall x \in I, r \in A.
+\]
+and call $I$ an ideal of $A$, often written $I \lhd A$. Again, we have a clear parallel between ideals and normal subgroups. This leads us naturally to the universal property of quotient algebras.
+
+\begin{theorem}[The Universal Property of Quotient Algebra's]
+    Let $T : A \to B$ be an algebra homomorphism with $I \lhd ker(T)$. Then there exists a unique morphism $\Hat{T} : A/I \to B$ given by $\Hat{T} \circ \pi_I  = T$ such that the following diagram commutes. 
+    
+  \begin{center}
+    \begin{tikzcd}[column sep=large, row sep=large]
+        A \arrow[rd, "T"] \arrow[d, "\pi_I"] & \\
+        A/I \arrow[r, dashed, "\Hat{T}"] & B
+    \end{tikzcd}
+  \end{center}
+\end{theorem}
+\begin{proof}
+  Like most other proofs of the universal property of quotients, we first start by defining the relation $\Hat{T}(r + I) = T(r)$. We show that $\Hat{T}$ is a well defined algebra homomorphism as 
+  \[
+    \Hat{T}((r + I)(r' + I)) = \Hat{T}((rr') + I) = T(rr') = T(r)T(r') = \Hat{T}(r + I)\Hat{T}(r' + I).
+  \] 
+  Uniqueness of the map follows trivially from its definition.
+\end{proof}
+
+With this in hand we have everything we need to construct, the tensor algebra.
+
+\section*{The Tensor Algebra}
+
+Let's work back to that definition of bilinear that was advanced earlier. Our goal in the construction of the Tensor Algebra, is akin to our construction of the free space. We wish to take a bilinear map and quotient out the bilinearity. Let $T : X \times Y \to W$ be a bilinear map and $X, Y, W$ be vector spaces over a field $\F$. First consider the map $\Hat{T} : \freespace{V \times V} \to W$ given by the universal property of free spaces such that the following diagram commutes. 
+
+\begin{center}
+    \begin{tikzcd}[column sep=large, row sep=large]
+        V\times V \arrow[rd, "T"] \arrow[d, "\iota"] & \\
+        \freespace{V \times V} \arrow[r, dashed, "\Hat{T}"] & W
+    \end{tikzcd}
+  \end{center}
+
+We now ``remove the bilinearity'' of the map through the quotient of the free space. We define an ideal generated by the following equivalence relations to "quotient the bilinearity" of the free space. Let $I$ be the ideal of $\freespace{V \times V}$ generated by 
+\begin{gather*}
+  \delta_{(x,y +z)} - \delta_{(x,y)} - \delta{(x, z)} \\
+  \delta_{(x + y, z)} - \delta{(x, z)} - \delta{(y,z)} \\
+  \delta_{(\lambda x, y)} - \lambda \delta_{(x,y)} \\
+  \delta_{(x, \lambda y)} - \lambda \delta_{(x,y)}
+\end{gather*}
+for any $x, y, z \in V$ and $\lambda \in \F$. As we define this relation on the basis of $\freespace{V \times V}$ it is well defined, furthermore, it generates an ideal $I$. Now we apply the universal property of algebraic quotients to get a mat $\tilde{T} : \freespace{V \times V} / I \to W$.
+\begin{center}
+    \begin{tikzcd}[column sep=large, row sep=large]
+        \freespace{V\times V} \arrow[rd, "\Hat{T}"] \arrow[d, "\pi"] & \\
+        \freespace{V\times V} / I \arrow[r, dashed, "\tilde{T}"] & W
+    \end{tikzcd}
+  \end{center}
+We call this quotient the tensor product, 
+\[
+  \freespace{V \times V} / I \equiv V \otimes V
+\]
+Putting this all together, we get 
+
+\begin{theorem}[The Universal Property of the Tensor Algebra]
+  Let $T : V \times V \to W$ be a bilinear map between vector spaces. Then there exists a unique map $\tilde{T} : V \otimes V \to W$ such that $\tilde{T} \circ \pi \circ \iota = T$. In other words the following diagram commutes. 
+    \begin{center}
+    \begin{tikzcd}[column sep=large, row sep=large]
+        V\times V \arrow[rd, "T"] \arrow[d, "\iota"] & \\
+        \freespace{V \times V} \arrow[r, "\Hat{T}"] \arrow[d, "\pi"] & W \\
+        V \otimes V \arrow[ru, "\tilde{T}"] & \\
+    \end{tikzcd}
+  \end{center}
+\end{theorem}
+
+\begin{proof}
+  This follows directly from the universal property of the free space and quotient algebra.
+\end{proof}
+
+\end{document}

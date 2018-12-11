@@ -1,0 +1,347 @@
+\documentclass[12pt]{extarticle}
+
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{mathrsfs}
+\usepackage{amssymb} 
+\usepackage{mathtools}
+\usepackage{braket}
+\usepackage{physics}
+\usepackage{tikz-cd}
+\usepackage{scalerel}
+\usepackage[bottom]{footmisc}
+\usepackage{cancel}
+\usepackage{todonotes}
+\usepackage{graphics}
+\usepackage{tabularx}
+\usepackage[english]{babel}
+\usepackage{blindtext}
+
+% Set the title
+\def \articletile {Factoring Matricies}
+
+% Set the margins 
+
+\usepackage
+[
+        a4paper,
+        hmargin=2.5cm
+]
+{geometry}
+
+% Some Theorems
+
+\newtheorem*{theorem}{Theorem}
+\newtheorem*{corollary}{Corollary}
+\newtheorem*{lemma}{Lemma}
+
+% Better tables
+
+\newcolumntype{C}{>{$}c<{$}} 
+\newcolumntype{L}{>{$}l<{$}} 
+
+% Flip command
+
+\newcommand{\flip}[1]{\reflectbox{\,$#1$\,}}
+
+% Avoid inline equation breaking 
+
+\binoppenalty=999
+\relpenalty=999
+
+% Set the main fonts
+
+\usepackage[T1]{fontenc}
+\usepackage{fourier}
+\usepackage{baskervald}
+
+% Create a freespace command
+
+\newcommand{\freespace}[1] {{\F\langle #1 \rangle}}
+
+% Create a vectorspace command 
+
+\newcommand{\vecspace}[1]{{V\langle #1 \rangle}}
+
+\newcommand{\iproduct}[1]{\langle #1 \rangle}
+
+% The best command
+
+\newcommand{\otherwise}[0]{\text{otherwise}}
+
+% Large plus command
+
+\DeclareMathOperator*{\bigplus}{\scalerel*{+}{\textstyle\sum}}
+
+% Create the power set equation
+
+\newcommand{\powerset}[0] {\textbf{P}}
+
+% Create better title sections
+
+\newcommand{\exercise}[1] {\setcounter{equation}{0}\vspace{0.25in}\large\textbf{Exercise #1.\quad}}
+\newenvironment{lexercise}[1]{\exercise{#1}\begin{it}}{\end{it}}
+
+% Better mapsto and \to command
+
+\renewcommand{\mapsto}[0]{\longmapsto}
+\renewcommand{\to}[0]{\longrightarrow}
+
+% Create a category command
+
+\newcommand{\cat}[1]{{\textbf{#1}}}
+
+% Create a better and command 
+
+\newcommand{\writeand}[0]{{\quad \textrm{and} \quad}}
+
+% Create a better iff command 
+
+\newcommand{\writeiff}[0]{{\qquad \textrm{iff} \qquad}}
+
+% Define common variables
+
+\newcommand{\N}{{\mathbb{N}}}
+\newcommand{\Z}{{\mathbb{Z}}}
+\newcommand{\C}{{\mathbb{C}}} 
+\newcommand{\R}{{\mathbb{R}}}
+\newcommand{\Q}{{\mathbb{Q}}}
+\newcommand{\F}{{\mathbb{F}}}
+\newcommand{\A}{{\mathscr{A}}}
+
+
+% Matrix shorthand
+
+\newcommand{\m}[1]{\begin{bmatrix} #1 \end{bmatrix}}
+
+% Better EmptySet
+
+\let\oldemptyset\emptyset
+\let\emptyset\varnothing
+
+\linespread{1.2}
+
+% Heading
+
+\pagestyle{headings}
+\markright{\hfill \small\textnormal{\uppercase{\articletile}} \hfill}
+
+
+% Define the title separate from the rest of the document
+
+\title{
+\textmd{\textbf{\articletile}}\\
+}
+
+\author{\textbf{Sequoia Snow}}
+
+% Remove the date
+
+\date{}
+
+\begin{document}
+
+\maketitle
+
+Let's begin with some very simple definitions. A matrix is a way of expressing complex linear mappings with respect to a basis. Let $T : V \to V$ be a vector space homomorphism and $(v_i)_{i = 1}^n$ a basis for $V$. Then the matrix representing $T$ with respect to that basis is defined to be 
+\[
+  M(T, (v_i)_{i=1}^n) = \m{ T(v_1) & T(v_2) & \cdots & T(v_n) }
+\]
+where each entry $T(v_i)$ is given as a column vector with respect to the basis, 
+\[
+  T(v_1) = \lambda_1 v_1 + \cdots + \lambda_n v_n \mapsto \m{ \lambda_1 \\ \vdots \\ \lambda_n}.
+\]
+
+There exists a vector space of matrices over a field $\F$ which is isomorphic to the group of automorphisms over a vector space. Of course there are other uses for matrices, one of the more famous was developed by Gauss for use solving systems of equations. 
+
+\section*{Solving Systems of Equations}
+
+Consider the following system of equations, 
+
+\begin{gather*}
+  a_{11} x_1 + a_{12} x_2 + \cdots + a_{1n}x_n = b_1 \\
+  a_{21} x_1 + a_{22} x_2 + \cdots + a_{2n}x_n = b_2 \\
+  \vdots \\
+  a_{n1} x_1 + a_{n2} x_2 + \cdots + a_{nn}x_n = b_n .
+\end{gather*}
+
+We can represent this as a matrix equation of the form $A\vb{x} = \vb{b}$, 
+\[
+  \m{
+    a_{11} & a_{12} & \cdots & a_{1n} \\
+    a_{21} & a_{22} & \cdots & a_{2n} \\
+    \vdots & \vdots & \ddots & \vdots \\
+    a_{n1} & a_{n2} & \cdots & a_{nn} \\
+  }
+  \m{ x_1 \\ x_2 \\ \vdots \\ x_n } 
+  = 
+  \m{ b_1 \\ b_1 \\ \vdots \\ b_n }.
+\] 
+
+Now we have several rules for a system of equations, we can subtract equations from each other, multiply them by constants without changing their results. Now in such cases our goal is to get our matrix in an upper triangular form, namely 
+\[
+  \m{ 
+    u_{11} & u_{12} & \cdots & u_{1n} \\
+           & u_{22} & \cdots & u_{2n} \\
+           &        & \ddots & \vdots \\
+           &        &        & u_{nn}
+  }
+  \m{ x_1 \\ x_2 \\ \vdots \\ x_n } 
+  = 
+  \m{ b_1 \\ b_1 \\ \vdots \\ b_n }.
+\]
+From this we can clearly determine every $x_i$ by backpropogating the values, i.e.
+\begin{align*}
+  x_n     &= \frac{b_n}{u_{nn}} \\
+  x_{n-1} &= \frac{b_{n-1} - u_{n-1,n}x_n}{u_{n-1,n-1}} \\
+  \vdots  \\
+  x_1     &= \frac{1}{u_{11}} \qty[ b_1 - \sum_{i = 2}^n u_{1i} x_i]
+\end{align*}
+
+The question then becomes, how to simplify a system of equations into an upper triangular matrix, using only row swaps, scaling, and adding rows together, or if every system of equations can be factorized thusly. Let us start with a theorem for the latter. 
+
+\begin{theorem} Every Matrix can be put in row eschelon form, such that there are no entries below the diagonal. 
+\end{theorem}
+
+\begin{proof}
+  The proof is constructive, take a given matrix, and swap the rows such that the longest row is ordered first. Then scale the row such that its first entry is one, and subtract the row as many times as needed from all lower rows such that each entry in that column is zero. Proceed in this manner to get row echelon form. 
+\end{proof}
+
+Now this is a trivial result, and is often as far as one considers the issue in a linear algebra class, however, there is a numerical component to this, what is the cost of the aforementioned algorithm? It's a nontrivial set of steps, and notably it changes the vector $\vb{b}$ which means that in use cases the calculation must be performed each step, a not insignificant cost factor. Instead we introduce $LU$ decomposition.
+
+\section*{LU Decomposition}
+
+Let's start with a brief discussion of matrix permutations. A permutation matrix is one which performs column or row interchanges, for instance, consider the $3 \times 3$ matrix
+\[
+  P = \m { 1 & 0 & 0 \\
+       0 & 0 & 1 \\
+       0 & 1 & 0 }.
+\]
+
+Applying this matrix to a matrix $A$ gives 
+\[
+  PA = \m{ 1 & 0 & 0 \\
+           0 & 0 & 1 \\
+           0 & 1 & 0 } 
+       \m{ a_{11} & a_{12} & a_{13} \\ 
+           a_{21} & a_{22} & a_{23} \\ 
+           a_{31} & a_{32} & a_{33} }
+     = \m{ a_{11} & a_{12} & a_{13} \\ 
+           a_{31} & a_{32} & a_{33} \\
+           a_{21} & a_{22} & a_{23}  }.
+\]
+
+Clearly, we see that $P$ exchanges the rows 3 and 2 in the matrix $A$. These permutation matrices have other interesting properties, for instance, they are all invertible and their inverse is equal to their transposition.
+
+\begin{proof}
+  Recall that a permutation matrix is a square matrix with exactly one entry of 1 in each row and column and 0's everywhere else. It is clear that such a matrix can be constructed by an arbitrary sequence of row interchanges. Let $P$ a $n \times n$ permutation matrix and let $R_{ij}$ be the matrix which exchanges row's $i$ and $j$ given by exchanging these rows in the identity matrix. Note that these have the property that $R_{ij} = (R_{ji})^T$. Then there exist some number of these row interchange matrices such that 
+  \[
+    P = R_1R_2 \cdots R_n I.
+  \]
+  
+  But by the previous property we see that 
+  
+  \[
+    P^T = (R_1R_2 \cdots R_n I)^T = R_1^TR_2^T \cdots R_n^T I.
+  \]
+  
+  Since the row interchange matrices are commutative, it is clear that $R_i R^T_i = I$ and hence $P^TP = I$. Thus $P$ has an inverse and the inverse is in fact the transposition of $P$.
+\end{proof}
+
+We can generalize this to the concept of \textbf{Elementary Matrices} which are exactly matrices representing a step in gaussian elimination. 
+
+\begin{lemma}
+  Elementary matrices are invertible, and their inverse is again an elementary matrix.
+\end{lemma}
+
+\begin{proof}
+  If an elementary matrix is obtained by row swapping, it is a permutation matrix and hence invertible. If an elementary matrix is obtained by scaling it's inverse is simply the scaling matrix by one over that factor. Lastly if the elementary matrix represents the addition of one row to another, the inverse is simply the subtraction of that row from the previous. 
+\end{proof}
+
+We use this to show that 
+
+\begin{corollary}
+  Every matrix $A$ can be written as the product of permutation matrices.
+\end{corollary}
+\begin{proof}
+  This follows from the property that every matrix can be written in reduced row echelon form 
+\end{proof}
+
+This leads us to an interesting result, namely that every invertible matrix, yields a factorization into two triangular matrices. This is known as $LU$ decomposition.
+
+\begin{theorem}
+  Every nonsingular (invertible) matrix has a $LUP$ factorization, which is to say, for a $n \times n$ matrix $A$, there exists a permutation $P$, a lower trianglular matrix $L$ and an upper triangular matrix $U$ such that 
+  \[
+    P^{-1} A = LU.
+  \]
+\end{theorem}
+\begin{proof}
+  First we show that such a factorization necessarily exists. As $A$ a square matrix there exist a sequence of elementary matrices such that 
+  \[
+    E_1 E_2 \cdots E_s A =  U.
+  \]
+  where $U$ is the upper triangular matrix produced by gaussian elimination. Let $L = (E_1E_2\cdots E_s)^{-1} = E_s^T\cdots E_2^TE_1^T$. Then $A = LU$ as intended.
+  
+  The addition of the permutation matrix $P$ allows us to reduce the $E_1, \dots, E_S$ to be only row addition and scaling operations, where $P$ is the only pivot operation for the first step of gaussian elimination. Since only pivot operations are non triangular we factor out the pivot matrix $P$ to leave $L$ lower triangular.
+\end{proof}
+
+Now, you might think, why is this factorization even useful. Well suppose we have a system of equations 
+
+
+\begin{gather*}
+  a_{11} x_1 + a_{12} x_2 + \cdots + a_{1n}x_n = b_1 \\
+  a_{21} x_1 + a_{22} x_2 + \cdots + a_{2n}x_n = b_2 \\
+  \vdots \\
+  a_{n1} x_1 + a_{n2} x_2 + \cdots + a_{nn}x_n = b_n .
+\end{gather*}
+
+If $A$ is the matrix of coefficients $A_{ij} = a_{ij}$, we can then write this equation in the form 
+\[
+  A\vb{x} = \vb{b}.
+\]
+
+To solve this we find a $LU$ factorization such that $A = LU$, which gives the equation $LU\vb{x} = \vb{b}$. Let $\vb{y} = U\vb{x}$, then we need to solve $L\vb{y} = \vb{b}$, which follows by simple prorogation, and then $U\vb{x} = \vb{y}$. 
+
+Now this might seem more complex than gaussian elimination, and in some sense it is. However, in many cases we consider systems of equations where $\vb{b}$. Since $\vb{b}$ changes with gaussian elimination, it would require a new computation at every computation, with $LU$ factorization we need only one factorization of the matrix. 
+
+Let's consider a simple example, given the matrix $A = \m{ -1 & 1 & 2 \\ 2 & 0 & 4 \\ 1 & 3 & 5}$ find a factorization $P^{-1}A = LU$. To do this, let's perform gaussian elimination on $A$.  We perform the following operations.
+
+\begin{enumerate}
+  \item Swap rows $r_2 \leftrightarrow r_1$.
+  \item Add row $r_2 \mapsto r_2 + r_1 / 2$
+  \item Add row $r_3 \mapsto r_2 - r_1 / 2$
+  \item Add row $r_3 \mapsto r_3 - 3r_2$
+\end{enumerate}
+
+To get 
+\[
+  U = \m{ 1 & -1 & -2 \\
+            & 4  &  7 \\
+            &    &  8}
+\]
+
+Now let us write the $L$ matrix as the inverse of the following matrices, 
+
+\[
+  L^{-1} = 
+  \m{ 1 & 0 & 0 \\
+      0 & 1 & 0  \\
+      -1 & 0 & 1 }
+  \m{ 1 & 0 & 0 \\
+     -2 & 1 & 0  \\
+      0 & 0 & 1 }
+  \m{ -1 & 0 & 0 \\
+      0 & 1 & 0 \\
+      0 & 0 & 1 }
+  =
+  \m{ -1 & 0 & 0 \\
+      2  & 1 & 0 \\
+      1  & 0 & 1 }
+\]
+
+with $P = \m{ 1 & 0 & 0 \\ 0 & 0 & 1 \\ 0 & 1 & 0 }$.
+
+
+
+
+\end{document}
