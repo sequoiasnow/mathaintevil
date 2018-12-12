@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<!-- Created by pdf2htmlEX (https://github.com/coolwanglu/pdf2htmlex) -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="utf-8"/>
+<meta name="generator" content="pdf2htmlEX"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+<style type="text/css">
+/* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab filetype=css: */
+/*! 
+ * Base CSS for pdf2htmlEX
+ * Copyright 2012,2013 Lu Wang <coolwanglu@gmail.com> 
+ * https://github.com/coolwanglu/pdf2htmlEX/blob/master/share/LICENSE
+ */
+/* Part 1: Web Page Layout: Free to modify, except for a few of them which are required by pdf2htmlEX.js, see the comments */
+#sidebar { /* Sidebar */
+  position:absolute;
+  top:0;
+  left:0;
+  bottom:0;
+  width:250px;
+  padding:0;
+  margin:0px;
+  overflow:auto;
+}
+#page-container { /* PDF container */
+  position:absolute; /* required for calculating relative positions of pages in pdf2htmlEX.js */
+  top:0;
+  left:0px;
+  margin:0; 
+  padding:0;
+  border:0; /* required for lazy page loading in pdf2htmlEX.js (page visibility test) */
+}
+@media screen {
+  /* for sidebar */
+  #sidebar.opened + #page-container { left:250px; }
+  #page-container {
+    /* `bottom' and `right' are required for lazy page loading in pdf2htmlEX.js (page visibility test)
+     * alternatively you may set width and height
+     */
+    bottom:0;
+    right:0;
+    overflow:auto;
+  }
+  .loading-indicator {
+    display:none;
+  }
+  .loading-indicator.active {
+    display:block;
+    position:absolute;
+    width:64px;
+    height:64px;
+    top:50%;
+    left:50%;
+    margin-top:-32px;
+    margin-left:-32px;
+  }
+  .loading-indicator img {
+    position:absolute;
+    top:0;
+    left:0;
+    bottom:0;
+    right:0;
+  }
+}
+@media print { 
+  @page { margin:0; }
+  html { margin:0; }
+  body { 
+    margin:0; 
+    -webkit-print-color-adjust:exact; /* enable printing background images for WebKit */
+  }
+  #sidebar { display:none; }
+  #page-container {
+    width:auto;
+    height:auto;
+    overflow:visible;
+    background-color:transparent;
+  }
+  .d { display:none; }
+}
+/* Part 2: Page Elements: Modify with caution
+ * The followings are base classes, some of which are meant to be override by PDF specific classes
+ * So do not increase the specificity (e.g. ".classname" -> "#page-container .classname")
+ */
+.pf { /* page */
+  position:relative;
+  background-color:white;
+  overflow: hidden;
+  margin:0; 
+  border:0; /* required by pdf2htmlEX.js for page visibility test */
+}
+.pc { /* content of a page */
+  position:absolute;
+  border:0;
+  padding:0;
+  margin:0;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  display:block;
+  /* set transform-origin for scaling */
+  transform-origin:0% 0%;
+  -ms-transform-origin:0% 0%;
+  -webkit-transform-origin:0% 0%;
+}
+.pc.opened { /* used by pdf2htmlEX.js, to show/hide pages */
+  display:block;
+}
+.bf { /* images that occupies the whole page */
+  position:absolute;
+  border:0;
+  margin:0;
+  top:0;
+  bottom:0;
+  width:100%;
+  height:100%;
+  -ms-user-select:none;
+  -moz-user-select:none;
+  -webkit-user-select:none;
+  user-select:none;
+}
+.bi { /* images that cover only a part of the page */
+  position:absolute;
+  border:0;
+  margin:0;
+  -ms-user-select:none;
+  -moz-user-select:none;
+  -webkit-user-select:none;
+  user-select:none;
+}
+@media print {
+  .pf {
+    margin:0;
+    box-shadow:none;
+    page-break-after:always;
+    page-break-inside:avoid;
+  }
+  @-moz-document url-prefix() {
+    /* fix page truncation for FireFox */
+    .pf {
+      overflow:visible;
+      border:1px solid #FFFFFF;
+    }
+    .pc {overflow:visible;}
+  }
+}
+.c { /* clip box */
+  position:absolute;
+  border:0;
+  padding:0;
+  margin:0;
+  overflow:hidden;
+  display:block;
+}
+.t { /* text line */
+  position:absolute;
+  white-space:pre;
+  font-size:1px;
+  transform-origin:0% 100%;
+  -ms-transform-origin:0% 100%;
+  -webkit-transform-origin:0% 100%;
+  unicode-bidi:bidi-override;/* For rtl languages, e.g. Hebrew, we don't want the default Unicode behaviour */
+  -moz-font-feature-settings:"liga" 0;/* We don't want Firefox to recognize ligatures */
+}
+.t:after { /* webkit #35443 */
+  content: '';
+}
+.t:before { /* Workaround Blink(up to 41)/Webkit bug of word-spacing with leading spaces (chromium #404444 and pdf2htmlEX #412) */
+  content: '';
+  display: inline-block;
+}
+.t span { /* text blocks within a line */
+  /* Blink(up to 41)/Webkit have bug with negative word-spacing and inline-block (pdf2htmlEX #416), so keep normal span inline. */
+  position:relative;
+  unicode-bidi:bidi-override; /* For rtl languages, e.g. Hebrew, we don't want the default Unicode behaviour */
+}
+._ { /* text shift */
+  /* Blink(up to 41)/Webkit have bug with inline element, continuous spaces and word-spacing. Workaround by inline-block. */
+  display: inline-block;
+  color: transparent;
+  z-index: -1;
+}
+/* selection background should not be opaque, for fallback mode */
+::selection{
+  background: rgba(127,255,255,0.4);
+}
+::-moz-selection{
+  background: rgba(127,255,255,0.4);
+}
+.pi { /* info for Javascript */
+  display:none;
+}
+.l { /* annotation links */
+}
+/* transparent color - WebKit */
+.d { /* css drawing */
+  position:absolute;
+  transform-origin:0% 100%;
+  -ms-transform-origin:0% 100%;
+  -webkit-transform-origin:0% 100%;
+}
+/* for the forms */
+.it {
+  border: none;
+  background-color: rgba(255, 255, 255, 0.0);
+}
+
+.ir:hover {
+  cursor: pointer;
+}
+
+/* Base CSS END */
+</style>
+<style type="text/css">
+/* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab filetype=css: */
+/*! 
+ * Fancy styles for pdf2htmlEX
+ * Copyright 2012,2013 Lu Wang <coolwanglu@gmail.com> 
+ * https://github.com/coolwanglu/pdf2htmlEX/blob/master/share/LICENSE
+ */
+@keyframes fadein { from { opacity:0;} to { opacity:1;} }
+@-webkit-keyframes fadein { from { opacity:0;} to { opacity:1;} }
+@keyframes swing {
+  0%  { transform: rotate(0deg); }
+  10% { transform: rotate(0deg); }
+  90% { transform: rotate(720deg); }
+  100%{ transform: rotate(720deg); }
+}
+@-webkit-keyframes swing {
+  0%  { -webkit-transform: rotate(0deg); }
+  10% { -webkit-transform: rotate(0deg); }
+  90% { -webkit-transform: rotate(720deg); }
+  100%{ -webkit-transform: rotate(720deg); }
+}
+
+@media screen { 
+    #sidebar {
+        /* Remove all coloration */
+    }
+    #outline {
+        font-family:Georgia,Times,"Times New Roman",serif;
+        font-size:13px;
+        margin:2em 1em;
+    }
+    #outline ul {
+        padding:0;
+    }
+    #outline li {
+        list-style-type:none;
+        margin:1em 0;
+    }
+    #outline li > ul {
+        margin-left: 1em;
+    }
+    #outline a,
+    #outline a:visited,
+    #outline a:hover,
+    #outline a:active {
+        line-height:1.2;
+        color:#e8e8e8;
+        text-overflow:ellipsis;
+        white-space:nowrap;
+        text-decoration:none;
+        display:block;
+        overflow:hidden;
+        outline:0;
+    }
+    #outline a:hover {
+        color:rgb(0,204,255);
+    }
+    #page-container {
+        -webkit-transition:left 500ms;
+        transition:left 500ms;
+    }
+    .pf {
+        margin: 13px auto;
+    }
+    .pc {
+        display: block !important;
+    }
+
+    .loading-indicator.active {
+        /* 
+         * use 0.01s instead of 0s,
+         * since YUI Compressor will change 0s to 0,
+         * which is not recognized by Firefox
+         */
+        -webkit-animation: swing 1.5s ease-in-out 0.01s infinite alternate none;
+        animation: swing 1.5s ease-in-out 0.01s infinite alternate none;
+    }
+}
+ /* Fancy CSS END */
+</style>
+<style type="text/css">
+.ff0{font-family:sans-serif;visibility:hidden;}
+@font-face{font-family:ff1;src:url('data:application/font-woff;base64,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')format("woff");}.ff1{font-family:ff1;line-height:0.955000;font-style:normal;font-weight:normal;visibility:visible;}
+@font-face{font-family:ff2;src:url('data:application/font-woff;base64,d09GRgABAAAAABfIAA0AAAAAIYwAAQAQAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAciBYFQUdERUYAAAFMAAAAHQAAACAAaQAET1MvMgAAAWwAAABIAAAAVlW7GatjbWFwAAABtAAAANcAAAGq+ulsFmdhc3AAAAKMAAAACAAAAAj//wADZ2x5ZgAAApQAABEaAAAYaHB8ErloZWFkAAATsAAAADQAAAA2ExzQXGhoZWEAABPkAAAAHwAAACQGTgKTaG10eAAAFAQAAADSAAAA8HOQBfdsb2NhAAAU2AAAAHoAAAB6r8apsm1heHAAABVUAAAAHgAAACAAgwBdbmFtZQAAFXQAAAHOAAADafBylmFwb3N0AAAXRAAAAIQAAACqROqisXicY2BgYGQAguvLq+eB6BvmLhdhNABMZgbhAAB4nGNgZGBg4ANiCQYQYGJgBEJrIGYB8xgABtMAbgAAAHicY2Bk/ME4gYGVgYGpi2kPAwNDD4RmfMBgyMgEFGVgZWYAgwagoAMDAgSkuaYwODAo/GZm2vOfEahyD8N/oDAjSA4ALNUMynicY2BgYGaAYBkGRgYQWALkMYL5LAwdQFqOQQAowsegwKDHYMZgz+DM4MkQwBDCEM6QyVClIPmb8Tfz//9AdQoMOgwGQHlHBlcGH4YgoHwiQzZM/v/j/zf+X/9//v+5/2f/n/5/6v+J//v/73ugwGrJagG1Fw9gZGOAK2JkAhJM6AogXoABFlY2BnYOTi5uHl6YEB8Dv4Agg5CwiKgYA4O4hKSUNIOMrBwDgzxck4KikrKKqpq6BoOmlraOrp6+gaGRsYmpmbkFIeeRDyxhDCuCSgE22CxFAAAAAAH//wACeJyFWGl0HNWVrveqF/Xepd6kruqqrq7urm61et+0dUtqa7dsWZY3WZIXjFeMbQwxmHWYwZCMCTABE8YcYscMJgPmnJxgPEMwiZMwE2cOMZCY7eAJIZnJBAdCMsAhMKg091WrZYl4Mv7RS1l9l+9+997vPUpLwT/0ET5N0ZSOMlBmykZRaUZkaIfo8DBINCHGgT767AnlxNknlHvQiifOPoFPT/egg9SMcn4GKdOvUjOoWcHUDIUoeWaM+h61k3JRlCdfRvmcrJN0UiCczxWyGbfLqUvFAxqdXmts8AcamzLLn2L8Wb/LiZHo9og90baNYKOLOos81GcQDxVySXnkef2zTAaeF2Y+pI5Tmyg9RbkD4Vwh43YeSIhiQrSI5A3SwFTnzMfoP/A3qHoqRFHaQALnc2Wc4bHLacWOXIKWAlb47PZkyhjZiysTHnd81Z5VSY87sboTWzxpMZx36XuyMryaFm3fU8jvvrqvsmNva37XVT1oBVvYvrh9+PqVkW88jIf2jUFMImDXhB+m7BTlkCDhdsQ43VmXmM8U8jePhq+ya5uSyifZCO70mXLT51NBlhWz8LsI/O4sPkZJkKNeLJbpfC4sBXQup2c+Wlasz2aK6GxQuYNpX7M+tyib7y8bwmJgx+KxawvbRksvpyIPPtiSGd9/56LC6Ip0j6OxM7R4csdYef+evuQS4gfw+Cfw00JRRbDuzkJcqicpIIMPDynRZRzr9DyC1+qT60wD8VJXpthQ0FiQoaXBHYy2FWJRn6m+Qd7c1renXGhfdsdU99Wx5zlfsjJRKa8LN/k09tF4x2TMn/TVBbhiaaqvbdxk3lRau6WrLEYptVYmwOAM/hbVQLEEBYmEB/XOFEpIQiQ4JlNGRT1DozMNG8TQ26HA71Bco9XQfq/X/J1vf7qqL8yxLBfuQx8xjJLSuBozKKq8TuhMBSDvH+NnSN4O/WxO1WyKPNIBDCTxBCKZW+E173B73O0oU8xaNXoCTvg0Gyz0fum+rS1XepyCi/aF0/08k5a9bVqH3pgqWJsZ35iX1QmMEHRbi1Ydh5e/Edw1sO1gV8EVQHSq0DywIS13Z+RGk9ONdmgQ9uplptGIECK5d0F8r+HHqACVhwgJSWsxJjDh6KWYE1ibU59BQXj4qzLu4krXLQsvctncLk2jV+4KOnB86di2nePFFUkP6jR6UmK06DR6MpKY9BiQxbD0wPW9PtHmauAbOibWhtN/tXLyQHpsA+0vlcMdw9FApb850l1SayLMfIi68QmIqwnicgE19PlslTUELSueTxIpgGf78F47bdQ52UavZGvyu7xGxmJzjEb7N/blBVvG78/40f5TGP8uUGnxtybcXjdjkYJb+4vrlYO11qXwzDS8fA8fpxopAUoIFam2US6JJD0QlHAD+MAiOYFkGu390NupfBQI0/nP0/qRX8YStv/avELDaHbh49PPdSOB51wGw+232yxhQUBsGPcqW86bgjbl9+CLJv2KOejbRkqmMuCtSncxD43IANxyXiQZatWOgdS1ckZt0RhCwytv2rVcOeljeZNJ8PpQx8Bm5UIiud9aH/Ll/UKwqci5ku3DaDs9uWJsk4A0NpFFz7OiTYOE4f4747+J80eEJO8yaZGftnqzoe5ula+/x1/GT6qZu6Qq1FBvBMgXPYShVdQ9hSLeJXq3rmtdnW5I7F42eAsXDD8ydd+pf75v60aTCR/+4/Z9LRPbi8vvmpzsZ1dv+uGhB1/ucfjVEa/mnIac4/DFAz5iiCHmsy71s5pqGRfhgX4eDuj9er+trXiwIx7FoqgXMh3ZTLApH7H5sGCdfr8GA3740fIi5bNE8lfF2GuZsMYmcUXp3MLsZ2NA0xBDSM0zF1NJTQp9Cfi50PLozsCyCljnlQtzcL9VLzjzxbv7htFLv77yHc5PDC90c6yrW/nTFPiSZj7A3wdMY+BLhK72oQVAZufhDH0FU0et76OIowPp1nu7v3Ly2fv3LjOafaxl34rOibizIbWiEN8TiThQgPf7H0Bdp796+M1ua+CDyQPtm3eW81vWFtOBiYinhvXPIc8W4nsuR00tR5eV9iERCKV+Ri7mEgrYqvyLSWiEnBvcPrPBxEPSQZH11aH2pjwKlgNmoZFTLnAcZ0KLL9QAwAY7764hQPDwc6dOpTlaEHBDQVnEiTaaPNfa/d4aF1Cryn8qiuaBPxcMalVe56ug8yjaGSDgL8R51jIJYCG/fOpO+6LRKpeBv+l5tEGhckCbSA+u8PnwuXOXsd8VE3z5oqTaZ6Bx+8C+TFGiRINBjzoRwAvAmGVRthZ8OyJQwn+go+KvcXPq3Vyz3PriuVf+rSSZ2Ua3UblQDuA2pSUaweAlnUdfbxexMD2NaQE35iGngFUjCLTUgU6pfmc+w8+A3wBMRAQp0eBNdSWRZT8XBEn1FTRlcDAB0zu5aFzZI3ZezMdIAfHDigbt54OMXgeGUSI//SucUW7sb9cS/63om7MNgmEOfIB/Bpw1UlAnjX9u1mqgNcEDsBWGAlDkjRd++OChHynbb53MejzZSfUtw/zrQ4dfeOHwQ48Wpq66+ap1hcI6eJtS5zqpjRVyCFIJMte/2HTZDK8jW18nyTWFoH9V7bw3a6X6DR9uCyehGWJyYnJqqLOnf7EjgkrnLteCSGO0s8GsPznibhRGFi1dhGsx3AMx6KkcxKD6gT6HWOiFzaHKNVAgGuhQ2Dry+bFKxz2LDGbB1aC8dakpnE1LhpqX9cr96XjS88D4PglNDg1+Vfn+i27ebsB/1hR2CRTRWmzsXTFaFJq+vh+pnIrOfIDOA95Nc3NXD/Gou03W6aV8VqUtbAC6NjbQCRFvaRny9W7a1Hv16g2jJqMoGjf3tC7v23Rl31XD4y1aKz72TNvW9c2VZGGqa/z6QS//s8E9ne2ZwWR2VfvwunTd7Dy2AB63VftltgdBjuilIpmANCCjtuHryr/7WJ9xW0vOydvxKMMbGV+M30EmBLSzzc9iU1f3sWP+UNQx/XGtGdGMMvMx/TWwzcMXFqkVVUmrpyUTkmj4JroCIPpYhH77+DV1odTbTSnjP4QePxR9sr4X4V76msNAWi2622902wFKb3j6u+hjxYT7ugUhUmdQptD/kJrGQMf8FJEZW4Cuz6oDVp4ds2W6qDJpVjSUAUk3lA3wlK20nqybInrKb0xHpJjGOxxqLvDFliE3l/Dx+ga3nWvrFYbGvDbPIUs5EkRBPhpfE2sJBQS5NR4pcHbGGMjlhZBQb/Mn61v7LjTLf69z2mXWH42ClpiBuN7Cp+AcwAHXSA/VSsrk5HyhyFQ1DZT7a6lVE9uumegZcJhC3eNticFS294pAe3uuPn0rUm7EzePIMFsm356eFvPMwNq3Zpn/oQeQU8QbEOXVPOsYAYGV6UaZItu8bet2fGlPeu95aKnnmX1Lpecd3jK8YGdxh07Nlxxp01mGZeb5XVtA5HE8i4Vz//GdRC3BzqVIscnEqvT4wJiyHOuHPnw7DkGfOytjLf3eCas2oGeiWv2jAx08ZOBpMfY3rEY7X6+Gvuz8GZBmeSt61bdpTz30wGxtU3s2abOhWbA6QjUzwYeqZAIxSmqKaljR189G+jREeXizX0FvnT1xK6dEyNTE5FEOo3ffmHYfsX+7/7N/pSmMLSkWOU0KHm0EXRtdb/PG49Av1xZM1/k+hCygBh9P8hVKtjgDrTJUsnDOB3Iau9CR3nl/ZSAgeNyBDn4ULK3OeYKi/ZG0LDbb6yeH2wzCP0CYjdR4+AtV5XIpK4O0GswN4jYT6DZvlU9Q2JQcfV8o9MD+6HBeFSVBeSkSP7QWtV8BSQvEUImSY7JI8jotScc/HUDms5sLD3evzwajzt9kslvsjtcI6WbNIe0Gj29ZDm6ecJf6Y7mZb0RdGgdwqMt3SuQ85ZEwZ/oHVQeszgZo1VT5wlGsDNptvTE+1Zmsx5XNOwIpcojtDGEnBwcDxDTUcKDQxYuLzXJWGPVmIx2czaaVvF1wMuHwI8g2YEAbInkrXfNW0MqY0AnZ6DV3B704fkgO1DK+sKvBbmuJX2epdHb2BBB9dtrmi9EZDImAWFCFJNdeb6Bx3/7HXiq4gv8pj7BO2Fuwy5yzNWS6CRwUqUIKeZJTn4z5OODnWbRy4oi60XHlZ9Ew1XTJ+Qo4g13ZCQpI83G/0uIH3a4w6MazBCB/+cZFEl3wsjS6T85JKVP+zUHXJxczeFWY/hEOYj0J2MGQbBr6x7xjNW81RJp22Y0unje4J/FjHoPfNooKjvfBbh8DwKv9C/jwnM/NjLTz4I18jvIn8bAr3aI1e0i2ao0UnGdQ2I++l8oxixQj5l7lgZL5sHB3jZf8HzQJ6YLzWzw50F2WSrPhs8HOZ+0DB1vCFUC/spA/1O1mhzN5dNv1L58a2P6jQWImqvxoWmIL1SLb0Fkl4vE0jNyAxsCRoxmshxhhE8aU11/+eT/6cmiciFOzquI6BInzInaWRpGBPiZbZjX9q3feO21Z3dN3rC/2F0pntuwf++mzTffsPUHPx7asYvYcEK//ifMTZbcfhS/WPEqwtXNS+5nZs/n+sfD6YtQpNGiqWV41ZVbVw/nkm3NbU4mF+3KS0/PzYgnl9K82e6WSreMT9wxmaZLI8mm/tbl1RmH0Kfg101uW9A8HusunQb0lyZqET3jky9mpOLAyit3jlfSyWSy3Z9qNLW0N3ei49M/kkU4XNINyTO5G9dM3tVcP9QabCv5K5sSs5xBm9Bxyq+qrIXwz0+RzNWTbPwXYY4PLmszFzsaJafdFrC5o6j9xQRbx1+qtL0hO+jz2LxhH9jPQR0WQx0il9Erl5ErRVRgtUvEkCFWKsd6i50phmW13UkuQr6XcoW4HR35irSkpTHE+Vvllv544N5UT4Bjoz6xEMp1p8gSohpnPkcRXCB3etWZPrskyFCHMmVdyLzL3cjFnJn+rclUKoSO+RVFyMSYJXcg7K5bX3yguhsYiP2P6AjZyNpwHgxUcckyZOvkZz/CqkPbLb1Lr+dCD4wlClzw/kpJK7KVu1SGKhc3pl9XP7wMvQo2QViic2DTTWILgLqhVaEDYlZAZITAAfZc3HLEd8wcea7JtGGLrhkd4VnlMNrC8rzGVNfw7h/qNQwiZaO0QJa/A1sCma1EJanKmCh9MObIOqr2yEhCLwc375Ru0tZbHU+77fTincEtq+mmgykLalbOo7VWu0bL80hnrjNfREnllYsGnRvzPB2s4gBzCH0AfuJqzDbkqV57qXNw9p4jm+kk1xwklUAtFSmP3kl79t3uzr/YpF9zRV34YW0ze9s+ONGdCZmWrtXGIbPGv/5HHmYibdq9ux4bBYE/+JDTwvNGnWHz5jqNhVf9Y+iHl8A/ORdDMrTVoPYBnP7pIh2W58MHPl/KW36CLBqr3m5i7A6jk3OJUY4JOB5imp6Pards0kTREUHnVyqYN/KWRgtj0HmcjFWWRyW0JIwAB4fBePGiweDiwTch1N3om+oUIfcMDrK1ieZ10eT2Ae3h6pSjnx90exu0nA0NfnrAITSYDx4U0UZvS91+QTlSH/aquh3dT53BJ8hsd9TumefdTGXiAY2Jmb1jRvdXL5npeXfMRKf8AXQKnEQQLMt5QwGEw/8nW5qZVSwXfjXEoaH1oeRvJba7WxUw4WCXm3E6NTZ7JzqK9TrlTG2q/iDjoy8jaIJE0HBVQaOeb/FFiGklOR3lyri4wCs80S6MI/sXA1/wuWIPVRLhbg/jcWOI7imkN3sCOTEIT6rx3sSshJRgGZGUUu9K3FOh9HtBtoKOJkZ6Isjntze6vK7t6/1yOZzw1s8FTuv+QpbzP/8vaZybeQAAeJxjYGRgYGBkkbDQkOCO57f5ysDN/AIownDD3OUijP7/9z8j8ySmPUAuBwMTSBQAKvcL2HicY2BkYGDa8x9IMk/5//f/QeZJDEA2CrABAKPNBuUAeJwdjUErRAEUhb9zninSeO95s2FqZJjQPDvNShllI9nyMyys/AhWVsqfmO2UBf+BLJSyIiGZnfFcbn333s65nasv/kv7fy14ZUWH9Hmk5w5b2mZR36zqM7hnWs+0PUNfRyx4WI29SebL0PZi1oNrlvxEpt3Yd8iSA3JfBaO46YR2Ft6INZ9ST86rHz3Q9WRVaUDpebq6oVSbpt5IXaPQFC29UFBRJA1aTgOz7lkakVPqOPwTNtRjzhPkusW+oKYxqe5w5C7zHv8Smv4g/wVkSCrXAAAAAAAmACYAJgAmAEgAVABmAJ4AugDuATwBagG6AgYCRAJ6AsIC9AM2A2wDqgP6BCQEVASQBMYE8gU0BX4FvAXqBh4GagaYBsYG/gcmB1wH1ggMCDYIcAiMCNwJEgk0CXAJpgnWChAKNApeCoQKuAr4CzYLWgt6C8QMNAAAeJxjYGRgYLBhiGJgZQABJiBmZACJOYD5DAARygDhAAB4nKWRzU7bQBSFz5hAxSaqWHdxVbGENPYCIXYpkdMFQghENkiVTDzY01h2NHaA8ARVl30MFjxN1QfpE3BmPDu6qNQomfnuz5n7EwBDvECh/3zD78AKe6oIHOGd+hF4C5/Un8AD7EVfAm9jGG0C7+B99MxMNdil9curHCvsq0ngCEP1FHgLX9XPwAPsRx8Db+NDdBN4BxJ9xykarLCBhUGBEh0EE1pLZKiR09vSM/VRw2iGinZK1drHLbUSWNMS5pQkwQznuPa3ZtTFeu0Fs29JBgtaZ/52Ga1XzZHw7GsLszK+57QHtB58ByXpjvVr36vGo9evaBnvHQGnzWpjTVF2MrHLrM5NK1NTmC6rJG3WdW43wlNb6Uots/NrmelaW0Yv1reVWciZWei61TJPhGqpsk7bA3kwXSl3Td2JflzoVWeamrU+s8WW63JN3vsRc7/CKZckuGJbOZOydqntfVblMpmmctXRd0lJwV24GS1NXayrjJCG2dxtmeG2knCqMe8T/v6lYJ8ZU3cYzoT6GMd8ngOkjS20JKOxnMjb1uiMk0N+k3F8/B8Dzr2kDX+La2fkmzgiY65tywVKPBrHR/L3Kn2NNxVYwL3/Cpymo88AAHicbcxLboEBAADh7/8tLBFUbQXxSlBpJWIl3prSUo/iAN3YOVuP5BitNJYmmcxuhP75vXhyj+7VQCgiJi4hKSXtQcajrJy8gqKSsoqqmrqG5vXV8uxFW0ffwNDI2MTUzKs3cwvvPiytfFrb2Nr5sndw9BOEQSR6Pn0Pe43mra0/jHMTcw==')format("woff");}.ff2{font-family:ff2;line-height:0.955000;font-style:normal;font-weight:normal;visibility:visible;}
+@font-face{font-family:ff3;src:url('data:application/font-woff;base64,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')format("woff");}.ff3{font-family:ff3;line-height:0.955000;font-style:normal;font-weight:normal;visibility:visible;}
+@font-face{font-family:ff4;src:url('data:application/font-woff;base64,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')format("woff");}.ff4{font-family:ff4;line-height:0.984000;font-style:normal;font-weight:normal;visibility:visible;}
+@font-face{font-family:ff5;src:url('data:application/font-woff;base64,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')format("woff");}.ff5{font-family:ff5;line-height:0.848000;font-style:normal;font-weight:normal;visibility:visible;}
+@font-face{font-family:ff6;src:url('data:application/font-woff;base64,d09GRgABAAAAAAWcAA0AAAAACEgAAQAEAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAciBYFQUdERUYAAAFMAAAAHQAAACAAOQAET1MvMgAAAWwAAABCAAAAVlSNgR9jbWFwAAABsAAAAHIAAAGCIx9MGGdhc3AAAAIkAAAACAAAAAj//wADZ2x5ZgAAAiwAAAElAAABiHff3zBoZWFkAAADVAAAADMAAAA2E2HNwWhoZWEAAAOIAAAAIAAAACQF7QNraG10eAAAA6gAAAAqAAAAMBdoAqBsb2NhAAAD1AAAABoAAAAaAbYBZm1heHAAAAPwAAAAHQAAACAAUAAfbmFtZQAABBAAAAFMAAACqVipbJ9wb3N0AAAFXAAAAD4AAABPPYgkOnicY2BgYGQAguvLq+eB6BvmLhdhNABMZgbhAAB4nGNgZGBg4ANiCQYQYGJgBEJuIGYB8xgABMMAPgAAAHicY2BkamGcwMDKwMDUxbSHQYWhB0T/b2F8wGDIyAQUZWBlZoABECsBxglIc01hYGRQUBJi0gXxISRQBAgAId0JegAAeJxjYGBgZoBgGQZGBhCoAfIYwXwWhgQgLcIgABRhYVBg0GYwZ7Bl2M5wXXGS4hQlof//gbJYRP8//n/z/7n/J/8H/De8V36v7O5PqMkYgJGNAS7FyAQkmNAVQJwGBSxIMqxgkg27uYMKsOOXBgAkBRuSAAAAAAAB//8AAnicTZDPSsNAEMZnNtA9FCIY0y0GIppul/qPYpIu7EEPUj14qYccpC+h5xz7AMGePHhq8VrvfQbxAfQZPPSSW8DdTQplZwcGvu83wwcIGVCSkwtoA3hxGvuxH/lRGmWlKnWhNL0EhCEs4A/nQI2uVg3VbKZwPlVTIJpTkBw/wDEKfpzaR/Lqh/TNL9RCAWjOBH7hG5+Maj8ZXXUOWicTnnCeIJjOjeYVbskNbuxNTDLKqKBCivVqNdgWbnYG43mAN6fAd9jTg+8iFSOpD+gLGaJTnL70PN6tHsnnYeT1nnEQuvdhEAl1HgZHd/ausfYvtT/QO9NrlKxFazfb0jqMXuK4RpHEgs4a8FeNbTdYS3V3B7A7Mqh0RlJnZBNq0tG5/AMvjFImAAAAeJxjYGRgYGBkZNMXN/kVz2/zlYGb+QVQhOGGuctFOG3AwM68mEmXgYmBA4iBAAAbHAlzAHicY2BkYGDSZQAC5hcMDP+FmRczpDBIMyADHgBJAwNfeJxj/MIABoy+IIKBgekCQyiQZQCiGcUYAoD0ROYXDN5A7AoSAwCs1AkaAAAAAAAAAAAAAAAAABQAJAA4AEoAZACEALYAxAAAeJxjYGRgYOBhkGFgYgABEMnIABJzAPMZAAZnAHAAAAB4nKWRvU7DMBSFj/uHWBBDBybksUNd2WmHqkIslVoJqQtt2RhayUoipUnlJkOfAPEOvAGIiZHn4Tk4Tj0yIDU/zuebe869NwFwhU8InI5b3AcW6OIlcAMX+AjchBE3gVvoijJwG9fiPXCH8R9mitYld3e1yrNAD8+BG6z7FriJLb4Ct9ATD4HbkOI1cIfxb0xRYI8jHFLESFBCIoLmOYQKNEKf0TnWWMEip7dlfgxMi/3RpXFSykjroeIy6sv5emXzrXV8P6N5VVt7gcICGxZISEuW3NGoQIYDE4vKpdapxaZM1PK42xYZo4+UxTTIKHPc2rjKNu5km9PIP30ftu55wE4lJrz/W/aUbahVYfXzGox9Q3k5K1xsZTTQciL/apBhEylekTbjs4d9qmUHyv1wsv7wph7K/wDJBOsOaZFLrc2AH1qeW/EXMgx2rHicY2BiYPj/EYjfMTAzYAM8QMzIwASU5WOQYlBgOMzwgZGJkZnhPVdiUVF+eVFmekYJJ5iZlF+SAQDDew8aAAA=')format("woff");}.ff6{font-family:ff6;line-height:0.550000;font-style:normal;font-weight:normal;visibility:visible;}
+@font-face{font-family:ff7;src:url('data:application/font-woff;base64,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')format("woff");}.ff7{font-family:ff7;line-height:3.005000;font-style:normal;font-weight:normal;visibility:visible;}
+@font-face{font-family:ff8;src:url('data:application/font-woff;base64,d09GRgABAAAAAASUAA0AAAAABvAAAQAEAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAciBYFQUdERUYAAAFMAAAAHAAAACAAMgAET1MvMgAAAWgAAABHAAAAVlVwYkBjbWFwAAABsAAAAEYAAAFKB2sDRGdhc3AAAAH4AAAACAAAAAj//wADZ2x5ZgAAAgAAAACMAAAAjCFr/CZoZWFkAAACjAAAADMAAAA2EhrOZmhoZWEAAALAAAAAHwAAACQFZQLkaG10eAAAAuAAAAAUAAAAFAPVACRsb2NhAAAC9AAAAAwAAAAMAAAARm1heHAAAAMAAAAAHQAAACAASAAwbmFtZQAAAyAAAAFKAAAC0DrEg/1wb3N0AAAEbAAAACYAAAAzaFHDo3icY2BgYGQAguvLq+eB6BvmLhdhNABMZgbhAAB4nGNgZGBg4ANiCQYQYGJgBEIWMAbxGAAEdgA3eJxjYGR0YZzAwMrAwNTFtIdBnqEHRP+fyviAwZCRCSjKwMrMAAONDEggIM01hYGRQYF5N9PT/1+AKp8y8ACFGUFyAFLKDVwAeJxjYGBgZoBgGQZGBhBwAfIYwXwWBg0gzQakGRmYGBSYd///D+SD6f+P/3hC1QMBIxsDnMPIBCSYGFABI8SK4QwAl34JsgAAAAAAAf//AAIAAQAk//QCZwLlACwAABMnNjMyFhcTFhcWMzI2NxcOASMiLgMnCwEHPgY3Nj0BJicmJyIG4Bg8YyQsAxIGBwkVDzQUGRtUMBMcDwkEARDwWARXEkYdNScSBAoICg4QOAJHDpBWMv6IgBkjQCoPQk4QFiggGgEZ/msKBnkaZi1SQyIIAw6GGxwBQQAAAHicY2BkYGBgZGRTU8vpjue3+crAzfwCKMJww9zlIpxW+f+FKZ3pKQMTAwcQAwEANPELnQB4nGNgZGBgevr/C5BsZwACpnSGFAZxBmTACgBy+gROAAAAAAAAAAAAAU0AAAABAAAChwAkAAAAAAAAAAAAAABGeJxjYGRgYGBl0GUA0QwMTEDMCGY7gPkMAAc8AHkAAAB4nLWRvW7CMBSFj/mJVKlCHSp1YPEIgyMnoAqxIkGRoBOwBxRBJEgq18wd+wSd2mfoG/QV+kw9CXdBYmBpfqzP995zfWwDaOEbCqfnAVZY4R5OuIYAH8J1DFRLuIG2ehNu4k79CAdo1wJWqsYNZ2GlKlmhgyfhGm7xLlzHC76EG3hUE+EmtPoUDhj/pX6ELjRi+rTowQj1GZtgiQVS5FhzdNgCnVFXx9b2DIe+niwXab5OHRNjFDiyJqsqDeZI4LEjzRjxfMv4KwuLo8tSZ+aJ35lZ6n3qGH2m3OFA0Z6Twh2S/alnTuW4Sm7ZofQZ0p3GkP+1axpMyWXrDBvRRuxkZCx3HGFQesv9uHDbVMeh1UN9yauZ+mSfbZiNYsMvttHg+u2fW7l4GLIAsBJNVh2Drq4lqrZ/uh6sWJ0VubY2Csvr+Bcbf92/fRoAAHicY2BiYPj/GYibGYwYsAFWIGZkYGJgZmRiy0nMTUpJBACshgYeAAA=')format("woff");}.ff8{font-family:ff8;line-height:0.753000;font-style:normal;font-weight:normal;visibility:visible;}
+@font-face{font-family:ff9;src:url('data:application/font-woff;base64,d09GRgABAAAAAAQcAA0AAAAABmwAAQAEAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAciBYFQUdERUYAAAFMAAAAHAAAACAAMgAET1MvMgAAAWgAAAA9AAAAVlSyXtxjbWFwAAABqAAAAEwAAAFKBIEGuWdhc3AAAAH0AAAACAAAAAj//wADZ2x5ZgAAAfwAAAA4AAAAOCaxFLtoZWFkAAACNAAAADMAAAA2EcLOQmhoZWEAAAJoAAAAGwAAACQEtgIiaG10eAAAAoQAAAAUAAAAFANqADVsb2NhAAACmAAAAAwAAAAMAAAAHG1heHAAAAKkAAAAHQAAACAASQARbmFtZQAAAsQAAAE2AAACpimcCzFwb3N0AAAD/AAAAB0AAAAs/44AXXicY2BgYGQAguvLq+eB6BvmLhdhNABMZgbhAAB4nGNgZGBg4ANiCQYQYGJgBEIWMAbxGAAEdgA3eJxjYGTkY5zAwMrAwNTFtIeBgaEHQjM+YDBkZAKKMrAyM8AAIwMSCEhzTWFQAEI3pq0gPoSEqAEAlasIOwAAAHicY2BgYGaAYBkGRgYQcAHyGMF8FgYNIM0GpBkZmBgUGNz+/wfywfT/x//3QdUDASMbA5zDyAQkmBhQASPECsKAhShVgxEAABH7CT4AAAAB//8AAgACADUAAAIAArUACQANAAATIRUhFTMVIxEjExEzETUBy/7p4OC0MlACtTLzMv6iAoP9rwJRAAAAeJxjYGRgYGBkZJNctqMhnt/mKwM38wugCMMNc5eLcNqUgYGJgWkrAyMDB5ABBAAv4wnXAHicY2BkYGDaygAETDJgkoGBkQEVsAIAGaAA3wAAAAAAAAAAAAFNAAAAAQAAAhwANQAAAAAAAAAAAAAAHHicY2BkYGBgZeBjYGIAARDJyAAScwDzGQAETABbAAAAeJytkb9qwkAcx7+nUWiHUujgelNRMOESUxDpFEEnl6Lu0R4a1Ds4dezWB+jUtW9Q+kh9FL9Jbu1QMJfcfe73/0sA3OEbAvXzgK5ngQ72nhto4cNzE6mA5wAdoT23cC++PLdp/2WkCG54e6yyShaI8Oy5gVu8e25ii0/PASLx5LkFKd48t2n/4XRj9CCRQHEN0CdPscAcGgYr7g4boDvuyUSpQV9OF3NtVtrROIHFmf6iigoxQ44TO4fIqDTHGjuSJTm8MtyeXaFdOMtP2zDb5+tdZnNHxwtjDowyRHvITV3ZsFZ5lv11NWHECSVG/P7Xuc6JWSH0e6k2xrCcyZwm1m20TCIlR/KPGemJk5BvouLh9YQvq/wj65RyZfUL4kqmQso7ltodC2ukUnGkVCqv1voC6P1ypQAAeJxjYGIAg//NDEYM2AArEDMyMDEwM2gCAD0zAesAAAA=')format("woff");}.ff9{font-family:ff9;line-height:0.693000;font-style:normal;font-weight:normal;visibility:visible;}
+@font-face{font-family:ffa;src:url('data:application/font-woff;base64,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')format("woff");}.ffa{font-family:ffa;line-height:0.984000;font-style:normal;font-weight:normal;visibility:visible;}
+@font-face{font-family:ffb;src:url('data:application/font-woff;base64,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')format("woff");}.ffb{font-family:ffb;line-height:0.977000;font-style:normal;font-weight:normal;visibility:visible;}
+.m0{transform:matrix(0.250000,0.000000,0.000000,0.250000,0,0);-ms-transform:matrix(0.250000,0.000000,0.000000,0.250000,0,0);-webkit-transform:matrix(0.250000,0.000000,0.000000,0.250000,0,0);}
+.v0{vertical-align:0.000000px;}
+.ls0{letter-spacing:0.000000px;}
+.sc_{text-shadow:none;}
+.sc0{text-shadow:-0.015em 0 transparent,0 0.015em transparent,0.015em 0 transparent,0 -0.015em  transparent;}
+@media screen and (-webkit-min-device-pixel-ratio:0){
+.sc_{-webkit-text-stroke:0px transparent;}
+.sc0{-webkit-text-stroke:0.015em transparent;text-shadow:none;}
+}
+.ws0{word-spacing:0.000000px;}
+._0{margin-left:-6.446700px;}
+._1d{margin-left:-4.381820px;}
+._4{margin-left:-3.251814px;}
+._1{margin-left:-1.322400px;}
+._12{width:1.147699px;}
+._d{width:2.649614px;}
+._a{width:3.956141px;}
+._10{width:5.418751px;}
+._e{width:6.911151px;}
+._7{width:8.781598px;}
+._18{width:10.922296px;}
+._9{width:12.044326px;}
+._c{width:13.389824px;}
+._11{width:14.425299px;}
+._5{width:16.163430px;}
+._3{width:17.215440px;}
+._8{width:18.639312px;}
+._b{width:19.866574px;}
+._19{width:20.929215px;}
+._13{width:22.061971px;}
+._6{width:23.665971px;}
+._2{width:25.786800px;}
+._17{width:29.297568px;}
+._1a{width:30.785030px;}
+._1b{width:36.309872px;}
+._f{width:39.849820px;}
+._16{width:40.861444px;}
+._15{width:43.209444px;}
+._1c{width:55.697417px;}
+._1e{width:71.535545px;}
+._14{width:662.209716px;}
+.fc0{color:rgb(0,0,0);}
+.fs4{font-size:32.996400px;}
+.fs6{font-size:43.636400px;}
+.fs3{font-size:43.994800px;}
+.fs2{font-size:47.820800px;}
+.fs1{font-size:57.384800px;}
+.fs5{font-size:68.861600px;}
+.fs0{font-size:82.650000px;}
+.y2d{bottom:121.654000px;}
+.yaa{bottom:148.404000px;}
+.yab{bottom:148.589000px;}
+.ya9{bottom:149.748000px;}
+.y102{bottom:151.159000px;}
+.yac{bottom:151.500000px;}
+.ya7{bottom:151.542000px;}
+.ya8{bottom:156.479000px;}
+.y7c{bottom:158.960000px;}
+.y2e{bottom:159.000000px;}
+.yff{bottom:164.922000px;}
+.y101{bottom:168.494000px;}
+.yfb{bottom:168.865000px;}
+.yd2{bottom:168.877000px;}
+.yfe{bottom:171.961000px;}
+.y7b{bottom:176.295000px;}
+.yfd{bottom:178.561000px;}
+.y2c{bottom:181.345000px;}
+.y2b{bottom:183.139000px;}
+.y100{bottom:185.829000px;}
+.yd1{bottom:186.211000px;}
+.ya6{bottom:186.212000px;}
+.y7a{bottom:193.630000px;}
+.yfc{bottom:197.919000px;}
+.yd0{bottom:201.753000px;}
+.yfa{bottom:202.397000px;}
+.y2a{bottom:203.462000px;}
+.ycf{bottom:203.546000px;}
+.y29{bottom:207.447000px;}
+.y79{bottom:210.965000px;}
+.y28{bottom:211.432000px;}
+.ya5{bottom:213.251000px;}
+.ya4{bottom:215.044000px;}
+.yce{bottom:217.146000px;}
+.ycd{bottom:217.929000px;}
+.ycb{bottom:220.881000px;}
+.ycc{bottom:225.221000px;}
+.y27{bottom:226.040000px;}
+.yf9{bottom:227.396000px;}
+.y26{bottom:227.833000px;}
+.yf8{bottom:229.189000px;}
+.yc9{bottom:236.423000px;}
+.yc8{bottom:238.216000px;}
+.y78{bottom:238.263000px;}
+.yca{bottom:242.556000px;}
+.ya3{bottom:243.876000px;}
+.y25{bottom:246.363000px;}
+.y24{bottom:248.157000px;}
+.yf7{bottom:253.820000px;}
+.y77{bottom:255.598000px;}
+.yf6{bottom:255.613000px;}
+.ya1{bottom:259.418000px;}
+.ya0{bottom:261.211000px;}
+.yc7{bottom:263.388000px;}
+.yc6{bottom:265.182000px;}
+.ya2{bottom:265.551000px;}
+.y9f{bottom:278.546000px;}
+.yf5{bottom:280.244000px;}
+.yf4{bottom:282.037000px;}
+.y76{bottom:282.895000px;}
+.yc5{bottom:292.147000px;}
+.y9e{bottom:294.088000px;}
+.y23{bottom:294.782000px;}
+.y9d{bottom:295.881000px;}
+.y75{bottom:300.230000px;}
+.yf3{bottom:306.668000px;}
+.yf2{bottom:308.461000px;}
+.yc4{bottom:309.482000px;}
+.y9c{bottom:313.216000px;}
+.y74{bottom:317.565000px;}
+.y22{bottom:323.528000px;}
+.y9b{bottom:330.551000px;}
+.yc2{bottom:334.787000px;}
+.yf1{bottom:335.253000px;}
+.yc3{bottom:339.724000px;}
+.y73{bottom:340.815000px;}
+.y6f{bottom:342.346000px;}
+.y6e{bottom:344.140000px;}
+.y6c{bottom:350.548000px;}
+.yc1{bottom:352.122000px;}
+.y6b{bottom:352.341000px;}
+.yf0{bottom:352.587000px;}
+.yee{bottom:352.588000px;}
+.y9a{bottom:356.722000px;}
+.yef{bottom:356.927000px;}
+.y6d{bottom:360.435000px;}
+.y72{bottom:362.273000px;}
+.y71{bottom:364.473000px;}
+.y21{bottom:367.194000px;}
+.yed{bottom:369.042000px;}
+.yc0{bottom:369.457000px;}
+.y70{bottom:371.496000px;}
+.y99{bottom:374.056000px;}
+.y6a{bottom:381.121000px;}
+.yea{bottom:382.805000px;}
+.y20{bottom:384.529000px;}
+.y69{bottom:385.106000px;}
+.yec{bottom:386.377000px;}
+.ye6{bottom:386.748000px;}
+.ybf{bottom:386.792000px;}
+.y68{bottom:389.091000px;}
+.ye9{bottom:389.844000px;}
+.y98{bottom:391.391000px;}
+.ye8{bottom:396.443000px;}
+.y67{bottom:401.457000px;}
+.y1f{bottom:401.864000px;}
+.y66{bottom:403.250000px;}
+.yeb{bottom:403.712000px;}
+.y63{bottom:409.658000px;}
+.y62{bottom:411.451000px;}
+.ybe{bottom:412.097000px;}
+.ye7{bottom:415.801000px;}
+.y97{bottom:416.110000px;}
+.y94{bottom:417.903000px;}
+.y65{bottom:417.946000px;}
+.y64{bottom:419.739000px;}
+.ye5{bottom:420.280000px;}
+.y1e{bottom:426.645000px;}
+.y1d{bottom:428.438000px;}
+.ybd{bottom:429.431000px;}
+.y91{bottom:431.665000px;}
+.y61{bottom:432.015000px;}
+.y96{bottom:433.444000px;}
+.y60{bottom:433.809000px;}
+.y93{bottom:435.238000px;}
+.y8d{bottom:435.608000px;}
+.ye4{bottom:437.615000px;}
+.y90{bottom:438.705000px;}
+.y5d{bottom:440.216000px;}
+.y5c{bottom:442.010000px;}
+.y17{bottom:443.726000px;}
+.y8f{bottom:445.304000px;}
+.y1c{bottom:445.773000px;}
+.y13{bottom:445.876000px;}
+.y12{bottom:447.669000px;}
+.y5f{bottom:448.310000px;}
+.y1b{bottom:449.758000px;}
+.y5e{bottom:450.103000px;}
+.y16{bottom:450.765000px;}
+.y95{bottom:450.779000px;}
+.y92{bottom:452.573000px;}
+.y1a{bottom:453.743000px;}
+.ye3{bottom:454.950000px;}
+.ybc{bottom:455.069000px;}
+.y15{bottom:457.365000px;}
+.y19{bottom:464.365000px;}
+.y8e{bottom:464.662000px;}
+.y18{bottom:466.159000px;}
+.ye2{bottom:472.285000px;}
+.ybb{bottom:472.403000px;}
+.y5b{bottom:472.523000px;}
+.y5a{bottom:474.317000px;}
+.y14{bottom:476.723000px;}
+.y8c{bottom:480.638000px;}
+.ye1{bottom:489.620000px;}
+.y11{bottom:492.494000px;}
+.y10{bottom:494.287000px;}
+.yba{bottom:497.708000px;}
+.y58{bottom:499.199000px;}
+.y57{bottom:500.992000px;}
+.ye0{bottom:506.955000px;}
+.y8b{bottom:507.150000px;}
+.yc{bottom:514.458000px;}
+.y4d{bottom:515.048000px;}
+.yf{bottom:515.934000px;}
+.ya{bottom:516.304000px;}
+.ye{bottom:517.727000px;}
+.y9{bottom:518.098000px;}
+.y56{bottom:518.327000px;}
+.y54{bottom:519.323000px;}
+.y88{bottom:520.912000px;}
+.y4c{bottom:522.088000px;}
+.y53{bottom:522.312000px;}
+.yb9{bottom:523.013000px;}
+.yb{bottom:523.035000px;}
+.ydf{bottom:524.290000px;}
+.y8a{bottom:524.485000px;}
+.y84{bottom:524.855000px;}
+.y52{bottom:525.301000px;}
+.y55{bottom:526.297000px;}
+.y87{bottom:527.951000px;}
+.y4b{bottom:528.687000px;}
+.y59{bottom:528.890000px;}
+.yd{bottom:530.653000px;}
+.y86{bottom:534.551000px;}
+.y4a{bottom:535.286000px;}
+.y8{bottom:535.433000px;}
+.y51{bottom:536.919000px;}
+.y50{bottom:538.712000px;}
+.y89{bottom:541.819000px;}
+.y49{bottom:541.886000px;}
+.y48{bottom:548.485000px;}
+.y7{bottom:548.530000px;}
+.yb8{bottom:548.650000px;}
+.yde{bottom:550.522000px;}
+.y5{bottom:550.974000px;}
+.y4{bottom:552.768000px;}
+.y85{bottom:553.909000px;}
+.y4f{bottom:554.254000px;}
+.y4e{bottom:556.047000px;}
+.y6{bottom:557.107000px;}
+.yb7{bottom:565.985000px;}
+.y47{bottom:567.843000px;}
+.y83{bottom:569.885000px;}
+.y3{bottom:570.103000px;}
+.ydd{bottom:574.961000px;}
+.ydc{bottom:576.754000px;}
+.yb6{bottom:583.320000px;}
+.y46{bottom:584.277000px;}
+.y82{bottom:587.220000px;}
+.y2{bottom:587.437000px;}
+.yb5{bottom:600.655000px;}
+.ydb{bottom:601.193000px;}
+.y45{bottom:601.612000px;}
+.yda{bottom:602.987000px;}
+.y115{bottom:603.110000px;}
+.y81{bottom:615.966000px;}
+.y112{bottom:616.873000px;}
+.yb4{bottom:617.990000px;}
+.y44{bottom:618.947000px;}
+.y114{bottom:620.445000px;}
+.y10e{bottom:620.815000px;}
+.yd9{bottom:623.310000px;}
+.y111{bottom:623.912000px;}
+.yd8{bottom:627.295000px;}
+.y110{bottom:630.511000px;}
+.yd7{bottom:631.280000px;}
+.y1{bottom:635.657000px;}
+.y113{bottom:637.780000px;}
+.yb3{bottom:643.295000px;}
+.y42{bottom:643.829000px;}
+.y41{bottom:645.622000px;}
+.yd6{bottom:645.888000px;}
+.yd5{bottom:647.681000px;}
+.y10f{bottom:649.869000px;}
+.y80{bottom:659.567000px;}
+.y37{bottom:659.678000px;}
+.y3e{bottom:662.957000px;}
+.y10b{bottom:663.376000px;}
+.y40{bottom:663.953000px;}
+.yd4{bottom:666.211000px;}
+.y36{bottom:666.718000px;}
+.y3d{bottom:666.942000px;}
+.yd3{bottom:668.005000px;}
+.yb2{bottom:668.600000px;}
+.y3f{bottom:669.931000px;}
+.y3c{bottom:670.927000px;}
+.y35{bottom:673.317000px;}
+.y43{bottom:673.520000px;}
+.y0{bottom:675.109000px;}
+.y7f{bottom:676.902000px;}
+.y108{bottom:677.139000px;}
+.y34{bottom:679.916000px;}
+.y10a{bottom:680.711000px;}
+.y103{bottom:681.082000px;}
+.y3b{bottom:681.549000px;}
+.y3a{bottom:683.342000px;}
+.y107{bottom:684.178000px;}
+.yb1{bottom:685.935000px;}
+.y104{bottom:686.019000px;}
+.y33{bottom:686.516000px;}
+.y10d{bottom:690.777000px;}
+.y106{bottom:690.778000px;}
+.y32{bottom:693.115000px;}
+.y7e{bottom:694.237000px;}
+.y109{bottom:698.046000px;}
+.y39{bottom:698.884000px;}
+.y38{bottom:700.677000px;}
+.y10c{bottom:710.135000px;}
+.y105{bottom:710.136000px;}
+.y7d{bottom:711.572000px;}
+.y31{bottom:712.473000px;}
+.yb0{bottom:715.912000px;}
+.yaf{bottom:724.741000px;}
+.yad{bottom:727.114000px;}
+.y30{bottom:728.907000px;}
+.yae{bottom:733.247000px;}
+.y2f{bottom:765.769000px;}
+.h7{height:2.023761px;}
+.h8{height:23.328455px;}
+.h4{height:24.483329px;}
+.ha{height:24.505104px;}
+.h5{height:31.104324px;}
+.h9{height:32.600147px;}
+.h6{height:32.644142px;}
+.h3{height:33.474560px;}
+.hd{height:34.526618px;}
+.h2{height:40.169360px;}
+.hb{height:48.203120px;}
+.h1{height:57.855000px;}
+.hc{height:286.500000px;}
+.he{height:568.500000px;}
+.h0{height:841.890000px;}
+.w2{width:8.000000px;}
+.w1{width:255.500000px;}
+.w0{width:595.276000px;}
+.x3{left:70.866000px;}
+.x6e{left:78.804000px;}
+.x6f{left:85.597000px;}
+.x2{left:88.425000px;}
+.x81{left:90.451000px;}
+.x4{left:102.606000px;}
+.x5{left:106.708000px;}
+.x6{left:110.558000px;}
+.x78{left:113.707000px;}
+.x79{left:121.406000px;}
+.x7{left:127.983000px;}
+.x91{left:132.973000px;}
+.x92{left:140.305000px;}
+.x85{left:151.191000px;}
+.x8a{left:155.679000px;}
+.x86{left:158.111000px;}
+.x82{left:160.540000px;}
+.x8b{left:162.410000px;}
+.x55{left:166.675000px;}
+.x8c{left:175.265000px;}
+.x16{left:177.339000px;}
+.x17{left:181.441000px;}
+.x83{left:185.525000px;}
+.x87{left:188.672000px;}
+.x84{left:190.399000px;}
+.x8{left:192.716000px;}
+.x56{left:193.971000px;}
+.x8d{left:196.515000px;}
+.x57{left:201.304000px;}
+.x88{left:203.069000px;}
+.x0{left:208.190000px;}
+.x18{left:210.273000px;}
+.x37{left:215.643000px;}
+.x66{left:217.068000px;}
+.x2f{left:218.439000px;}
+.x25{left:222.247000px;}
+.x30{left:224.967000px;}
+.x9{left:229.380000px;}
+.xa{left:233.483000px;}
+.x31{left:235.630000px;}
+.xb{left:237.332000px;}
+.x4d{left:239.118000px;}
+.x32{left:241.667000px;}
+.x38{left:242.796000px;}
+.x26{left:244.300000px;}
+.x8e{left:246.401000px;}
+.x33{left:248.002000px;}
+.x39{left:249.324000px;}
+.x27{left:250.635000px;}
+.xc{left:251.746000px;}
+.x1{left:253.452000px;}
+.x58{left:254.804000px;}
+.x19{left:256.801000px;}
+.x53{left:259.577000px;}
+.x1a{left:261.914000px;}
+.x34{left:264.144000px;}
+.x67{left:265.432000px;}
+.xd{left:267.601000px;}
+.x3a{left:269.134000px;}
+.x4c{left:271.783000px;}
+.xe{left:272.795000px;}
+.x1b{left:274.454000px;}
+.x28{left:276.266000px;}
+.x3c{left:277.401000px;}
+.x54{left:279.520000px;}
+.x35{left:280.844000px;}
+.x29{left:282.303000px;}
+.x7e{left:283.421000px;}
+.x64{left:284.857000px;}
+.x36{left:287.179000px;}
+.x2a{left:288.638000px;}
+.x46{left:289.649000px;}
+.xf{left:291.481000px;}
+.x4e{left:293.003000px;}
+.x10{left:296.355000px;}
+.x3b{left:297.980000px;}
+.x50{left:299.204000px;}
+.x68{left:300.954000px;}
+.x65{left:303.173000px;}
+.x51{left:305.539000px;}
+.x59{left:306.762000px;}
+.x3d{left:308.992000px;}
+.x62{left:312.296000px;}
+.x1c{left:313.298000px;}
+.x52{left:315.801000px;}
+.x3e{left:317.493000px;}
+.x1d{left:319.586000px;}
+.x5a{left:322.538000px;}
+.x47{left:324.482000px;}
+.x1e{left:325.791000px;}
+.x2b{left:327.136000px;}
+.x11{left:328.853000px;}
+.x48{left:330.519000px;}
+.x3f{left:331.689000px;}
+.x12{left:333.726000px;}
+.x89{left:334.985000px;}
+.x49{left:336.567000px;}
+.x2c{left:337.799000px;}
+.x4f{left:339.914000px;}
+.x5b{left:341.876000px;}
+.x2d{left:343.836000px;}
+.x63{left:345.519000px;}
+.x40{left:346.528000px;}
+.x5c{left:349.448000px;}
+.x2e{left:351.930000px;}
+.x1f{left:353.090000px;}
+.x41{left:356.488000px;}
+.x20{left:361.010000px;}
+.x4a{left:363.238000px;}
+.x42{left:364.408000px;}
+.x22{left:365.664000px;}
+.x21{left:368.123000px;}
+.x4b{left:369.741000px;}
+.x43{left:370.912000px;}
+.x7f{left:372.150000px;}
+.x23{left:373.584000px;}
+.x44{left:376.373000px;}
+.x69{left:378.052000px;}
+.x8f{left:379.589000px;}
+.x24{left:382.085000px;}
+.x45{left:384.874000px;}
+.x13{left:387.707000px;}
+.x90{left:390.879000px;}
+.x14{left:393.755000px;}
+.x15{left:397.604000px;}
+.x5d{left:401.405000px;}
+.x5e{left:407.933000px;}
+.x5f{left:417.182000px;}
+.x60{left:425.683000px;}
+.x80{left:429.279000px;}
+.x7a{left:431.336000px;}
+.x6a{left:433.379000px;}
+.x7b{left:436.209000px;}
+.x6b{left:437.481000px;}
+.x6c{left:445.384000px;}
+.x6d{left:454.349000px;}
+.x7c{left:463.789000px;}
+.x7d{left:473.488000px;}
+.x70{left:479.221000px;}
+.x71{left:484.095000px;}
+.x72{left:491.244000px;}
+.x73{left:497.287000px;}
+.x61{left:515.797000px;}
+.x74{left:517.303000px;}
+.x75{left:521.523000px;}
+.x76{left:525.372000px;}
+.x77{left:538.227000px;}
+@media print{
+.v0{vertical-align:0.000000pt;}
+.ls0{letter-spacing:0.000000pt;}
+.ws0{word-spacing:0.000000pt;}
+._0{margin-left:-8.595600pt;}
+._1d{margin-left:-5.842427pt;}
+._4{margin-left:-4.335753pt;}
+._1{margin-left:-1.763200pt;}
+._12{width:1.530266pt;}
+._d{width:3.532819pt;}
+._a{width:5.274855pt;}
+._10{width:7.225002pt;}
+._e{width:9.214868pt;}
+._7{width:11.708797pt;}
+._18{width:14.563062pt;}
+._9{width:16.059102pt;}
+._c{width:17.853099pt;}
+._11{width:19.233732pt;}
+._5{width:21.551241pt;}
+._3{width:22.953920pt;}
+._8{width:24.852417pt;}
+._b{width:26.488766pt;}
+._19{width:27.905620pt;}
+._13{width:29.415962pt;}
+._6{width:31.554628pt;}
+._2{width:34.382400pt;}
+._17{width:39.063424pt;}
+._1a{width:41.046706pt;}
+._1b{width:48.413163pt;}
+._f{width:53.133093pt;}
+._16{width:54.481926pt;}
+._15{width:57.612593pt;}
+._1c{width:74.263222pt;}
+._1e{width:95.380726pt;}
+._14{width:882.946289pt;}
+.fs4{font-size:43.995200pt;}
+.fs6{font-size:58.181867pt;}
+.fs3{font-size:58.659733pt;}
+.fs2{font-size:63.761067pt;}
+.fs1{font-size:76.513067pt;}
+.fs5{font-size:91.815467pt;}
+.fs0{font-size:110.200000pt;}
+.y2d{bottom:162.205333pt;}
+.yaa{bottom:197.872000pt;}
+.yab{bottom:198.118667pt;}
+.ya9{bottom:199.664000pt;}
+.y102{bottom:201.545333pt;}
+.yac{bottom:202.000000pt;}
+.ya7{bottom:202.056000pt;}
+.ya8{bottom:208.638667pt;}
+.y7c{bottom:211.946667pt;}
+.y2e{bottom:212.000000pt;}
+.yff{bottom:219.896000pt;}
+.y101{bottom:224.658667pt;}
+.yfb{bottom:225.153333pt;}
+.yd2{bottom:225.169333pt;}
+.yfe{bottom:229.281333pt;}
+.y7b{bottom:235.060000pt;}
+.yfd{bottom:238.081333pt;}
+.y2c{bottom:241.793333pt;}
+.y2b{bottom:244.185333pt;}
+.y100{bottom:247.772000pt;}
+.yd1{bottom:248.281333pt;}
+.ya6{bottom:248.282667pt;}
+.y7a{bottom:258.173333pt;}
+.yfc{bottom:263.892000pt;}
+.yd0{bottom:269.004000pt;}
+.yfa{bottom:269.862667pt;}
+.y2a{bottom:271.282667pt;}
+.ycf{bottom:271.394667pt;}
+.y29{bottom:276.596000pt;}
+.y79{bottom:281.286667pt;}
+.y28{bottom:281.909333pt;}
+.ya5{bottom:284.334667pt;}
+.ya4{bottom:286.725333pt;}
+.yce{bottom:289.528000pt;}
+.ycd{bottom:290.572000pt;}
+.ycb{bottom:294.508000pt;}
+.ycc{bottom:300.294667pt;}
+.y27{bottom:301.386667pt;}
+.yf9{bottom:303.194667pt;}
+.y26{bottom:303.777333pt;}
+.yf8{bottom:305.585333pt;}
+.yc9{bottom:315.230667pt;}
+.yc8{bottom:317.621333pt;}
+.y78{bottom:317.684000pt;}
+.yca{bottom:323.408000pt;}
+.ya3{bottom:325.168000pt;}
+.y25{bottom:328.484000pt;}
+.y24{bottom:330.876000pt;}
+.yf7{bottom:338.426667pt;}
+.y77{bottom:340.797333pt;}
+.yf6{bottom:340.817333pt;}
+.ya1{bottom:345.890667pt;}
+.ya0{bottom:348.281333pt;}
+.yc7{bottom:351.184000pt;}
+.yc6{bottom:353.576000pt;}
+.ya2{bottom:354.068000pt;}
+.y9f{bottom:371.394667pt;}
+.yf5{bottom:373.658667pt;}
+.yf4{bottom:376.049333pt;}
+.y76{bottom:377.193333pt;}
+.yc5{bottom:389.529333pt;}
+.y9e{bottom:392.117333pt;}
+.y23{bottom:393.042667pt;}
+.y9d{bottom:394.508000pt;}
+.y75{bottom:400.306667pt;}
+.yf3{bottom:408.890667pt;}
+.yf2{bottom:411.281333pt;}
+.yc4{bottom:412.642667pt;}
+.y9c{bottom:417.621333pt;}
+.y74{bottom:423.420000pt;}
+.y22{bottom:431.370667pt;}
+.y9b{bottom:440.734667pt;}
+.yc2{bottom:446.382667pt;}
+.yf1{bottom:447.004000pt;}
+.yc3{bottom:452.965333pt;}
+.y73{bottom:454.420000pt;}
+.y6f{bottom:456.461333pt;}
+.y6e{bottom:458.853333pt;}
+.y6c{bottom:467.397333pt;}
+.yc1{bottom:469.496000pt;}
+.y6b{bottom:469.788000pt;}
+.yf0{bottom:470.116000pt;}
+.yee{bottom:470.117333pt;}
+.y9a{bottom:475.629333pt;}
+.yef{bottom:475.902667pt;}
+.y6d{bottom:480.580000pt;}
+.y72{bottom:483.030667pt;}
+.y71{bottom:485.964000pt;}
+.y21{bottom:489.592000pt;}
+.yed{bottom:492.056000pt;}
+.yc0{bottom:492.609333pt;}
+.y70{bottom:495.328000pt;}
+.y99{bottom:498.741333pt;}
+.y6a{bottom:508.161333pt;}
+.yea{bottom:510.406667pt;}
+.y20{bottom:512.705333pt;}
+.y69{bottom:513.474667pt;}
+.yec{bottom:515.169333pt;}
+.ye6{bottom:515.664000pt;}
+.ybf{bottom:515.722667pt;}
+.y68{bottom:518.788000pt;}
+.ye9{bottom:519.792000pt;}
+.y98{bottom:521.854667pt;}
+.ye8{bottom:528.590667pt;}
+.y67{bottom:535.276000pt;}
+.y1f{bottom:535.818667pt;}
+.y66{bottom:537.666667pt;}
+.yeb{bottom:538.282667pt;}
+.y63{bottom:546.210667pt;}
+.y62{bottom:548.601333pt;}
+.ybe{bottom:549.462667pt;}
+.ye7{bottom:554.401333pt;}
+.y97{bottom:554.813333pt;}
+.y94{bottom:557.204000pt;}
+.y65{bottom:557.261333pt;}
+.y64{bottom:559.652000pt;}
+.ye5{bottom:560.373333pt;}
+.y1e{bottom:568.860000pt;}
+.y1d{bottom:571.250667pt;}
+.ybd{bottom:572.574667pt;}
+.y91{bottom:575.553333pt;}
+.y61{bottom:576.020000pt;}
+.y96{bottom:577.925333pt;}
+.y60{bottom:578.412000pt;}
+.y93{bottom:580.317333pt;}
+.y8d{bottom:580.810667pt;}
+.ye4{bottom:583.486667pt;}
+.y90{bottom:584.940000pt;}
+.y5d{bottom:586.954667pt;}
+.y5c{bottom:589.346667pt;}
+.y17{bottom:591.634667pt;}
+.y8f{bottom:593.738667pt;}
+.y1c{bottom:594.364000pt;}
+.y13{bottom:594.501333pt;}
+.y12{bottom:596.892000pt;}
+.y5f{bottom:597.746667pt;}
+.y1b{bottom:599.677333pt;}
+.y5e{bottom:600.137333pt;}
+.y16{bottom:601.020000pt;}
+.y95{bottom:601.038667pt;}
+.y92{bottom:603.430667pt;}
+.y1a{bottom:604.990667pt;}
+.ye3{bottom:606.600000pt;}
+.ybc{bottom:606.758667pt;}
+.y15{bottom:609.820000pt;}
+.y19{bottom:619.153333pt;}
+.y8e{bottom:619.549333pt;}
+.y18{bottom:621.545333pt;}
+.ye2{bottom:629.713333pt;}
+.ybb{bottom:629.870667pt;}
+.y5b{bottom:630.030667pt;}
+.y5a{bottom:632.422667pt;}
+.y14{bottom:635.630667pt;}
+.y8c{bottom:640.850667pt;}
+.ye1{bottom:652.826667pt;}
+.y11{bottom:656.658667pt;}
+.y10{bottom:659.049333pt;}
+.yba{bottom:663.610667pt;}
+.y58{bottom:665.598667pt;}
+.y57{bottom:667.989333pt;}
+.ye0{bottom:675.940000pt;}
+.y8b{bottom:676.200000pt;}
+.yc{bottom:685.944000pt;}
+.y4d{bottom:686.730667pt;}
+.yf{bottom:687.912000pt;}
+.ya{bottom:688.405333pt;}
+.ye{bottom:690.302667pt;}
+.y9{bottom:690.797333pt;}
+.y56{bottom:691.102667pt;}
+.y54{bottom:692.430667pt;}
+.y88{bottom:694.549333pt;}
+.y4c{bottom:696.117333pt;}
+.y53{bottom:696.416000pt;}
+.yb9{bottom:697.350667pt;}
+.yb{bottom:697.380000pt;}
+.ydf{bottom:699.053333pt;}
+.y8a{bottom:699.313333pt;}
+.y84{bottom:699.806667pt;}
+.y52{bottom:700.401333pt;}
+.y55{bottom:701.729333pt;}
+.y87{bottom:703.934667pt;}
+.y4b{bottom:704.916000pt;}
+.y59{bottom:705.186667pt;}
+.yd{bottom:707.537333pt;}
+.y86{bottom:712.734667pt;}
+.y4a{bottom:713.714667pt;}
+.y8{bottom:713.910667pt;}
+.y51{bottom:715.892000pt;}
+.y50{bottom:718.282667pt;}
+.y89{bottom:722.425333pt;}
+.y49{bottom:722.514667pt;}
+.y48{bottom:731.313333pt;}
+.y7{bottom:731.373333pt;}
+.yb8{bottom:731.533333pt;}
+.yde{bottom:734.029333pt;}
+.y5{bottom:734.632000pt;}
+.y4{bottom:737.024000pt;}
+.y85{bottom:738.545333pt;}
+.y4f{bottom:739.005333pt;}
+.y4e{bottom:741.396000pt;}
+.y6{bottom:742.809333pt;}
+.yb7{bottom:754.646667pt;}
+.y47{bottom:757.124000pt;}
+.y83{bottom:759.846667pt;}
+.y3{bottom:760.137333pt;}
+.ydd{bottom:766.614667pt;}
+.ydc{bottom:769.005333pt;}
+.yb6{bottom:777.760000pt;}
+.y46{bottom:779.036000pt;}
+.y82{bottom:782.960000pt;}
+.y2{bottom:783.249333pt;}
+.yb5{bottom:800.873333pt;}
+.ydb{bottom:801.590667pt;}
+.y45{bottom:802.149333pt;}
+.yda{bottom:803.982667pt;}
+.y115{bottom:804.146667pt;}
+.y81{bottom:821.288000pt;}
+.y112{bottom:822.497333pt;}
+.yb4{bottom:823.986667pt;}
+.y44{bottom:825.262667pt;}
+.y114{bottom:827.260000pt;}
+.y10e{bottom:827.753333pt;}
+.yd9{bottom:831.080000pt;}
+.y111{bottom:831.882667pt;}
+.yd8{bottom:836.393333pt;}
+.y110{bottom:840.681333pt;}
+.yd7{bottom:841.706667pt;}
+.y1{bottom:847.542667pt;}
+.y113{bottom:850.373333pt;}
+.yb3{bottom:857.726667pt;}
+.y42{bottom:858.438667pt;}
+.y41{bottom:860.829333pt;}
+.yd6{bottom:861.184000pt;}
+.yd5{bottom:863.574667pt;}
+.y10f{bottom:866.492000pt;}
+.y80{bottom:879.422667pt;}
+.y37{bottom:879.570667pt;}
+.y3e{bottom:883.942667pt;}
+.y10b{bottom:884.501333pt;}
+.y40{bottom:885.270667pt;}
+.yd4{bottom:888.281333pt;}
+.y36{bottom:888.957333pt;}
+.y3d{bottom:889.256000pt;}
+.yd3{bottom:890.673333pt;}
+.yb2{bottom:891.466667pt;}
+.y3f{bottom:893.241333pt;}
+.y3c{bottom:894.569333pt;}
+.y35{bottom:897.756000pt;}
+.y43{bottom:898.026667pt;}
+.y0{bottom:900.145333pt;}
+.y7f{bottom:902.536000pt;}
+.y108{bottom:902.852000pt;}
+.y34{bottom:906.554667pt;}
+.y10a{bottom:907.614667pt;}
+.y103{bottom:908.109333pt;}
+.y3b{bottom:908.732000pt;}
+.y3a{bottom:911.122667pt;}
+.y107{bottom:912.237333pt;}
+.yb1{bottom:914.580000pt;}
+.y104{bottom:914.692000pt;}
+.y33{bottom:915.354667pt;}
+.y10d{bottom:921.036000pt;}
+.y106{bottom:921.037333pt;}
+.y32{bottom:924.153333pt;}
+.y7e{bottom:925.649333pt;}
+.y109{bottom:930.728000pt;}
+.y39{bottom:931.845333pt;}
+.y38{bottom:934.236000pt;}
+.y10c{bottom:946.846667pt;}
+.y105{bottom:946.848000pt;}
+.y7d{bottom:948.762667pt;}
+.y31{bottom:949.964000pt;}
+.yb0{bottom:954.549333pt;}
+.yaf{bottom:966.321333pt;}
+.yad{bottom:969.485333pt;}
+.y30{bottom:971.876000pt;}
+.yae{bottom:977.662667pt;}
+.y2f{bottom:1021.025333pt;}
+.h7{height:2.698348pt;}
+.h8{height:31.104606pt;}
+.h4{height:32.644438pt;}
+.ha{height:32.673471pt;}
+.h5{height:41.472431pt;}
+.h9{height:43.466862pt;}
+.h6{height:43.525522pt;}
+.h3{height:44.632747pt;}
+.hd{height:46.035490pt;}
+.h2{height:53.559147pt;}
+.hb{height:64.270827pt;}
+.h1{height:77.140000pt;}
+.hc{height:382.000000pt;}
+.he{height:758.000000pt;}
+.h0{height:1122.520000pt;}
+.w2{width:10.666667pt;}
+.w1{width:340.666667pt;}
+.w0{width:793.701333pt;}
+.x3{left:94.488000pt;}
+.x6e{left:105.072000pt;}
+.x6f{left:114.129333pt;}
+.x2{left:117.900000pt;}
+.x81{left:120.601333pt;}
+.x4{left:136.808000pt;}
+.x5{left:142.277333pt;}
+.x6{left:147.410667pt;}
+.x78{left:151.609333pt;}
+.x79{left:161.874667pt;}
+.x7{left:170.644000pt;}
+.x91{left:177.297333pt;}
+.x92{left:187.073333pt;}
+.x85{left:201.588000pt;}
+.x8a{left:207.572000pt;}
+.x86{left:210.814667pt;}
+.x82{left:214.053333pt;}
+.x8b{left:216.546667pt;}
+.x55{left:222.233333pt;}
+.x8c{left:233.686667pt;}
+.x16{left:236.452000pt;}
+.x17{left:241.921333pt;}
+.x83{left:247.366667pt;}
+.x87{left:251.562667pt;}
+.x84{left:253.865333pt;}
+.x8{left:256.954667pt;}
+.x56{left:258.628000pt;}
+.x8d{left:262.020000pt;}
+.x57{left:268.405333pt;}
+.x88{left:270.758667pt;}
+.x0{left:277.586667pt;}
+.x18{left:280.364000pt;}
+.x37{left:287.524000pt;}
+.x66{left:289.424000pt;}
+.x2f{left:291.252000pt;}
+.x25{left:296.329333pt;}
+.x30{left:299.956000pt;}
+.x9{left:305.840000pt;}
+.xa{left:311.310667pt;}
+.x31{left:314.173333pt;}
+.xb{left:316.442667pt;}
+.x4d{left:318.824000pt;}
+.x32{left:322.222667pt;}
+.x38{left:323.728000pt;}
+.x26{left:325.733333pt;}
+.x8e{left:328.534667pt;}
+.x33{left:330.669333pt;}
+.x39{left:332.432000pt;}
+.x27{left:334.180000pt;}
+.xc{left:335.661333pt;}
+.x1{left:337.936000pt;}
+.x58{left:339.738667pt;}
+.x19{left:342.401333pt;}
+.x53{left:346.102667pt;}
+.x1a{left:349.218667pt;}
+.x34{left:352.192000pt;}
+.x67{left:353.909333pt;}
+.xd{left:356.801333pt;}
+.x3a{left:358.845333pt;}
+.x4c{left:362.377333pt;}
+.xe{left:363.726667pt;}
+.x1b{left:365.938667pt;}
+.x28{left:368.354667pt;}
+.x3c{left:369.868000pt;}
+.x54{left:372.693333pt;}
+.x35{left:374.458667pt;}
+.x29{left:376.404000pt;}
+.x7e{left:377.894667pt;}
+.x64{left:379.809333pt;}
+.x36{left:382.905333pt;}
+.x2a{left:384.850667pt;}
+.x46{left:386.198667pt;}
+.xf{left:388.641333pt;}
+.x4e{left:390.670667pt;}
+.x10{left:395.140000pt;}
+.x3b{left:397.306667pt;}
+.x50{left:398.938667pt;}
+.x68{left:401.272000pt;}
+.x65{left:404.230667pt;}
+.x51{left:407.385333pt;}
+.x59{left:409.016000pt;}
+.x3d{left:411.989333pt;}
+.x62{left:416.394667pt;}
+.x1c{left:417.730667pt;}
+.x52{left:421.068000pt;}
+.x3e{left:423.324000pt;}
+.x1d{left:426.114667pt;}
+.x5a{left:430.050667pt;}
+.x47{left:432.642667pt;}
+.x1e{left:434.388000pt;}
+.x2b{left:436.181333pt;}
+.x11{left:438.470667pt;}
+.x48{left:440.692000pt;}
+.x3f{left:442.252000pt;}
+.x12{left:444.968000pt;}
+.x89{left:446.646667pt;}
+.x49{left:448.756000pt;}
+.x2c{left:450.398667pt;}
+.x4f{left:453.218667pt;}
+.x5b{left:455.834667pt;}
+.x2d{left:458.448000pt;}
+.x63{left:460.692000pt;}
+.x40{left:462.037333pt;}
+.x5c{left:465.930667pt;}
+.x2e{left:469.240000pt;}
+.x1f{left:470.786667pt;}
+.x41{left:475.317333pt;}
+.x20{left:481.346667pt;}
+.x4a{left:484.317333pt;}
+.x42{left:485.877333pt;}
+.x22{left:487.552000pt;}
+.x21{left:490.830667pt;}
+.x4b{left:492.988000pt;}
+.x43{left:494.549333pt;}
+.x7f{left:496.200000pt;}
+.x23{left:498.112000pt;}
+.x44{left:501.830667pt;}
+.x69{left:504.069333pt;}
+.x8f{left:506.118667pt;}
+.x24{left:509.446667pt;}
+.x45{left:513.165333pt;}
+.x13{left:516.942667pt;}
+.x90{left:521.172000pt;}
+.x14{left:525.006667pt;}
+.x15{left:530.138667pt;}
+.x5d{left:535.206667pt;}
+.x5e{left:543.910667pt;}
+.x5f{left:556.242667pt;}
+.x60{left:567.577333pt;}
+.x80{left:572.372000pt;}
+.x7a{left:575.114667pt;}
+.x6a{left:577.838667pt;}
+.x7b{left:581.612000pt;}
+.x6b{left:583.308000pt;}
+.x6c{left:593.845333pt;}
+.x6d{left:605.798667pt;}
+.x7c{left:618.385333pt;}
+.x7d{left:631.317333pt;}
+.x70{left:638.961333pt;}
+.x71{left:645.460000pt;}
+.x72{left:654.992000pt;}
+.x73{left:663.049333pt;}
+.x61{left:687.729333pt;}
+.x74{left:689.737333pt;}
+.x75{left:695.364000pt;}
+.x76{left:700.496000pt;}
+.x77{left:717.636000pt;}
+}
+</style>
+<script>
+/*
+ Copyright 2012 Mozilla Foundation 
+ Copyright 2013 Lu Wang <coolwanglu@gmail.com>
+ Apachine License Version 2.0 
+*/
+(function(){function b(a,b,e,f){var c=(a.className||"").split(/\s+/g);""===c[0]&&c.shift();var d=c.indexOf(b);0>d&&e&&c.push(b);0<=d&&f&&c.splice(d,1);a.className=c.join(" ");return 0<=d}if(!("classList"in document.createElement("div"))){var e={add:function(a){b(this.element,a,!0,!1)},contains:function(a){return b(this.element,a,!1,!1)},remove:function(a){b(this.element,a,!1,!0)},toggle:function(a){b(this.element,a,!0,!0)}};Object.defineProperty(HTMLElement.prototype,"classList",{get:function(){if(this._classList)return this._classList;
+var a=Object.create(e,{element:{value:this,writable:!1,enumerable:!0}});Object.defineProperty(this,"_classList",{value:a,writable:!1,enumerable:!1});return a},enumerable:!0})}})();
+</script>
+<script>
+(function(){/*
+ pdf2htmlEX.js: Core UI functions for pdf2htmlEX 
+ Copyright 2012,2013 Lu Wang <coolwanglu@gmail.com> and other contributors 
+ https://github.com/coolwanglu/pdf2htmlEX/blob/master/share/LICENSE 
+*/
+var pdf2htmlEX=window.pdf2htmlEX=window.pdf2htmlEX||{},CSS_CLASS_NAMES={page_frame:"pf",page_content_box:"pc",page_data:"pi",background_image:"bi",link:"l",input_radio:"ir",__dummy__:"no comma"},DEFAULT_CONFIG={container_id:"page-container",sidebar_id:"sidebar",outline_id:"outline",loading_indicator_cls:"loading-indicator",preload_pages:3,render_timeout:100,scale_step:0.9,key_handler:!0,hashchange_handler:!0,view_history_handler:!0,__dummy__:"no comma"},EPS=1E-6;
+function invert(a){var b=a[0]*a[3]-a[1]*a[2];return[a[3]/b,-a[1]/b,-a[2]/b,a[0]/b,(a[2]*a[5]-a[3]*a[4])/b,(a[1]*a[4]-a[0]*a[5])/b]}function transform(a,b){return[a[0]*b[0]+a[2]*b[1]+a[4],a[1]*b[0]+a[3]*b[1]+a[5]]}function get_page_number(a){return parseInt(a.getAttribute("data-page-no"),16)}function disable_dragstart(a){for(var b=0,c=a.length;b<c;++b)a[b].addEventListener("dragstart",function(){return!1},!1)}
+function clone_and_extend_objs(a){for(var b={},c=0,e=arguments.length;c<e;++c){var h=arguments[c],d;for(d in h)h.hasOwnProperty(d)&&(b[d]=h[d])}return b}
+function Page(a){if(a){this.shown=this.loaded=!1;this.page=a;this.num=get_page_number(a);this.original_height=a.clientHeight;this.original_width=a.clientWidth;var b=a.getElementsByClassName(CSS_CLASS_NAMES.page_content_box)[0];b&&(this.content_box=b,this.original_scale=this.cur_scale=this.original_height/b.clientHeight,this.page_data=JSON.parse(a.getElementsByClassName(CSS_CLASS_NAMES.page_data)[0].getAttribute("data-data")),this.ctm=this.page_data.ctm,this.ictm=invert(this.ctm),this.loaded=!0)}}
+Page.prototype={hide:function(){this.loaded&&this.shown&&(this.content_box.classList.remove("opened"),this.shown=!1)},show:function(){this.loaded&&!this.shown&&(this.content_box.classList.add("opened"),this.shown=!0)},rescale:function(a){this.cur_scale=0===a?this.original_scale:a;this.loaded&&(a=this.content_box.style,a.msTransform=a.webkitTransform=a.transform="scale("+this.cur_scale.toFixed(3)+")");a=this.page.style;a.height=this.original_height*this.cur_scale+"px";a.width=this.original_width*this.cur_scale+
+"px"},view_position:function(){var a=this.page,b=a.parentNode;return[b.scrollLeft-a.offsetLeft-a.clientLeft,b.scrollTop-a.offsetTop-a.clientTop]},height:function(){return this.page.clientHeight},width:function(){return this.page.clientWidth}};function Viewer(a){this.config=clone_and_extend_objs(DEFAULT_CONFIG,0<arguments.length?a:{});this.pages_loading=[];this.init_before_loading_content();var b=this;document.addEventListener("DOMContentLoaded",function(){b.init_after_loading_content()},!1)}
+Viewer.prototype={scale:1,cur_page_idx:0,first_page_idx:0,init_before_loading_content:function(){this.pre_hide_pages()},initialize_radio_button:function(){for(var a=document.getElementsByClassName(CSS_CLASS_NAMES.input_radio),b=0;b<a.length;b++)a[b].addEventListener("click",function(){this.classList.toggle("checked")})},init_after_loading_content:function(){this.sidebar=document.getElementById(this.config.sidebar_id);this.outline=document.getElementById(this.config.outline_id);this.container=document.getElementById(this.config.container_id);
+this.loading_indicator=document.getElementsByClassName(this.config.loading_indicator_cls)[0];for(var a=!0,b=this.outline.childNodes,c=0,e=b.length;c<e;++c)if("ul"===b[c].nodeName.toLowerCase()){a=!1;break}a||this.sidebar.classList.add("opened");this.find_pages();if(0!=this.pages.length){disable_dragstart(document.getElementsByClassName(CSS_CLASS_NAMES.background_image));this.config.key_handler&&this.register_key_handler();var h=this;this.config.hashchange_handler&&window.addEventListener("hashchange",
+function(a){h.navigate_to_dest(document.location.hash.substring(1))},!1);this.config.view_history_handler&&window.addEventListener("popstate",function(a){a.state&&h.navigate_to_dest(a.state)},!1);this.container.addEventListener("scroll",function(){h.update_page_idx();h.schedule_render(!0)},!1);[this.container,this.outline].forEach(function(a){a.addEventListener("click",h.link_handler.bind(h),!1)});this.initialize_radio_button();this.render()}},find_pages:function(){for(var a=[],b={},c=this.container.childNodes,
+e=0,h=c.length;e<h;++e){var d=c[e];d.nodeType===Node.ELEMENT_NODE&&d.classList.contains(CSS_CLASS_NAMES.page_frame)&&(d=new Page(d),a.push(d),b[d.num]=a.length-1)}this.pages=a;this.page_map=b},load_page:function(a,b,c){var e=this.pages;if(!(a>=e.length||(e=e[a],e.loaded||this.pages_loading[a]))){var e=e.page,h=e.getAttribute("data-page-url");if(h){this.pages_loading[a]=!0;var d=e.getElementsByClassName(this.config.loading_indicator_cls)[0];"undefined"===typeof d&&(d=this.loading_indicator.cloneNode(!0),
+d.classList.add("active"),e.appendChild(d));var f=this,g=new XMLHttpRequest;g.open("GET",h,!0);g.onload=function(){if(200===g.status||0===g.status){var b=document.createElement("div");b.innerHTML=g.responseText;for(var d=null,b=b.childNodes,e=0,h=b.length;e<h;++e){var p=b[e];if(p.nodeType===Node.ELEMENT_NODE&&p.classList.contains(CSS_CLASS_NAMES.page_frame)){d=p;break}}b=f.pages[a];f.container.replaceChild(d,b.page);b=new Page(d);f.pages[a]=b;b.hide();b.rescale(f.scale);disable_dragstart(d.getElementsByClassName(CSS_CLASS_NAMES.background_image));
+f.schedule_render(!1);c&&c(b)}delete f.pages_loading[a]};g.send(null)}void 0===b&&(b=this.config.preload_pages);0<--b&&(f=this,setTimeout(function(){f.load_page(a+1,b)},0))}},pre_hide_pages:function(){var a="@media screen{."+CSS_CLASS_NAMES.page_content_box+"{display:none;}}",b=document.createElement("style");b.styleSheet?b.styleSheet.cssText=a:b.appendChild(document.createTextNode(a));document.head.appendChild(b)},render:function(){for(var a=this.container,b=a.scrollTop,c=a.clientHeight,a=b-c,b=
+b+c+c,c=this.pages,e=0,h=c.length;e<h;++e){var d=c[e],f=d.page,g=f.offsetTop+f.clientTop,f=g+f.clientHeight;g<=b&&f>=a?d.loaded?d.show():this.load_page(e):d.hide()}},update_page_idx:function(){var a=this.pages,b=a.length;if(!(2>b)){for(var c=this.container,e=c.scrollTop,c=e+c.clientHeight,h=-1,d=b,f=d-h;1<f;){var g=h+Math.floor(f/2),f=a[g].page;f.offsetTop+f.clientTop+f.clientHeight>=e?d=g:h=g;f=d-h}this.first_page_idx=d;for(var g=h=this.cur_page_idx,k=0;d<b;++d){var f=a[d].page,l=f.offsetTop+f.clientTop,
+f=f.clientHeight;if(l>c)break;f=(Math.min(c,l+f)-Math.max(e,l))/f;if(d===h&&Math.abs(f-1)<=EPS){g=h;break}f>k&&(k=f,g=d)}this.cur_page_idx=g}},schedule_render:function(a){if(void 0!==this.render_timer){if(!a)return;clearTimeout(this.render_timer)}var b=this;this.render_timer=setTimeout(function(){delete b.render_timer;b.render()},this.config.render_timeout)},register_key_handler:function(){var a=this;window.addEventListener("DOMMouseScroll",function(b){if(b.ctrlKey){b.preventDefault();var c=a.container,
+e=c.getBoundingClientRect(),c=[b.clientX-e.left-c.clientLeft,b.clientY-e.top-c.clientTop];a.rescale(Math.pow(a.config.scale_step,b.detail),!0,c)}},!1);window.addEventListener("keydown",function(b){var c=!1,e=b.ctrlKey||b.metaKey,h=b.altKey;switch(b.keyCode){case 61:case 107:case 187:e&&(a.rescale(1/a.config.scale_step,!0),c=!0);break;case 173:case 109:case 189:e&&(a.rescale(a.config.scale_step,!0),c=!0);break;case 48:e&&(a.rescale(0,!1),c=!0);break;case 33:h?a.scroll_to(a.cur_page_idx-1):a.container.scrollTop-=
+a.container.clientHeight;c=!0;break;case 34:h?a.scroll_to(a.cur_page_idx+1):a.container.scrollTop+=a.container.clientHeight;c=!0;break;case 35:a.container.scrollTop=a.container.scrollHeight;c=!0;break;case 36:a.container.scrollTop=0,c=!0}c&&b.preventDefault()},!1)},rescale:function(a,b,c){var e=this.scale;this.scale=a=0===a?1:b?e*a:a;c||(c=[0,0]);b=this.container;c[0]+=b.scrollLeft;c[1]+=b.scrollTop;for(var h=this.pages,d=h.length,f=this.first_page_idx;f<d;++f){var g=h[f].page;if(g.offsetTop+g.clientTop>=
+c[1])break}g=f-1;0>g&&(g=0);var g=h[g].page,k=g.clientWidth,f=g.clientHeight,l=g.offsetLeft+g.clientLeft,m=c[0]-l;0>m?m=0:m>k&&(m=k);k=g.offsetTop+g.clientTop;c=c[1]-k;0>c?c=0:c>f&&(c=f);for(f=0;f<d;++f)h[f].rescale(a);b.scrollLeft+=m/e*a+g.offsetLeft+g.clientLeft-m-l;b.scrollTop+=c/e*a+g.offsetTop+g.clientTop-c-k;this.schedule_render(!0)},fit_width:function(){var a=this.cur_page_idx;this.rescale(this.container.clientWidth/this.pages[a].width(),!0);this.scroll_to(a)},fit_height:function(){var a=this.cur_page_idx;
+this.rescale(this.container.clientHeight/this.pages[a].height(),!0);this.scroll_to(a)},get_containing_page:function(a){for(;a;){if(a.nodeType===Node.ELEMENT_NODE&&a.classList.contains(CSS_CLASS_NAMES.page_frame)){a=get_page_number(a);var b=this.page_map;return a in b?this.pages[b[a]]:null}a=a.parentNode}return null},link_handler:function(a){var b=a.target,c=b.getAttribute("data-dest-detail");if(c){if(this.config.view_history_handler)try{var e=this.get_current_view_hash();window.history.replaceState(e,
+"","#"+e);window.history.pushState(c,"","#"+c)}catch(h){}this.navigate_to_dest(c,this.get_containing_page(b));a.preventDefault()}},navigate_to_dest:function(a,b){try{var c=JSON.parse(a)}catch(e){return}if(c instanceof Array){var h=c[0],d=this.page_map;if(h in d){for(var f=d[h],h=this.pages[f],d=2,g=c.length;d<g;++d){var k=c[d];if(null!==k&&"number"!==typeof k)return}for(;6>c.length;)c.push(null);var g=b||this.pages[this.cur_page_idx],d=g.view_position(),d=transform(g.ictm,[d[0],g.height()-d[1]]),
+g=this.scale,l=[0,0],m=!0,k=!1,n=this.scale;switch(c[1]){case "XYZ":l=[null===c[2]?d[0]:c[2]*n,null===c[3]?d[1]:c[3]*n];g=c[4];if(null===g||0===g)g=this.scale;k=!0;break;case "Fit":case "FitB":l=[0,0];k=!0;break;case "FitH":case "FitBH":l=[0,null===c[2]?d[1]:c[2]*n];k=!0;break;case "FitV":case "FitBV":l=[null===c[2]?d[0]:c[2]*n,0];k=!0;break;case "FitR":l=[c[2]*n,c[5]*n],m=!1,k=!0}if(k){this.rescale(g,!1);var p=this,c=function(a){l=transform(a.ctm,l);m&&(l[1]=a.height()-l[1]);p.scroll_to(f,l)};h.loaded?
+c(h):(this.load_page(f,void 0,c),this.scroll_to(f))}}}},scroll_to:function(a,b){var c=this.pages;if(!(0>a||a>=c.length)){c=c[a].view_position();void 0===b&&(b=[0,0]);var e=this.container;e.scrollLeft+=b[0]-c[0];e.scrollTop+=b[1]-c[1]}},get_current_view_hash:function(){var a=[],b=this.pages[this.cur_page_idx];a.push(b.num);a.push("XYZ");var c=b.view_position(),c=transform(b.ictm,[c[0],b.height()-c[1]]);a.push(c[0]/this.scale);a.push(c[1]/this.scale);a.push(this.scale);return JSON.stringify(a)}};
+pdf2htmlEX.Viewer=Viewer;})();
+</script>
+<script>
+try{
+pdf2htmlEX.defaultViewer = new pdf2htmlEX.Viewer({});
+}catch(e){}
+</script>
+<title></title>
+</head>
+<body>
+<div id="sidebar">
+<div id="outline">
+</div>
+</div>
+<div id="page-container">
+<div id="pf1" class="pf w0 h0" data-page-no="1"><div class="pc pc1 w0 h0"><div class="t m0 x0 h1 y0 ff1 fs0 fc0 sc0 ls0 ws0">F<span class="_ _0"></span>act<span class="_ _1"></span>or ing<span class="_ _2"> </span>Matricies</div><div class="t m0 x1 h2 y1 ff1 fs1 fc0 sc0 ls0 ws0">Sequoia<span class="_ _3"> </span>Sno<span class="_ _1"></span>w</div><div class="t m0 x2 h3 y2 ff2 fs2 fc0 sc0 ls0 ws0">Let’<span class="_ _4"></span>s<span class="_ _5"> </span>begin<span class="_ _5"> </span>with<span class="_ _5"> </span>some<span class="_ _5"> </span>v<span class="_ _1"></span>er y<span class="_ _5"> </span>simple<span class="_ _5"> </span>de<span class="ff3">ﬁ</span>nitions.<span class="_ _6"> </span>A<span class="_ _5"> </span>matrix<span class="_ _5"> </span>is<span class="_ _5"> </span>a<span class="_ _5"> </span>w<span class="_ _1"></span>a<span class="_ _4"></span>y<span class="_ _5"> </span>of<span class="_ _5"> </span>expr<span class="_ _1"></span>essing<span class="_ _5"> </span>comple<span class="_ _1"></span>x</div><div class="t m0 x3 h3 y3 ff2 fs2 fc0 sc0 ls0 ws0">linear<span class="_ _5"> </span>mappings<span class="_ _5"> </span>with<span class="_ _3"> </span>r<span class="_ _1"></span>espect<span class="_ _5"> </span>to<span class="_ _5"> </span>a<span class="_ _5"> </span>basis.<span class="_ _2"> </span>Let<span class="_ _5"> </span><span class="ff4 fs3">T<span class="_ _5"> </span><span class="ff5">:<span class="_ _7"> </span></span>V<span class="_ _8"> </span><span class="ff6">−<span class="_ _0"></span>→<span class="_ _7"> </span><span class="ff4">V<span class="_ _2"> </span><span class="ff2 fs2">be<span class="_ _5"> </span>a<span class="_ _5"> </span>v<span class="_ _1"></span>ect<span class="_ _1"></span>or<span class="_ _5"> </span>space<span class="_ _3"> </span>homomorphism</span></span></span></span></div><div class="t m0 x3 h3 y4 ff2 fs2 fc0 sc0 ls0 ws0">and<span class="_ _9"> </span><span class="ff5 fs3">(<span class="ff4">v</span></span></div><div class="t m0 x4 h4 y5 ff4 fs4 fc0 sc0 ls0 ws0">i</div><div class="t m0 x5 h5 y4 ff5 fs3 fc0 sc0 ls0 ws0">)</div><div class="t m0 x6 h4 y6 ff4 fs4 fc0 sc0 ls0 ws0">n</div><div class="t m0 x6 h4 y7 ff4 fs4 fc0 sc0 ls0 ws0">i<span class="_ _a"></span><span class="ff6">=<span class="ff5">1</span></span></div><div class="t m0 x7 h3 y4 ff2 fs2 fc0 sc0 ls0 ws0">a<span class="_ _9"> </span>basis<span class="_ _9"> </span>f<span class="_ _1"></span>or<span class="_ _9"> </span><span class="ff4 fs3">V<span class="_ _7"> </span></span>.<span class="_ _5"> </span>Then<span class="_ _9"> </span>the<span class="_ _9"> </span>matrix<span class="_ _9"> </span>repr<span class="_ _4"></span>esenting<span class="_ _9"> </span><span class="ff4 fs3">T<span class="_ _b"> </span></span>with<span class="_ _9"> </span>r<span class="_ _1"></span>espect<span class="_ _9"> </span>to<span class="_ _9"> </span>tha<span class="_ _1"></span>t<span class="_ _9"> </span>basis<span class="_ _9"> </span>is<span class="_ _9"> </span>de<span class="ff3">ﬁ</span>ned</div><div class="t m0 x3 h3 y8 ff2 fs2 fc0 sc0 ls0 ws0">to<span class="_ _c"> </span>be</div><div class="t m0 x8 h6 y9 ff4 fs3 fc0 sc0 ls0 ws0">M<span class="_ _a"></span><span class="ff5">(</span>T<span class="_ _d"></span><span class="ff5">,<span class="_ _a"> </span>(<span class="_ _d"></span></span>v</div><div class="t m0 x9 h4 ya ff4 fs4 fc0 sc0 ls0 ws0">i</div><div class="t m0 xa h5 y9 ff5 fs3 fc0 sc0 ls0 ws0">)</div><div class="t m0 xb h4 yb ff4 fs4 fc0 sc0 ls0 ws0">n</div><div class="t m0 xb h4 yc ff4 fs4 fc0 sc0 ls0 ws0">i<span class="_ _a"></span><span class="ff6">=<span class="ff5">1</span></span></div><div class="t m0 xc h5 y9 ff5 fs3 fc0 sc0 ls0 ws0">)<span class="_ _7"> </span><span class="ff6">=</span></div><div class="t m0 xd h7 yd ff7 fs3 fc0 sc0 ls0 ws0">h</div><div class="t m0 xe h6 ye ff4 fs3 fc0 sc0 ls0 ws0">T<span class="_ _e"> </span><span class="ff5">(</span>v</div><div class="t m0 xf h8 yf ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x10 h6 ye ff5 fs3 fc0 sc0 ls0 ws0">)<span class="_ _f"> </span><span class="ff4">T<span class="_ _e"> </span></span>(<span class="ff4">v</span></div><div class="t m0 x11 h8 yf ff5 fs4 fc0 sc0 ls0 ws0">2</div><div class="t m0 x12 h6 ye ff5 fs3 fc0 sc0 ls0 ws0">)<span class="_ _f"> </span><span class="ff6">·<span class="_ _a"> </span>·<span class="_ _10"> </span>·<span class="_ _f"> </span><span class="ff4">T<span class="_ _e"> </span></span></span>(<span class="ff4">v</span></div><div class="t m0 x13 h4 yf ff4 fs4 fc0 sc0 ls0 ws0">n</div><div class="t m0 x14 h5 ye ff5 fs3 fc0 sc0 ls0 ws0">)</div><div class="t m0 x15 h7 yd ff7 fs3 fc0 sc0 ls0 ws0">i</div><div class="t m0 x3 h3 y10 ff2 fs2 fc0 sc0 ls0 ws0">wher<span class="_ _1"></span>e<span class="_ _c"> </span>each<span class="_ _11"> </span>entr<span class="_ _12"></span>y<span class="_ _c"> </span><span class="ff4 fs3">T<span class="_ _e"> </span><span class="ff5">(<span class="_ _12"></span></span>v</span></div><div class="t m0 x16 h4 y11 ff4 fs4 fc0 sc0 ls0 ws0">i</div><div class="t m0 x17 h3 y10 ff5 fs3 fc0 sc0 ls0 ws0">)<span class="_ _c"> </span><span class="ff2 fs2">is<span class="_ _11"> </span>given<span class="_ _c"> </span>as<span class="_ _11"> </span>a<span class="_ _11"> </span>column<span class="_ _11"> </span>v<span class="_ _1"></span>ector<span class="_ _c"> </span>with<span class="_ _11"> </span>r<span class="_ _1"></span>espect<span class="_ _11"> </span>to<span class="_ _c"> </span>the<span class="_ _c"> </span>basis<span class="_ _12"></span>,</span></div><div class="t m0 x18 h6 y12 ff4 fs3 fc0 sc0 ls0 ws0">T<span class="_ _e"> </span><span class="ff5">(</span>v</div><div class="t m0 x9 h8 y13 ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 xa h9 y12 ff5 fs3 fc0 sc0 ls0 ws0">)<span class="_ _7"> </span><span class="ff6">=<span class="_ _e"> </span><span class="ff8">λ</span></span></div><div class="t m0 x19 h8 y13 ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x1a h6 y12 ff4 fs3 fc0 sc0 ls0 ws0">v</div><div class="t m0 xd h8 y13 ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x1b h9 y12 ff6 fs3 fc0 sc0 ls0 ws0">+<span class="_ _10"> </span>·<span class="_ _10"> </span>·<span class="_ _a"> </span>·<span class="_ _10"> </span>+<span class="_ _e"> </span><span class="ff8">λ</span></div><div class="t m0 x1c h4 y13 ff4 fs4 fc0 sc0 ls0 ws0">n</div><div class="t m0 x1d h6 y12 ff4 fs3 fc0 sc0 ls0 ws0">v</div><div class="t m0 x1e h4 y13 ff4 fs4 fc0 sc0 ls0 ws0">n</div><div class="t m0 x12 ha y12 ff6 fs3 fc0 sc0 ls0 ws0">7−<span class="_ _0"></span>→</div><div class="t m0 x1f h7 y14 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x1f h7 y15 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x1f h7 y16 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x1f h7 y17 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x20 h9 y18 ff8 fs3 fc0 sc0 ls0 ws0">λ</div><div class="t m0 x21 h8 y19 ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x22 h3 y1a ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x22 h3 y1b ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x22 h3 y1c ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x20 h9 y1d ff8 fs3 fc0 sc0 ls0 ws0">λ</div><div class="t m0 x21 h4 y1e ff4 fs4 fc0 sc0 ls0 ws0">n</div><div class="t m0 x23 h7 y14 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x23 h7 y15 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x23 h7 y16 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x23 h7 y17 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x24 h5 y12 ff5 fs3 fc0 sc0 ls0 ws0">.</div><div class="t m0 x2 h3 y1f ff2 fs2 fc0 sc0 ls0 ws0">There<span class="_ _c"> </span>e<span class="_ _1"></span>xists<span class="_ _c"> </span>a<span class="_ _11"> </span>v<span class="_ _1"></span>ector<span class="_ _9"> </span>space<span class="_ _11"> </span>of<span class="_ _c"> </span>matrices<span class="_ _9"> </span>ov<span class="_ _1"></span>er<span class="_ _c"> </span>a<span class="_ _c"> </span><span class="ff3">ﬁ</span>eld<span class="_ _11"> </span><span class="ff9 fs3">F<span class="_ _c"> </span></span>which<span class="_ _c"> </span>is<span class="_ _c"> </span>isomor<span class="_ _12"></span>phic<span class="_ _c"> </span>to<span class="_ _c"> </span>the<span class="_ _c"> </span>gr<span class="_ _1"></span>oup<span class="_ _c"> </span>of</div><div class="t m0 x3 h3 y20 ff2 fs2 fc0 sc0 ls0 ws0">automorphisms<span class="_ _11"> </span>ov<span class="_ _1"></span>er<span class="_ _5"> </span>a<span class="_ _11"> </span>vect<span class="_ _1"></span>or<span class="_ _11"> </span>space.<span class="_ _13"> </span>Of<span class="_ _5"> </span>course<span class="_ _11"> </span>there<span class="_ _11"> </span>ar<span class="_ _1"></span>e<span class="_ _5"> </span>other<span class="_ _11"> </span>uses<span class="_ _5"> </span>for<span class="_ _11"> </span>matrices,<span class="_ _5"> </span>one<span class="_ _5"> </span>o<span class="_ _1"></span>f<span class="_ _5"> </span>the</div><div class="t m0 x3 h3 y21 ff2 fs2 fc0 sc0 ls0 ws0">mor<span class="_ _1"></span>e<span class="_ _c"> </span>famous<span class="_ _11"> </span>was<span class="_ _11"> </span>dev<span class="_ _1"></span>eloped<span class="_ _c"> </span>by<span class="_ _c"> </span>Gauss<span class="_ _11"> </span>for<span class="_ _c"> </span>use<span class="_ _11"> </span>solving<span class="_ _c"> </span>syst<span class="_ _1"></span>ems<span class="_ _c"> </span>of<span class="_ _11"> </span>equations.</div><div class="t m0 x3 hb y22 ff1 fs5 fc0 sc0 ls0 ws0">Sol<span class="_ _1"></span>ving<span class="_ _b"> </span>Syst<span class="_ _1"></span>ems<span class="_ _b"> </span>o<span class="_ _1"></span>f<span class="_ _b"> </span>Equations</div><div class="t m0 x3 h3 y23 ff2 fs2 fc0 sc0 ls0 ws0">Consider<span class="_ _c"> </span>the<span class="_ _11"> </span>following<span class="_ _c"> </span>syst<span class="_ _1"></span>em<span class="_ _c"> </span>of<span class="_ _c"> </span>equations,</div><div class="t m0 x25 h6 y24 ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x9 h8 y25 ff5 fs4 fc0 sc0 ls0 ws0">11</div><div class="t m0 xb h6 y24 ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x26 h8 y25 ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x27 h6 y24 ff6 fs3 fc0 sc0 ls0 ws0">+<span class="_ _e"> </span><span class="ff4">a</span></div><div class="t m0 xd h8 y25 ff5 fs4 fc0 sc0 ls0 ws0">12</div><div class="t m0 x28 h6 y24 ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x29 h8 y25 ff5 fs4 fc0 sc0 ls0 ws0">2</div><div class="t m0 x2a h6 y24 ff6 fs3 fc0 sc0 ls0 ws0">+<span class="_ _10"> </span>·<span class="_ _10"> </span>·<span class="_ _a"> </span>·<span class="_ _10"> </span>+<span class="_ _e"> </span><span class="ff4">a</span></div><div class="t m0 x2b h4 y25 ff5 fs4 fc0 sc0 ls0 ws0">1<span class="ff4">n</span></div><div class="t m0 x2c h6 y24 ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x2d h4 y25 ff4 fs4 fc0 sc0 ls0 ws0">n</div><div class="t m0 x2e h6 y24 ff6 fs3 fc0 sc0 ls0 ws0">=<span class="_ _7"> </span><span class="ff4">b</span></div><div class="t m0 x21 h8 y25 ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x25 h6 y26 ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x9 h8 y27 ff5 fs4 fc0 sc0 ls0 ws0">21</div><div class="t m0 xb h6 y26 ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x26 h8 y27 ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x27 h6 y26 ff6 fs3 fc0 sc0 ls0 ws0">+<span class="_ _e"> </span><span class="ff4">a</span></div><div class="t m0 xd h8 y27 ff5 fs4 fc0 sc0 ls0 ws0">22</div><div class="t m0 x28 h6 y26 ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x29 h8 y27 ff5 fs4 fc0 sc0 ls0 ws0">2</div><div class="t m0 x2a h6 y26 ff6 fs3 fc0 sc0 ls0 ws0">+<span class="_ _10"> </span>·<span class="_ _10"> </span>·<span class="_ _a"> </span>·<span class="_ _10"> </span>+<span class="_ _e"> </span><span class="ff4">a</span></div><div class="t m0 x2b h4 y27 ff5 fs4 fc0 sc0 ls0 ws0">2<span class="ff4">n</span></div><div class="t m0 x2c h6 y26 ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x2d h4 y27 ff4 fs4 fc0 sc0 ls0 ws0">n</div><div class="t m0 x2e h6 y26 ff6 fs3 fc0 sc0 ls0 ws0">=<span class="_ _7"> </span><span class="ff4">b</span></div><div class="t m0 x21 h8 y27 ff5 fs4 fc0 sc0 ls0 ws0">2</div><div class="t m0 x10 h3 y28 ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x10 h3 y29 ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x10 h3 y2a ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x2f h6 y2b ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x30 h4 y2c ff4 fs4 fc0 sc0 ls0 ws0">n<span class="_ _12"></span><span class="ff5">1</span></div><div class="t m0 x31 h6 y2b ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x32 h8 y2c ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x33 h6 y2b ff6 fs3 fc0 sc0 ls0 ws0">+<span class="_ _e"> </span><span class="ff4">a</span></div><div class="t m0 x34 h4 y2c ff4 fs4 fc0 sc0 ls0 ws0">n<span class="_ _12"></span><span class="ff5">2</span></div><div class="t m0 x1b h6 y2b ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x35 h8 y2c ff5 fs4 fc0 sc0 ls0 ws0">2</div><div class="t m0 x36 h6 y2b ff6 fs3 fc0 sc0 ls0 ws0">+<span class="_ _10"> </span>·<span class="_ _10"> </span>·<span class="_ _a"> </span>·<span class="_ _10"> </span>+<span class="_ _e"> </span><span class="ff4">a</span></div><div class="t m0 x1e h4 y2c ff4 fs4 fc0 sc0 ls0 ws0">n<span class="_ _12"></span>n</div><div class="t m0 x2c h6 y2b ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x2d h4 y2c ff4 fs4 fc0 sc0 ls0 ws0">n</div><div class="t m0 x2e h6 y2b ff6 fs3 fc0 sc0 ls0 ws0">=<span class="_ _7"> </span><span class="ff4">b</span></div><div class="t m0 x21 h4 y2c ff4 fs4 fc0 sc0 ls0 ws0">n</div><div class="t m0 x23 h5 y2b ff5 fs3 fc0 sc0 ls0 ws0">.</div><div class="t m0 x10 h3 y2d ff2 fs2 fc0 sc0 ls0 ws0">1</div></div><div class="pi" data-data='{"ctm":[1.000000,0.000000,0.000000,1.000000,0.000000,0.000000]}'></div></div>
+<div id="pf2" class="pf w0 h0" data-page-no="2"><div class="pc pc2 w0 h0"><img class="bi xd y2e w1 hc" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAf8AAAI9CAIAAAC7W+bLAAAACXBIWXMAABYlAAAWJQFJUiTwAAAGb0lEQVR42u3csQ2AMBAEQR7Rf8tHCUCADe+ZBpAuWCwHrm24JBsAU5UWAyxoNwGA+gOg/gCoPwDqD4D6A6D+AKg/AOoPgPoDoP4AqD8A6g+A+gOg/gCoPwDqD4D6A6D+AOoPgPoDoP4AqD8A6g+A+gOg/gCoPwDqD4D6A6D+AKg/AOoPgPoDoP4AqD8A6g+A+gOoPwDqD4D6A6D+AKg/AOoPgPoDoP4AqD8A6g+A+gOg/gCoPwDqD4D6A6D+AKg/AOoPgPoDqD8A6g+A+gPQSpmgmSRGAK7rLxYAC3LzA6D+AKg/AOoPgPoDoP4AqD8A6g+A+gOg/gCoPwDqD4D6A6D+AKg/AOoPgPoDoP4AqD+A+gOg/gCoPwDqD4D6A6D+AKg/AOoPgPoDoP4AqD8A6g+A+gOg/gCoPwDqD4D6A6D+AOoPgPoDoP4AqD8A6g+A+gOg/gCoPwDqD4D6A6D+AKg/AOoPgPoDoP4AqD8A6g+A+gOg/gDqD4D6A6D+AKg/AOoPgPoDoP4AqD8A6g+A+gOg/gCoPwDqD4D6A6D+AKg/AOoPgPoDqD8A6g+A+gOg/gCoPwDqD4D6A6D+AKg/AOoPgPoDoP4AqD8A6g+A+gOg/gCoPwDqD4D6A6g/AOoPgPoDoP4AqD8A6g+A+gOg/gCoPwDqD4D6A6D+AKg/AOoPgPoDoP4AqD8A6g+g/gCoPwDqD4D6A6D+APxTDfhGEkMDOPsDMPvs72AO4OwPgPoDoP4AqD8A6g+A+gOg/gCoPwDqD4D6A6D+AKg/AOoPgPoDoP4AqD8A6g+A+gOoPwDqD4D6A6D+AKg/AOoPgPoDoP4AqD8A6g+A+gOg/gCoPwDqD4D6A6D+AKg/AOoPoP4AqD8A6g+A+gOg/gCoPwDqD4D6A6D+AKg/AOoPgPoDoP4AqD8A6g+A+gOg/gCoPwDqD6D+AKg/AOoPgPoDoP4AqD8A6g+A+gOg/gCoPwDqD4D6A6D+AKg/AOoPgPoDoP4AqD+A+gOg/gCoPwDqD4D6A6D+AKg/AOoPgPoDoP4AqD8A6g+A+gOg/gCoPwDqD4D6A6D+AKg/gPoDoP4AqD8A6g+A+gOg/gCoPwDqD4D6A6D+AKg/AOoPgPoDoP4AqD8A6g+A+gOg/gDqD4D6A6D+AKg/AOoPgPoDoP4AqD8A6g+A+gOg/gCoPwDqD4D6A6D+AKg/AOoPgPoDqL8JANQfAPUHQP0BUH8A1B8A9QdA/QFQfwDUHwD1B0D9AVB/ANQfAPUHQP0BUH8A1B8A9QdQfwDUHwD1B0D9AVB/ANQfAPUHQP0BUH8A1B8A9QdA/QFQfwDUHwD1B0D9AVB/ANQfQP0BUH8A1B8A9QdA/QFQfwDUHwD1B0D9AVB/ANQfAPUHQP0BUH8A1B8A9QdA/QFQfwDUH0D9AVB/ANQfAPUHQP0BUH8A1B8A9QdA/QFQfwDUHwD1B0D9AVB/ANQfAPUHQP0BUH8A9QdA/QFQfwDUHwD1B0D9AVB/ANQfAPUHQP0BUH8A1B8A9QdA/QFQfwDUHwD1B0D9AVB/APUHQP0BUH8A1B8A9QdA/QFQfwDUHwD1B0D9AVB/ANQfAPUHQP0BUH8A1B8A9QdA/QHUHwD1B0D9AVB/ANQfAPUHQP0BUH8A1B8A9QdA/QFQfwDUHwD1B0D9AVB/ANQfAPUHUH8TAKg/AOoPgPoDoP4AqD8A6g+A+gOg/gCoPwDqD4D6A6D+AKg/AOoPgPoDoP4AqD8A6g+g/gCoPwDqD4D6A6D+AKg/AOoPgPoDoP4AqD8A6g+A+gOg/gCoPwDqD4D6A6D+AKg/gPoDoP4AqD8A6g+A+gOg/gCoPwDqD4D6A6D+AKg/AOoPgPoDoP4AqD8A6g+A+gOg/gCoP4D6A6D+AKg/AOoPgPoDoP4AqD8A6g+A+gOg/gCoPwDqD4D6A6D+AKg/AOoPgPoDoP4A6g+A+gOg/gCoPwDqD4D6A6D+AKg/AOoPgPoDoP4AqD8A6g+A+gOg/gCoPwDqD4D6A6D+AOoPgPoDoP4AqD8A6g+A+gOg/gCoPwDqD4D6A6D+AKg/AOoPgPoDoP4AqD8A6g+A+gOoPwDqD4D6A6D+AKg/AOoPgPoD8FmHCQAaqCr1B1hRkvu/Cjc/ACtSfwD1B0D9AVB/ANQfAPUHQP0BUH8A1B8A9QdA/QFQfwDe441PgCYePfJ8As57GW8ye1TQAAAAAElFTkSuQmCC"/><div class="t m0 xa h3 y2f ff2 fs6 fc0 sc0 ls0 ws0">F<span class="_ _0"></span>A<span class="_ _1"></span>CT<span class="_ _1"></span>ORIN<span class="_ _1"></span>G<span class="_ _9"> </span>MA<span class="_ _4"></span>TRICIES<span class="_ _14"> </span><span class="fs2">2</span></div><div class="t m0 x2 h3 y30 ff2 fs2 fc0 sc0 ls0 ws0">W<span class="_ _4"></span>e<span class="_ _c"> </span>can<span class="_ _11"> </span>r<span class="_ _1"></span>epr<span class="_ _1"></span>esent<span class="_ _c"> </span>this<span class="_ _11"> </span>as<span class="_ _11"> </span>a<span class="_ _11"> </span>matrix<span class="_ _c"> </span>equation<span class="_ _11"> </span>of<span class="_ _c"> </span>the<span class="_ _11"> </span>form<span class="_ _5"> </span><span class="ff4 fs3">A<span class="_ _d"></span><span class="ffa">x<span class="_ _7"> </span><span class="ff6">=<span class="_ _e"> </span></span>b</span></span>,</div><div class="t m0 x0 h7 y31 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x0 h7 y32 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x0 h7 y33 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x0 h7 y34 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x0 h7 y35 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x0 h7 y36 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x0 h7 y37 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x37 h6 y38 ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x25 h8 y39 ff5 fs4 fc0 sc0 ls0 ws0">11</div><div class="t m0 x38 h6 y38 ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x39 h8 y39 ff5 fs4 fc0 sc0 ls0 ws0">12</div><div class="t m0 x3a h6 y38 ff6 fs3 fc0 sc0 ls0 ws0">·<span class="_ _a"> </span>·<span class="_ _10"> </span>·<span class="_ _15"> </span><span class="ff4">a</span></div><div class="t m0 x3b h4 y39 ff5 fs4 fc0 sc0 ls0 ws0">1<span class="ff4">n</span></div><div class="t m0 x37 h6 y3a ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x25 h8 y3b ff5 fs4 fc0 sc0 ls0 ws0">21</div><div class="t m0 x38 h6 y3a ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x39 h8 y3b ff5 fs4 fc0 sc0 ls0 ws0">22</div><div class="t m0 x3a h6 y3a ff6 fs3 fc0 sc0 ls0 ws0">·<span class="_ _a"> </span>·<span class="_ _10"> </span>·<span class="_ _15"> </span><span class="ff4">a</span></div><div class="t m0 x3b h4 y3b ff5 fs4 fc0 sc0 ls0 ws0">2<span class="ff4">n</span></div><div class="t m0 x25 h3 y3c ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x25 h3 y3d ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x25 h3 y3e ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x39 h3 y3c ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x39 h3 y3d ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x39 h3 y3e ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x3a h3 y3f ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 xe h3 y3d ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x3c h3 y40 ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x3b h3 y3c ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x3b h3 y3d ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x3b h3 y3e ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x37 h6 y41 ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x25 h4 y42 ff4 fs4 fc0 sc0 ls0 ws0">n<span class="_ _12"></span><span class="ff5">1</span></div><div class="t m0 x32 h6 y41 ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x33 h4 y42 ff4 fs4 fc0 sc0 ls0 ws0">n<span class="_ _12"></span><span class="ff5">2</span></div><div class="t m0 x3a h6 y41 ff6 fs3 fc0 sc0 ls0 ws0">·<span class="_ _a"> </span>·<span class="_ _10"> </span>·<span class="_ _16"> </span><span class="ff4">a</span></div><div class="t m0 x3b h4 y42 ff4 fs4 fc0 sc0 ls0 ws0">n<span class="_ _12"></span>n</div><div class="t m0 x3d h7 y31 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x3d h7 y32 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x3d h7 y33 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x3d h7 y34 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x3d h7 y35 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x3d h7 y36 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x3d h7 y37 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x3e h7 y31 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x3e h7 y32 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x3e h7 y33 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x3e h7 y34 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x3e h7 y35 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x3e h7 y36 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x3e h7 y37 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x1e h6 y38 ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x3f h8 y39 ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x1e h6 y3a ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x3f h8 y3b ff5 fs4 fc0 sc0 ls0 ws0">2</div><div class="t m0 x11 h3 y3c ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x11 h3 y3d ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x11 h3 y3e ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x1e h6 y41 ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x3f h4 y42 ff4 fs4 fc0 sc0 ls0 ws0">n</div><div class="t m0 x2c h7 y31 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x2c h7 y32 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x2c h7 y33 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x2c h7 y34 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x2c h7 y35 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x2c h7 y36 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x2c h7 y37 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x40 ha y43 ff6 fs3 fc0 sc0 ls0 ws0">=</div><div class="t m0 x41 h7 y31 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x41 h7 y32 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x41 h7 y33 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x41 h7 y34 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x41 h7 y35 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x41 h7 y36 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x41 h7 y37 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x42 h6 y38 ff4 fs3 fc0 sc0 ls0 ws0">b</div><div class="t m0 x43 h8 y39 ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x42 h6 y3a ff4 fs3 fc0 sc0 ls0 ws0">b</div><div class="t m0 x43 h8 y3b ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x21 h3 y3c ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x21 h3 y3d ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x21 h3 y3e ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x42 h6 y41 ff4 fs3 fc0 sc0 ls0 ws0">b</div><div class="t m0 x43 h4 y42 ff4 fs4 fc0 sc0 ls0 ws0">n</div><div class="t m0 x44 h7 y31 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x44 h7 y32 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x44 h7 y33 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x44 h7 y34 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x44 h7 y35 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x44 h7 y36 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x44 h7 y37 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x45 h5 y43 ff5 fs3 fc0 sc0 ls0 ws0">.</div><div class="t m0 x2 h3 y44 ff2 fs2 fc0 sc0 ls0 ws0">No<span class="_ _1"></span>w<span class="_ _9"> </span>we<span class="_ _9"> </span>ha<span class="_ _1"></span>v<span class="_ _4"></span>e<span class="_ _c"> </span>sev<span class="_ _1"></span>eral<span class="_ _9"> </span>rules<span class="_ _c"> </span>f<span class="_ _1"></span>or<span class="_ _9"> </span>a<span class="_ _c"> </span>syst<span class="_ _1"></span>em<span class="_ _9"> </span>of<span class="_ _9"> </span>equations,<span class="_ _9"> </span>we<span class="_ _9"> </span>can<span class="_ _9"> </span>subtract<span class="_ _c"> </span>equations<span class="_ _9"> </span>from<span class="_ _9"> </span>each</div><div class="t m0 x3 h3 y45 ff2 fs2 fc0 sc0 ls0 ws0">other<span class="_ _1"></span>,<span class="_ _c"> </span>multiply<span class="_ _c"> </span>them<span class="_ _c"> </span>b<span class="_ _1"></span>y<span class="_ _c"> </span>constants<span class="_ _c"> </span>without<span class="_ _c"> </span>changing<span class="_ _9"> </span>their<span class="_ _c"> </span>results.<span class="_ _5"> </span>Now<span class="_ _9"> </span>in<span class="_ _c"> </span>such<span class="_ _c"> </span>cases<span class="_ _c"> </span>our<span class="_ _c"> </span>g<span class="_ _1"></span>oal</div><div class="t m0 x3 h3 y46 ff2 fs2 fc0 sc0 ls0 ws0">is<span class="_ _c"> </span>to<span class="_ _c"> </span>get<span class="_ _c"> </span>our<span class="_ _11"> </span>matrix<span class="_ _c"> </span>in<span class="_ _11"> </span>an<span class="_ _11"> </span>upper<span class="_ _11"> </span>triangular<span class="_ _11"> </span>form,<span class="_ _c"> </span>namely</div><div class="t m0 x0 h7 y47 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x0 h7 y48 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x0 h7 y49 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x0 h7 y4a ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x0 h7 y4b ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x0 h7 y4c ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x0 h7 y4d ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x37 h6 y4e ff4 fs3 fc0 sc0 ls0 ws0">u</div><div class="t m0 x25 h8 y4f ff5 fs4 fc0 sc0 ls0 ws0">11</div><div class="t m0 x32 h6 y4e ff4 fs3 fc0 sc0 ls0 ws0">u</div><div class="t m0 x33 h8 y4f ff5 fs4 fc0 sc0 ls0 ws0">12</div><div class="t m0 xd h6 y4e ff6 fs3 fc0 sc0 ls0 ws0">·<span class="_ _a"> </span>·<span class="_ _10"> </span>·<span class="_ _15"> </span><span class="ff4">u</span></div><div class="t m0 x3b h4 y4f ff5 fs4 fc0 sc0 ls0 ws0">1<span class="ff4">n</span></div><div class="t m0 x32 h6 y50 ff4 fs3 fc0 sc0 ls0 ws0">u</div><div class="t m0 x33 h8 y51 ff5 fs4 fc0 sc0 ls0 ws0">22</div><div class="t m0 xd h6 y50 ff6 fs3 fc0 sc0 ls0 ws0">·<span class="_ _a"> </span>·<span class="_ _10"> </span>·<span class="_ _15"> </span><span class="ff4">u</span></div><div class="t m0 x3b h4 y51 ff5 fs4 fc0 sc0 ls0 ws0">2<span class="ff4">n</span></div><div class="t m0 x3a h3 y52 ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 xe h3 y53 ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x28 h3 y54 ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x3b h3 y55 ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x3b h3 y53 ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x3b h3 y56 ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x46 h6 y57 ff4 fs3 fc0 sc0 ls0 ws0">u</div><div class="t m0 x10 h4 y58 ff4 fs4 fc0 sc0 ls0 ws0">n<span class="_ _12"></span>n</div><div class="t m0 x3d h7 y47 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x3d h7 y48 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x3d h7 y49 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x3d h7 y4a ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x3d h7 y4b ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x3d h7 y4c ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x3d h7 y4d ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x3e h7 y47 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x3e h7 y48 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x3e h7 y49 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x3e h7 y4a ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x3e h7 y4b ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x3e h7 y4c ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x3e h7 y4d ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x1e h6 y4e ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x3f h8 y4f ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x1e h6 y50 ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x3f h8 y51 ff5 fs4 fc0 sc0 ls0 ws0">2</div><div class="t m0 x11 h3 y55 ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x11 h3 y53 ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x11 h3 y56 ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x47 h6 y57 ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x48 h4 y58 ff4 fs4 fc0 sc0 ls0 ws0">n</div><div class="t m0 x49 h7 y47 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x49 h7 y48 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x49 h7 y49 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x49 h7 y4a ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x49 h7 y4b ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x49 h7 y4c ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x49 h7 y4d ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x40 ha y59 ff6 fs3 fc0 sc0 ls0 ws0">=</div><div class="t m0 x41 h7 y47 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x41 h7 y48 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x41 h7 y49 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x41 h7 y4a ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x41 h7 y4b ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x41 h7 y4c ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x41 h7 y4d ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x42 h6 y4e ff4 fs3 fc0 sc0 ls0 ws0">b</div><div class="t m0 x43 h8 y4f ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x42 h6 y50 ff4 fs3 fc0 sc0 ls0 ws0">b</div><div class="t m0 x43 h8 y51 ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x21 h3 y55 ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x21 h3 y53 ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x21 h3 y56 ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x4a h6 y57 ff4 fs3 fc0 sc0 ls0 ws0">b</div><div class="t m0 x4b h4 y58 ff4 fs4 fc0 sc0 ls0 ws0">n</div><div class="t m0 x44 h7 y47 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x44 h7 y48 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x44 h7 y49 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x44 h7 y4a ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x44 h7 y4b ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x44 h7 y4c ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x44 h7 y4d ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x45 h5 y59 ff5 fs3 fc0 sc0 ls0 ws0">.</div><div class="t m0 x3 h3 y5a ff2 fs2 fc0 sc0 ls0 ws0">F<span class="_ _4"></span>r<span class="_ _1"></span>om<span class="_ _11"> </span>this<span class="_ _11"> </span>w<span class="_ _1"></span>e<span class="_ _11"> </span>can<span class="_ _c"> </span>clearly<span class="_ _11"> </span>determine<span class="_ _c"> </span>ev<span class="_ _1"></span>ery<span class="_ _5"> </span><span class="ff4 fs3">x</span></div><div class="t m0 x29 h4 y5b ff4 fs4 fc0 sc0 ls0 ws0">i</div><div class="t m0 xf h3 y5a ff2 fs2 fc0 sc0 ls0 ws0">b<span class="_ _1"></span>y<span class="_ _11"> </span>backpr<span class="_ _1"></span>opoga<span class="_ _1"></span>ting<span class="_ _11"> </span>the<span class="_ _11"> </span>values,<span class="_ _c"> </span>i.e.</div><div class="t m0 x38 h6 y5c ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x39 h4 y5d ff4 fs4 fc0 sc0 ls0 ws0">n</div><div class="t m0 x19 ha y5c ff6 fs3 fc0 sc0 ls0 ws0">=</div><div class="t m0 x4c h6 y5e ff4 fs3 fc0 sc0 ls0 ws0">b</div><div class="t m0 x3c h4 y5f ff4 fs4 fc0 sc0 ls0 ws0">n</div><div class="t m0 x3a h6 y60 ff4 fs3 fc0 sc0 ls0 ws0">u</div><div class="t m0 x28 h4 y61 ff4 fs4 fc0 sc0 ls0 ws0">n<span class="_ _12"></span>n</div><div class="t m0 xa h6 y62 ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x4d h4 y63 ff4 fs4 fc0 sc0 ls0 ws0">n<span class="_ _12"></span><span class="ff6">−<span class="ff5">1</span></span></div><div class="t m0 x19 ha y62 ff6 fs3 fc0 sc0 ls0 ws0">=</div><div class="t m0 x3a h6 y64 ff4 fs3 fc0 sc0 ls0 ws0">b</div><div class="t m0 x1b h4 y65 ff4 fs4 fc0 sc0 ls0 ws0">n<span class="_ _12"></span><span class="ff6">−<span class="ff5">1</span></span></div><div class="t m0 x4e h6 y64 ff6 fs3 fc0 sc0 ls0 ws0">−<span class="_ _10"> </span><span class="ff4">u</span></div><div class="t m0 x3d h4 y65 ff4 fs4 fc0 sc0 ls0 ws0">n<span class="_ _12"></span><span class="ff6">−<span class="ff5">1,</span></span>n</div><div class="t m0 x12 h6 y64 ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x4f h4 y65 ff4 fs4 fc0 sc0 ls0 ws0">n</div><div class="t m0 x36 h6 y66 ff4 fs3 fc0 sc0 ls0 ws0">u</div><div class="t m0 x4e h4 y67 ff4 fs4 fc0 sc0 ls0 ws0">n<span class="_ _12"></span><span class="ff6">−<span class="ff5">1,</span></span>n<span class="_ _d"></span><span class="ff6">−<span class="ff5">1</span></span></div><div class="t m0 x1 h3 y68 ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x1 h3 y69 ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x1 h3 y6a ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x26 h6 y6b ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x27 h8 y6c ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x19 ha y6b ff6 fs3 fc0 sc0 ls0 ws0">=</div><div class="t m0 x1b h5 y6d ff5 fs3 fc0 sc0 ls0 ws0">1</div><div class="t m0 x3a h6 y6e ff4 fs3 fc0 sc0 ls0 ws0">u</div><div class="t m0 x28 h8 y6f ff5 fs4 fc0 sc0 ls0 ws0">11</div><div class="t m0 x36 h7 y70 ff7 fs3 fc0 sc0 ls0 ws0">&quot;</div><div class="t m0 x4e h6 y6b ff4 fs3 fc0 sc0 ls0 ws0">b</div><div class="t m0 x50 h8 y6c ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x51 ha y6b ff6 fs3 fc0 sc0 ls0 ws0">−</div><div class="t m0 x1d h4 y71 ff4 fs4 fc0 sc0 ls0 ws0">n</div><div class="t m0 x52 h7 y72 ff7 fs3 fc0 sc0 ls0 ws0">X</div><div class="t m0 x52 h4 y73 ff4 fs4 fc0 sc0 ls0 ws0">i<span class="_ _a"></span><span class="ff6">=<span class="ff5">2</span></span></div><div class="t m0 x48 h6 y6b ff4 fs3 fc0 sc0 ls0 ws0">u</div><div class="t m0 x49 h4 y6c ff5 fs4 fc0 sc0 ls0 ws0">1<span class="ff4">i</span></div><div class="t m0 x40 h6 y6b ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x2e h4 y6c ff4 fs4 fc0 sc0 ls0 ws0">i</div><div class="t m0 x41 h7 y70 ff7 fs3 fc0 sc0 ls0 ws0">#</div><div class="t m0 x2 h3 y74 ff2 fs2 fc0 sc0 ls0 ws0">The<span class="_ _3"> </span>question<span class="_ _5"> </span>then<span class="_ _5"> </span>becomes<span class="_ _12"></span>,<span class="_ _5"> </span>how<span class="_ _5"> </span>to<span class="_ _5"> </span>simplify<span class="_ _5"> </span>a<span class="_ _5"> </span>syst<span class="_ _1"></span>em<span class="_ _5"> </span>of<span class="_ _5"> </span>equations<span class="_ _5"> </span>int<span class="_ _1"></span>o<span class="_ _5"> </span>an<span class="_ _5"> </span>upper<span class="_ _3"> </span>trian-</div><div class="t m0 x3 h3 y75 ff2 fs2 fc0 sc0 ls0 ws0">gular<span class="_ _11"> </span>matrix,<span class="_ _11"> </span>using<span class="_ _5"> </span>only<span class="_ _11"> </span>r<span class="_ _1"></span>ow<span class="_ _c"> </span>swaps,<span class="_ _5"> </span>scaling,<span class="_ _11"> </span>and<span class="_ _11"> </span>adding<span class="_ _5"> </span>r<span class="_ _1"></span>o<span class="_ _1"></span>ws<span class="_ _11"> </span>tog<span class="_ _1"></span>ether<span class="_ _1"></span>,<span class="_ _c"> </span>or<span class="_ _5"> </span>if<span class="_ _11"> </span>ev<span class="_ _1"></span>ery<span class="_ _5"> </span>sy<span class="_ _1"></span>stem<span class="_ _c"> </span>of</div><div class="t m0 x3 h3 y76 ff2 fs2 fc0 sc0 ls0 ws0">equations<span class="_ _c"> </span>can<span class="_ _11"> </span>be<span class="_ _11"> </span>factorized<span class="_ _c"> </span>thusly<span class="_ _4"></span>.<span class="_ _8"> </span>Let<span class="_ _c"> </span>us<span class="_ _11"> </span>start<span class="_ _11"> </span>with<span class="_ _11"> </span>a<span class="_ _11"> </span>theor<span class="_ _1"></span>em<span class="_ _11"> </span>for<span class="_ _c"> </span>the<span class="_ _c"> </span>latter<span class="_ _1"></span>.</div><div class="t m0 x3 hd y77 ff1 fs2 fc0 sc0 ls0 ws0">Theorem.<span class="_ _8"> </span><span class="ffb">Eve<span class="_ _12"></span>r<span class="_ _d"></span>y<span class="_ _9"> </span>Matr<span class="_ _12"></span>ix<span class="_ _c"> </span>can<span class="_ _c"> </span>be<span class="_ _9"> </span>put<span class="_ _c"> </span>in<span class="_ _c"> </span>row<span class="_ _c"> </span>eschelon<span class="_ _9"> </span>for<span class="_ _d"></span>m,<span class="_ _9"> </span>such<span class="_ _c"> </span>that<span class="_ _c"> </span>there<span class="_ _c"> </span>are<span class="_ _c"> </span>no<span class="_ _c"> </span>entries<span class="_ _c"> </span>below<span class="_ _c"> </span>the</span></div><div class="t m0 x3 hd y78 ffb fs2 fc0 sc0 ls0 ws0">diagonal.</div><div class="t m0 x3 hd y79 ffb fs2 fc0 sc0 ls0 ws0">Proof.<span class="_ _6"> </span><span class="ff2">The<span class="_ _9"> </span>proo<span class="_ _1"></span>f<span class="_ _9"> </span>is<span class="_ _9"> </span>constr<span class="_ _12"></span>uctiv<span class="_ _1"></span>e,<span class="_ _9"> </span>take<span class="_ _9"> </span>a<span class="_ _9"> </span>giv<span class="_ _1"></span>en<span class="_ _9"> </span>matrix,<span class="_ _9"> </span>and<span class="_ _9"> </span>swap<span class="_ _9"> </span>the<span class="_ _9"> </span>r<span class="_ _1"></span>ow<span class="_ _1"></span>s<span class="_ _9"> </span>such<span class="_ _9"> </span>that<span class="_ _9"> </span>the<span class="_ _9"> </span>longest</span></div><div class="t m0 x3 h3 y7a ff2 fs2 fc0 sc0 ls0 ws0">r<span class="_ _1"></span>ow<span class="_ _c"> </span>is<span class="_ _5"> </span>or<span class="_ _1"></span>der<span class="_ _1"></span>ed<span class="_ _11"> </span><span class="ff3">ﬁ</span>rst.<span class="_ _b"> </span>Then<span class="_ _5"> </span>scale<span class="_ _c"> </span>the<span class="_ _5"> </span>r<span class="_ _1"></span>ow<span class="_ _c"> </span>such<span class="_ _5"> </span>tha<span class="_ _1"></span>t<span class="_ _11"> </span>its<span class="_ _5"> </span><span class="ff3">ﬁ</span>rst<span class="_ _11"> </span>entr<span class="_ _12"></span>y<span class="_ _11"> </span>is<span class="_ _5"> </span>one,<span class="_ _11"> </span>and<span class="_ _11"> </span>subtract<span class="_ _5"> </span>the<span class="_ _c"> </span>ro<span class="_ _1"></span>w</div><div class="t m0 x3 h3 y7b ff2 fs2 fc0 sc0 ls0 ws0">as<span class="_ _3"> </span>many<span class="_ _5"> </span>times<span class="_ _8"> </span>as<span class="_ _3"> </span>needed<span class="_ _8"> </span>fr<span class="_ _1"></span>om<span class="_ _3"> </span>all<span class="_ _8"> </span>low<span class="_ _1"></span>er<span class="_ _5"> </span>ro<span class="_ _1"></span>ws<span class="_ _3"> </span>such<span class="_ _3"> </span>that<span class="_ _3"> </span>each<span class="_ _3"> </span>entr<span class="_ _12"></span>y<span class="_ _8"> </span>in<span class="_ _3"> </span>that<span class="_ _3"> </span>column<span class="_ _8"> </span>is<span class="_ _3"> </span>zer<span class="_ _1"></span>o.</div><div class="t m0 x3 h3 y7c ff2 fs2 fc0 sc0 ls0 ws0">Pr<span class="_ _1"></span>oceed<span class="_ _c"> </span>in<span class="_ _11"> </span>this<span class="_ _11"> </span>manner<span class="_ _c"> </span>to<span class="_ _c"> </span>get<span class="_ _c"> </span>r<span class="_ _1"></span>ow<span class="_ _c"> </span>echelon<span class="_ _11"> </span>form.</div></div><div class="pi" data-data='{"ctm":[1.000000,0.000000,0.000000,1.000000,0.000000,0.000000]}'></div></div>
+<div id="pf3" class="pf w0 h0" data-page-no="3"><div class="pc pc3 w0 h0"><div class="t m0 xa h3 y2f ff2 fs6 fc0 sc0 ls0 ws0">F<span class="_ _0"></span>A<span class="_ _1"></span>CT<span class="_ _1"></span>ORIN<span class="_ _1"></span>G<span class="_ _9"> </span>MA<span class="_ _4"></span>TRICIES<span class="_ _14"> </span><span class="fs2">3</span></div><div class="t m0 x2 h3 y30 ff2 fs2 fc0 sc0 ls0 ws0">No<span class="_ _1"></span>w<span class="_ _9"> </span>this<span class="_ _9"> </span>is<span class="_ _9"> </span>a<span class="_ _9"> </span>trivial<span class="_ _9"> </span>r<span class="_ _1"></span>esult,<span class="_ _9"> </span>and<span class="_ _9"> </span>is<span class="_ _9"> </span>oft<span class="_ _1"></span>en<span class="_ _9"> </span>as<span class="_ _9"> </span>far<span class="_ _9"> </span>as<span class="_ _9"> </span>one<span class="_ _9"> </span>considers<span class="_ _9"> </span>the<span class="_ _9"> </span>issue<span class="_ _9"> </span>in<span class="_ _9"> </span>a<span class="_ _9"> </span>linear<span class="_ _9"> </span>alg<span class="_ _1"></span>ebra</div><div class="t m0 x3 h3 y7d ff2 fs2 fc0 sc0 ls0 ws0">class,<span class="_ _c"> </span>how<span class="_ _1"></span>e<span class="_ _1"></span>v<span class="_ _1"></span>er<span class="_ _1"></span>,<span class="_ _9"> </span>ther<span class="_ _1"></span>e<span class="_ _9"> </span>is<span class="_ _9"> </span>a<span class="_ _9"> </span>numerical<span class="_ _9"> </span>component<span class="_ _9"> </span>to<span class="_ _9"> </span>this,<span class="_ _9"> </span>what<span class="_ _9"> </span>is<span class="_ _9"> </span>the<span class="_ _9"> </span>cost<span class="_ _9"> </span>o<span class="_ _1"></span>f<span class="_ _9"> </span>the<span class="_ _9"> </span>afor<span class="_ _1"></span>ementioned</div><div class="t m0 x3 h3 y7e ff2 fs2 fc0 sc0 ls0 ws0">alg<span class="_ _1"></span>orithm?<span class="_ _17"> </span>It’<span class="_ _4"></span>s<span class="_ _8"> </span>a<span class="_ _3"> </span>nontrivial<span class="_ _8"> </span>set<span class="_ _8"> </span>of<span class="_ _3"> </span>steps,<span class="_ _8"> </span>and<span class="_ _8"> </span>notably<span class="_ _8"> </span>it<span class="_ _8"> </span>chang<span class="_ _1"></span>es<span class="_ _3"> </span>the<span class="_ _8"> </span>v<span class="_ _1"></span>ector<span class="_ _3"> </span><span class="ffa fs3">b<span class="_ _8"> </span></span>which<span class="_ _3"> </span>means</div><div class="t m0 x3 h3 y7f ff2 fs2 fc0 sc0 ls0 ws0">that<span class="_ _c"> </span>in<span class="_ _c"> </span>use<span class="_ _c"> </span>cases<span class="_ _11"> </span>the<span class="_ _c"> </span>calculation<span class="_ _c"> </span>must<span class="_ _c"> </span>be<span class="_ _11"> </span>perf<span class="_ _1"></span>ormed<span class="_ _c"> </span>each<span class="_ _11"> </span>step,<span class="_ _9"> </span>a<span class="_ _11"> </span>not<span class="_ _c"> </span>insigni<span class="ff3">ﬁ</span>cant<span class="_ _11"> </span>cost<span class="_ _c"> </span>factor<span class="_ _1"></span>.</div><div class="t m0 x3 h3 y80 ff2 fs2 fc0 sc0 ls0 ws0">Instead<span class="_ _c"> </span>w<span class="_ _1"></span>e<span class="_ _11"> </span>intr<span class="_ _1"></span>oduce<span class="_ _c"> </span><span class="ff4 fs3">L<span class="_ _1"></span>U<span class="_ _8"> </span><span class="ff2 fs2">decomposition.</span></span></div><div class="t m0 x3 hb y81 ff1 fs5 fc0 sc0 ls0 ws0">L<span class="_ _4"></span>U<span class="_ _b"> </span>Decomposition</div><div class="t m0 x3 h3 y82 ff2 fs2 fc0 sc0 ls0 ws0">Let’<span class="_ _4"></span>s<span class="_ _9"> </span>start<span class="_ _c"> </span>with<span class="_ _9"> </span>a<span class="_ _9"> </span>brief<span class="_ _c"> </span>discussion<span class="_ _9"> </span>of<span class="_ _9"> </span>matrix<span class="_ _9"> </span>permutations.<span class="_ _5"> </span>A<span class="_ _9"> </span>permutation<span class="_ _9"> </span>matrix<span class="_ _9"> </span>is<span class="_ _c"> </span>one<span class="_ _9"> </span>which</div><div class="t m0 x3 h3 y83 ff2 fs2 fc0 sc0 ls0 ws0">perf<span class="_ _1"></span>orms<span class="_ _11"> </span>column<span class="_ _11"> </span>or<span class="_ _c"> </span>ro<span class="_ _1"></span>w<span class="_ _11"> </span>inter<span class="_ _4"></span>changes,<span class="_ _c"> </span>for<span class="_ _c"> </span>instance,<span class="_ _11"> </span>consider<span class="_ _11"> </span>the<span class="_ _11"> </span><span class="ff5 fs3">3<span class="_ _10"> </span><span class="ff6">×<span class="_ _e"> </span></span>3<span class="_ _c"> </span></span>matrix</div><div class="t m0 x53 h6 y84 ff4 fs3 fc0 sc0 ls0 ws0">P<span class="_ _9"> </span><span class="ff6">=</span></div><div class="t m0 x54 h7 y85 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x54 h7 y86 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x54 h7 y87 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x54 h7 y88 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x36 h5 y89 ff5 fs3 fc0 sc0 ls0 ws0">1<span class="_ _f"> </span>0<span class="_ _f"> </span>0</div><div class="t m0 x36 h5 y8a ff5 fs3 fc0 sc0 ls0 ws0">0<span class="_ _f"> </span>0<span class="_ _f"> </span>1</div><div class="t m0 x36 h5 y8b ff5 fs3 fc0 sc0 ls0 ws0">0<span class="_ _f"> </span>1<span class="_ _f"> </span>0</div><div class="t m0 x47 h7 y85 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x47 h7 y86 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x47 h7 y87 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x47 h7 y88 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x12 h5 y84 ff5 fs3 fc0 sc0 ls0 ws0">.</div><div class="t m0 x2 h3 y8c ff2 fs2 fc0 sc0 ls0 ws0">Applying<span class="_ _c"> </span>this<span class="_ _11"> </span>matrix<span class="_ _11"> </span>to<span class="_ _c"> </span>a<span class="_ _11"> </span>matrix<span class="_ _3"> </span><span class="ff4 fs3">A<span class="_ _5"> </span></span>giv<span class="_ _1"></span>es</div><div class="t m0 x55 h6 y8d ff4 fs3 fc0 sc0 ls0 ws0">P<span class="_ _a"></span>A<span class="_ _18"> </span><span class="ff6">=</span></div><div class="t m0 x56 h7 y8e ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x56 h7 y8f ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x56 h7 y90 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x56 h7 y91 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x57 h5 y92 ff5 fs3 fc0 sc0 ls0 ws0">1<span class="_ _f"> </span>0<span class="_ _f"> </span>0</div><div class="t m0 x57 h5 y93 ff5 fs3 fc0 sc0 ls0 ws0">0<span class="_ _f"> </span>0<span class="_ _f"> </span>1</div><div class="t m0 x57 h5 y94 ff5 fs3 fc0 sc0 ls0 ws0">0<span class="_ _f"> </span>1<span class="_ _f"> </span>0</div><div class="t m0 x4d h7 y8e ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x4d h7 y8f ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x4d h7 y90 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x4d h7 y91 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x33 h7 y8e ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x33 h7 y8f ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x33 h7 y90 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x33 h7 y91 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x58 h6 y92 ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x1a h8 y95 ff5 fs4 fc0 sc0 ls0 ws0">11</div><div class="t m0 x35 h6 y92 ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x36 h8 y95 ff5 fs4 fc0 sc0 ls0 ws0">12</div><div class="t m0 x59 h6 y92 ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x1c h8 y95 ff5 fs4 fc0 sc0 ls0 ws0">13</div><div class="t m0 x58 h6 y93 ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x1a h8 y96 ff5 fs4 fc0 sc0 ls0 ws0">21</div><div class="t m0 x35 h6 y93 ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x36 h8 y96 ff5 fs4 fc0 sc0 ls0 ws0">22</div><div class="t m0 x59 h6 y93 ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x1c h8 y96 ff5 fs4 fc0 sc0 ls0 ws0">23</div><div class="t m0 x58 h6 y94 ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x1a h8 y97 ff5 fs4 fc0 sc0 ls0 ws0">31</div><div class="t m0 x35 h6 y94 ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x36 h8 y97 ff5 fs4 fc0 sc0 ls0 ws0">32</div><div class="t m0 x59 h6 y94 ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x1c h8 y97 ff5 fs4 fc0 sc0 ls0 ws0">33</div><div class="t m0 x5a h7 y8e ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x5a h7 y8f ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x5a h7 y90 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x5a h7 y91 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x3f ha y8d ff6 fs3 fc0 sc0 ls0 ws0">=</div><div class="t m0 x5b h7 y8e ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x5b h7 y8f ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x5b h7 y90 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x5b h7 y91 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x5c h6 y92 ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x41 h8 y95 ff5 fs4 fc0 sc0 ls0 ws0">11</div><div class="t m0 x44 h6 y92 ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x24 h8 y95 ff5 fs4 fc0 sc0 ls0 ws0">12</div><div class="t m0 x5d h6 y92 ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x5e h8 y95 ff5 fs4 fc0 sc0 ls0 ws0">13</div><div class="t m0 x5c h6 y93 ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x41 h8 y96 ff5 fs4 fc0 sc0 ls0 ws0">31</div><div class="t m0 x44 h6 y93 ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x24 h8 y96 ff5 fs4 fc0 sc0 ls0 ws0">32</div><div class="t m0 x5d h6 y93 ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x5e h8 y96 ff5 fs4 fc0 sc0 ls0 ws0">33</div><div class="t m0 x5c h6 y94 ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x41 h8 y97 ff5 fs4 fc0 sc0 ls0 ws0">21</div><div class="t m0 x44 h6 y94 ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x24 h8 y97 ff5 fs4 fc0 sc0 ls0 ws0">22</div><div class="t m0 x5d h6 y94 ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x5e h8 y97 ff5 fs4 fc0 sc0 ls0 ws0">23</div><div class="t m0 x5f h7 y8e ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x5f h7 y8f ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x5f h7 y90 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x5f h7 y91 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x60 h5 y8d ff5 fs3 fc0 sc0 ls0 ws0">.</div><div class="t m0 x2 h3 y98 ff2 fs2 fc0 sc0 ls0 ws0">Clearly<span class="_ _0"></span>,<span class="_ _5"> </span>we<span class="_ _5"> </span>see<span class="_ _5"> </span>that<span class="_ _5"> </span><span class="ff4 fs3">P<span class="_ _13"> </span></span>ex<span class="_ _4"></span>changes<span class="_ _5"> </span>the<span class="_ _5"> </span>r<span class="_ _1"></span>ow<span class="_ _1"></span>s<span class="_ _5"> </span>3<span class="_ _5"> </span>and<span class="_ _3"> </span>2<span class="_ _5"> </span>in<span class="_ _3"> </span>the<span class="_ _5"> </span>matrix<span class="_ _b"> </span><span class="ff4 fs3">A<span class="_ _12"></span></span>.<span class="_ _2"> </span>These<span class="_ _5"> </span>permutation</div><div class="t m0 x3 h3 y99 ff2 fs2 fc0 sc0 ls0 ws0">matrices<span class="_ _13"> </span>ha<span class="_ _4"></span>ve<span class="_ _13"> </span>other<span class="_ _13"> </span>inter<span class="_ _1"></span>esting<span class="_ _13"> </span>pr<span class="_ _1"></span>operties,<span class="_ _2"> </span>f<span class="_ _1"></span>or<span class="_ _13"> </span>instance,<span class="_ _2"> </span>the<span class="_ _1"></span>y<span class="_ _13"> </span>ar<span class="_ _1"></span>e<span class="_ _13"> </span>all<span class="_ _6"> </span>in<span class="_ _1"></span>v<span class="_ _1"></span>ertible<span class="_ _13"> </span>and<span class="_ _13"> </span>their</div><div class="t m0 x3 h3 y9a ff2 fs2 fc0 sc0 ls0 ws0">in<span class="_ _1"></span>v<span class="_ _1"></span>erse<span class="_ _11"> </span>is<span class="_ _c"> </span>equal<span class="_ _11"> </span>to<span class="_ _c"> </span>their<span class="_ _11"> </span>transposition.</div><div class="t m0 x3 hd y9b ffb fs2 fc0 sc0 ls0 ws0">Proof.<span class="_ _6"> </span><span class="ff2">Recall<span class="_ _9"> </span>that<span class="_ _9"> </span>a<span class="_ _c"> </span>permutation<span class="_ _18"> </span>matrix<span class="_ _9"> </span>is<span class="_ _c"> </span>a<span class="_ _9"> </span>square<span class="_ _9"> </span>matrix<span class="_ _9"> </span>with<span class="_ _9"> </span>exactly<span class="_ _9"> </span>one<span class="_ _c"> </span>entr<span class="_ _12"></span>y<span class="_ _9"> </span>of<span class="_ _9"> </span>1<span class="_ _c"> </span>in<span class="_ _9"> </span>each</span></div><div class="t m0 x3 h3 y9c ff2 fs2 fc0 sc0 ls0 ws0">r<span class="_ _1"></span>ow<span class="_ _5"> </span>and<span class="_ _5"> </span>column<span class="_ _5"> </span>and<span class="_ _3"> </span>0’<span class="_ _1"></span>s<span class="_ _5"> </span>e<span class="_ _1"></span>v<span class="_ _1"></span>er<span class="_ _12"></span>ywher<span class="_ _1"></span>e<span class="_ _5"> </span>else.<span class="_ _6"> </span>It<span class="_ _3"> </span>is<span class="_ _5"> </span>clear<span class="_ _3"> </span>that<span class="_ _5"> </span>such<span class="_ _5"> </span>a<span class="_ _3"> </span>matrix<span class="_ _5"> </span>can<span class="_ _5"> </span>be<span class="_ _3"> </span>constructed</div><div class="t m0 x3 h3 y9d ff2 fs2 fc0 sc0 ls0 ws0">b<span class="_ _1"></span>y<span class="_ _11"> </span>an<span class="_ _11"> </span>arbitrar<span class="_ _12"></span>y<span class="_ _11"> </span>sequence<span class="_ _5"> </span>o<span class="_ _1"></span>f<span class="_ _11"> </span>r<span class="_ _1"></span>ow<span class="_ _c"> </span>inter<span class="_ _1"></span>chang<span class="_ _1"></span>es.<span class="_ _3"> </span>Let<span class="_ _5"> </span><span class="ff4 fs3">P<span class="_ _8"> </span></span>a<span class="_ _11"> </span><span class="ff4 fs3">n<span class="_ _7"> </span><span class="ff6">×<span class="_ _10"> </span></span>n<span class="_ _3"> </span></span>permutation<span class="_ _c"> </span>matrix<span class="_ _11"> </span>and<span class="_ _11"> </span>let<span class="_ _11"> </span><span class="ff4 fs3">R</span></div><div class="t m0 x61 h4 y9e ff4 fs4 fc0 sc0 ls0 ws0">i<span class="_ _e"> </span>j</div><div class="t m0 x3 h3 y9f ff2 fs2 fc0 sc0 ls0 ws0">be<span class="_ _11"> </span>the<span class="_ _11"> </span>matrix<span class="_ _11"> </span>which<span class="_ _11"> </span>ex<span class="_ _4"></span>changes<span class="_ _c"> </span>ro<span class="_ _1"></span>w’<span class="_ _4"></span>s<span class="_ _5"> </span><span class="ff4 fs3">i<span class="_ _8"> </span></span>and<span class="_ _b"> </span><span class="ff4 fs3">j<span class="_ _19"> </span></span>giv<span class="_ _1"></span>en<span class="_ _11"> </span>by<span class="_ _c"> </span>ex<span class="_ _1"></span>changing<span class="_ _11"> </span>these<span class="_ _11"> </span>r<span class="_ _1"></span>ow<span class="_ _1"></span>s<span class="_ _11"> </span>in<span class="_ _5"> </span>the<span class="_ _c"> </span>identity</div><div class="t m0 x3 h3 ya0 ff2 fs2 fc0 sc0 ls0 ws0">matrix.<span class="_ _19"> </span>Not<span class="_ _1"></span>e<span class="_ _5"> </span>tha<span class="_ _1"></span>t<span class="_ _5"> </span>these<span class="_ _5"> </span>ha<span class="_ _4"></span>ve<span class="_ _11"> </span>the<span class="_ _5"> </span>pr<span class="_ _1"></span>operty<span class="_ _5"> </span>tha<span class="_ _1"></span>t<span class="_ _5"> </span><span class="ff4 fs3">R</span></div><div class="t m0 x62 h4 ya1 ff4 fs4 fc0 sc0 ls0 ws0">i<span class="_ _e"> </span>j</div><div class="t m0 x5a h6 ya0 ff6 fs3 fc0 sc0 ls0 ws0">=<span class="_ _7"> </span><span class="ff5">(<span class="ff4">R</span></span></div><div class="t m0 x63 h4 ya1 ff4 fs4 fc0 sc0 ls0 ws0">j<span class="_ _a"> </span>i</div><div class="t m0 x1f h5 ya0 ff5 fs3 fc0 sc0 ls0 ws0">)</div><div class="t m0 x41 h4 ya2 ff4 fs4 fc0 sc0 ls0 ws0">T</div><div class="t m0 x4a h3 ya0 ff2 fs2 fc0 sc0 ls0 ws0">.<span class="_ _19"> </span>T<span class="_ _12"></span>hen<span class="_ _5"> </span>ther<span class="_ _1"></span>e<span class="_ _5"> </span>e<span class="_ _1"></span>xist<span class="_ _5"> </span>some<span class="_ _11"> </span>number</div><div class="t m0 x3 h3 ya3 ff2 fs2 fc0 sc0 ls0 ws0">of<span class="_ _c"> </span>these<span class="_ _11"> </span>r<span class="_ _1"></span>ow<span class="_ _c"> </span>inter<span class="_ _1"></span>chang<span class="_ _1"></span>e<span class="_ _c"> </span>matrices<span class="_ _c"> </span>such<span class="_ _11"> </span>that</div><div class="t m0 x19 h6 ya4 ff4 fs3 fc0 sc0 ls0 ws0">P<span class="_ _9"> </span><span class="ff6">=<span class="_ _7"> </span></span>R</div><div class="t m0 x64 h8 ya5 ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x46 h6 ya4 ff4 fs3 fc0 sc0 ls0 ws0">R</div><div class="t m0 x10 h8 ya5 ff5 fs4 fc0 sc0 ls0 ws0">2</div><div class="t m0 x65 h6 ya4 ff6 fs3 fc0 sc0 ls0 ws0">·<span class="_ _a"> </span>·<span class="_ _10"> </span>·<span class="_ _a"> </span><span class="ff4">R</span></div><div class="t m0 x5a h4 ya5 ff4 fs4 fc0 sc0 ls0 ws0">n</div><div class="t m0 x11 h6 ya4 ff4 fs3 fc0 sc0 ls0 ws0">I<span class="_ _10"> </span><span class="ff5">.</span></div><div class="t m0 x2 h3 ya6 ff2 fs2 fc0 sc0 ls0 ws0">But<span class="_ _c"> </span>by<span class="_ _c"> </span>the<span class="_ _11"> </span>pre<span class="_ _1"></span>vious<span class="_ _11"> </span>pr<span class="_ _1"></span>operty<span class="_ _c"> </span>we<span class="_ _c"> </span>see<span class="_ _11"> </span>that</div><div class="t m0 x0 h6 ya7 ff4 fs3 fc0 sc0 ls0 ws0">P</div><div class="t m0 x66 h4 ya8 ff4 fs4 fc0 sc0 ls0 ws0">T</div><div class="t m0 x30 h6 ya7 ff6 fs3 fc0 sc0 ls0 ws0">=<span class="_ _7"> </span><span class="ff5">(<span class="ff4">R</span></span></div><div class="t m0 x33 h8 ya9 ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 xc h6 ya7 ff4 fs3 fc0 sc0 ls0 ws0">R</div><div class="t m0 x53 h8 ya9 ff5 fs4 fc0 sc0 ls0 ws0">2</div><div class="t m0 x67 h6 ya7 ff6 fs3 fc0 sc0 ls0 ws0">·<span class="_ _a"> </span>·<span class="_ _10"> </span>·<span class="_ _a"> </span><span class="ff4">R</span></div><div class="t m0 x64 h4 ya9 ff4 fs4 fc0 sc0 ls0 ws0">n</div><div class="t m0 xf h6 ya7 ff4 fs3 fc0 sc0 ls0 ws0">I<span class="_ _10"> </span><span class="ff5">)</span></div><div class="t m0 x68 h4 ya8 ff4 fs4 fc0 sc0 ls0 ws0">T</div><div class="t m0 x3d h6 ya7 ff6 fs3 fc0 sc0 ls0 ws0">=<span class="_ _7"> </span><span class="ff4">R</span></div><div class="t m0 x2b h4 ya8 ff4 fs4 fc0 sc0 ls0 ws0">T</div><div class="t m0 x2b h8 yaa ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x12 h6 ya7 ff4 fs3 fc0 sc0 ls0 ws0">R</div><div class="t m0 x5b h4 ya8 ff4 fs4 fc0 sc0 ls0 ws0">T</div><div class="t m0 x5b h8 yaa ff5 fs4 fc0 sc0 ls0 ws0">2</div><div class="t m0 x5c h6 ya7 ff6 fs3 fc0 sc0 ls0 ws0">·<span class="_ _a"> </span>·<span class="_ _10"> </span>·<span class="_ _a"> </span><span class="ff4">R</span></div><div class="t m0 x43 h4 ya8 ff4 fs4 fc0 sc0 ls0 ws0">T</div><div class="t m0 x4b h4 yab ff4 fs4 fc0 sc0 ls0 ws0">n</div><div class="t m0 x69 h6 ya7 ff4 fs3 fc0 sc0 ls0 ws0">I<span class="_ _10"> </span><span class="ff5">.</span></div></div><div class="pi" data-data='{"ctm":[1.000000,0.000000,0.000000,1.000000,0.000000,0.000000]}'></div></div>
+<div id="pf4" class="pf w0 h0" data-page-no="4"><div class="pc pc4 w0 h0"><img class="bi x61 yac w2 he" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAARxCAIAAACndpDaAAAACXBIWXMAABYlAAAWJQFJUiTwAAAA7ElEQVR42u3dMQ7AIAgFUOj9j8tOlx5A4mBj3p99cRA2iBHDZER09+rpzGd6AwAcA+PkejN4BwAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOAfYBxb5oB++FJVtswBAAAAAAAAAAAAAAAAAAAAAAAAAAAAADgIxjH7A9xc3kZ5AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAADYA+P4LhS4uLxfO3Ugn3l5tggAAAAASUVORK5CYII="/><div class="t m0 xa h3 y2f ff2 fs6 fc0 sc0 ls0 ws0">F<span class="_ _0"></span>A<span class="_ _1"></span>CT<span class="_ _1"></span>ORIN<span class="_ _1"></span>G<span class="_ _9"> </span>MA<span class="_ _4"></span>TRICIES<span class="_ _14"> </span><span class="fs2">4</span></div><div class="t m0 x2 h3 y30 ff2 fs2 fc0 sc0 ls0 ws0">Since<span class="_ _11"> </span>the<span class="_ _5"> </span>r<span class="_ _1"></span>o<span class="_ _1"></span>w<span class="_ _11"> </span>inter<span class="_ _1"></span>chang<span class="_ _1"></span>e<span class="_ _11"> </span>matrices<span class="_ _11"> </span>ar<span class="_ _1"></span>e<span class="_ _11"> </span>commutativ<span class="_ _1"></span>e,<span class="_ _5"> </span>it<span class="_ _11"> </span>is<span class="_ _11"> </span>clear<span class="_ _5"> </span>tha<span class="_ _1"></span>t<span class="_ _11"> </span><span class="ff4 fs3">R</span></div><div class="t m0 x6a h4 yad ff4 fs4 fc0 sc0 ls0 ws0">i</div><div class="t m0 x6b h6 y30 ff4 fs3 fc0 sc0 ls0 ws0">R</div><div class="t m0 x6c h4 yae ff4 fs4 fc0 sc0 ls0 ws0">T</div><div class="t m0 x6c h4 yaf ff4 fs4 fc0 sc0 ls0 ws0">i</div><div class="t m0 x6d h3 y30 ff6 fs3 fc0 sc0 ls0 ws0">=<span class="_ _18"> </span><span class="ff4">I<span class="_ _b"> </span><span class="ff2 fs2">and<span class="_ _11"> </span>hence</span></span></div><div class="t m0 x3 h6 y7d ff4 fs3 fc0 sc0 ls0 ws0">P</div><div class="t m0 x6e h4 yb0 ff4 fs4 fc0 sc0 ls0 ws0">T</div><div class="t m0 x6f h3 y7d ff4 fs3 fc0 sc0 ls0 ws0">P<span class="_ _9"> </span><span class="ff6">=<span class="_ _18"> </span></span>I<span class="_ _10"></span><span class="ff2 fs2">.<span class="_ _3"> </span>Thus<span class="_ _11"> </span></span>P<span class="_ _b"> </span><span class="ff2 fs2">has<span class="_ _11"> </span>an<span class="_ _c"> </span>inv<span class="_ _1"></span>erse<span class="_ _c"> </span>and<span class="_ _11"> </span>the<span class="_ _11"> </span>inv<span class="_ _1"></span>erse<span class="_ _c"> </span>is<span class="_ _11"> </span>in<span class="_ _11"> </span>fact<span class="_ _11"> </span>the<span class="_ _c"> </span>transposition<span class="_ _11"> </span>of<span class="_ _11"> </span><span class="ff4 fs3">P<span class="_ _a"></span></span>.</span></div><div class="t m0 x2 h3 yb1 ff2 fs2 fc0 sc0 ls0 ws0">W<span class="_ _4"></span>e<span class="_ _18"> </span>can<span class="_ _18"> </span>g<span class="_ _1"></span>eneralize<span class="_ _18"> </span>this<span class="_ _18"> </span>to<span class="_ _18"> </span>the<span class="_ _18"> </span>concept<span class="_ _18"> </span>of<span class="_ _18"> </span><span class="ff1">Elementary<span class="_ _9"> </span>Matrices<span class="_ _18"> </span></span>which<span class="_ _18"> </span>ar<span class="_ _1"></span>e<span class="_ _18"> </span>exactly<span class="_ _18"> </span>ma<span class="_ _1"></span>trices</div><div class="t m0 x3 h3 yb2 ff2 fs2 fc0 sc0 ls0 ws0">r<span class="_ _1"></span>epr<span class="_ _1"></span>esenting<span class="_ _c"> </span>a<span class="_ _11"> </span>step<span class="_ _c"> </span>in<span class="_ _11"> </span>gaussian<span class="_ _11"> </span>elimination.</div><div class="t m0 x3 hd yb3 ff1 fs2 fc0 sc0 ls0 ws0">Lemma.<span class="_ _b"> </span><span class="ffb">Elementar<span class="_ _d"></span>y<span class="_ _c"> </span>matrices<span class="_ _c"> </span>are<span class="_ _11"> </span>inver<span class="_ _12"></span>tible,<span class="_ _c"> </span>and<span class="_ _c"> </span>their<span class="_ _11"> </span>inver<span class="_ _12"></span>se<span class="_ _c"> </span>is<span class="_ _c"> </span>again<span class="_ _11"> </span>an<span class="_ _c"> </span>elementar<span class="_ _d"></span>y<span class="_ _c"> </span>matrix.</span></div><div class="t m0 x3 hd yb4 ffb fs2 fc0 sc0 ls0 ws0">Proof.<span class="_ _6"> </span><span class="ff2">If<span class="_ _19"> </span>an<span class="_ _13"> </span>elementar<span class="_ _12"></span>y<span class="_ _13"> </span>matrix<span class="_ _13"> </span>is<span class="_ _19"> </span>obtained<span class="_ _13"> </span>by<span class="_ _19"> </span>ro<span class="_ _1"></span>w<span class="_ _13"> </span>swapping,<span class="_ _6"> </span>it<span class="_ _19"> </span>is<span class="_ _13"> </span>a<span class="_ _13"> </span>permutation<span class="_ _19"> </span>matrix</span></div><div class="t m0 x3 h3 yb5 ff2 fs2 fc0 sc0 ls0 ws0">and<span class="_ _8"> </span>hence<span class="_ _8"> </span>in<span class="_ _1"></span>v<span class="_ _1"></span>ertible.<span class="_ _1a"> </span>If<span class="_ _8"> </span>an<span class="_ _8"> </span>elementar<span class="_ _12"></span>y<span class="_ _8"> </span>matrix<span class="_ _3"> </span>is<span class="_ _8"> </span>obtained<span class="_ _8"> </span>by<span class="_ _8"> </span>scaling<span class="_ _8"> </span>it’<span class="_ _4"></span>s<span class="_ _8"> </span>in<span class="_ _1"></span>v<span class="_ _1"></span>erse<span class="_ _8"> </span>is<span class="_ _8"> </span>simply</div><div class="t m0 x3 h3 yb6 ff2 fs2 fc0 sc0 ls0 ws0">the<span class="_ _8"> </span>scaling<span class="_ _8"> </span>matrix<span class="_ _3"> </span>by<span class="_ _8"> </span>one<span class="_ _8"> </span>o<span class="_ _1"></span>v<span class="_ _1"></span>er<span class="_ _8"> </span>that<span class="_ _3"> </span>factor<span class="_ _1"></span>.<span class="_ _1a"> </span>Lastly<span class="_ _8"> </span>if<span class="_ _8"> </span>the<span class="_ _8"> </span>elementary<span class="_ _8"> </span>matrix<span class="_ _8"> </span>r<span class="_ _1"></span>epr<span class="_ _1"></span>esents<span class="_ _8"> </span>the</div><div class="t m0 x3 h3 yb7 ff2 fs2 fc0 sc0 ls0 ws0">addition<span class="_ _3"> </span>of<span class="_ _8"> </span>one<span class="_ _3"> </span>ro<span class="_ _1"></span>w<span class="_ _3"> </span>to<span class="_ _3"> </span>another,<span class="_ _3"> </span>the<span class="_ _8"> </span>inv<span class="_ _4"></span>erse<span class="_ _8"> </span>is<span class="_ _8"> </span>simply<span class="_ _3"> </span>the<span class="_ _3"> </span>subtraction<span class="_ _8"> </span>of<span class="_ _3"> </span>that<span class="_ _3"> </span>ro<span class="_ _1"></span>w<span class="_ _3"> </span>f<span class="_ _12"></span>r<span class="_ _1"></span>om<span class="_ _3"> </span>the</div><div class="t m0 x3 h3 yb8 ff2 fs2 fc0 sc0 ls0 ws0">pr<span class="_ _1"></span>evious.</div><div class="t m0 x2 h3 yb9 ff2 fs2 fc0 sc0 ls0 ws0">W<span class="_ _4"></span>e<span class="_ _c"> </span>use<span class="_ _11"> </span>this<span class="_ _c"> </span>to<span class="_ _c"> </span>show<span class="_ _11"> </span>that</div><div class="t m0 x3 hd yba ff1 fs2 fc0 sc0 ls0 ws0">Corollary<span class="_ _4"></span>.<span class="_ _b"> </span><span class="ffb">Eve<span class="_ _12"></span>r<span class="_ _d"></span>y<span class="_ _c"> </span>matr ix<span class="_ _3"> </span><span class="ff4 fs3">A<span class="_ _5"> </span></span>can<span class="_ _c"> </span>be<span class="_ _c"> </span>w<span class="_ _12"></span>r<span class="_ _12"></span>itten<span class="_ _c"> </span>as<span class="_ _c"> </span>the<span class="_ _11"> </span>product<span class="_ _c"> </span>of<span class="_ _9"> </span>pe<span class="_ _12"></span>r<span class="_ _d"></span>mutation<span class="_ _c"> </span>matrices<span class="_ _12"></span>.</span></div><div class="t m0 x3 hd ybb ffb fs2 fc0 sc0 ls0 ws0">Proof.<span class="_ _6"> </span><span class="ff2">This<span class="_ _18"> </span>follo<span class="_ _1"></span>ws<span class="_ _18"> </span>from<span class="_ _18"> </span>the<span class="_ _18"> </span>pr<span class="_ _1"></span>operty<span class="_ _18"> </span>that<span class="_ _18"> </span>e<span class="_ _1"></span>v<span class="_ _1"></span>er<span class="_ _12"></span>y<span class="_ _18"> </span>matrix<span class="_ _18"> </span>can<span class="_ _18"> </span>be<span class="_ _18"> </span>written<span class="_ _18"> </span>in<span class="_ _18"> </span>r<span class="_ _1"></span>educed<span class="_ _18"> </span>r<span class="_ _1"></span>ow<span class="_ _18"> </span>echelon</span></div><div class="t m0 x3 h3 ybc ff2 fs2 fc0 sc0 ls0 ws0">f<span class="_ _1"></span>orm</div><div class="t m0 x2 h3 ybd ff2 fs2 fc0 sc0 ls0 ws0">This<span class="_ _11"> </span>leads<span class="_ _c"> </span>us<span class="_ _c"> </span>to<span class="_ _c"> </span>an<span class="_ _c"> </span>inter<span class="_ _1"></span>esting<span class="_ _c"> </span>r<span class="_ _1"></span>esult,<span class="_ _c"> </span>namely<span class="_ _c"> </span>that<span class="_ _c"> </span>ev<span class="_ _1"></span>ery<span class="_ _c"> </span>inv<span class="_ _1"></span>ertible<span class="_ _c"> </span>matrix,<span class="_ _c"> </span>yields<span class="_ _c"> </span>a<span class="_ _c"> </span>factor<span class="_ _4"></span>-</div><div class="t m0 x3 h3 ybe ff2 fs2 fc0 sc0 ls0 ws0">ization<span class="_ _c"> </span>into<span class="_ _c"> </span>two<span class="_ _c"> </span>triangular<span class="_ _11"> </span>matrices.<span class="_ _5"> </span>T<span class="_ _12"></span>his<span class="_ _11"> </span>is<span class="_ _11"> </span>known<span class="_ _c"> </span>as<span class="_ _11"> </span><span class="ff4 fs3">L<span class="_ _1"></span>U<span class="_ _8"> </span><span class="ff2 fs2">decomposition.</span></span></div><div class="t m0 x3 hd ybf ff1 fs2 fc0 sc0 ls0 ws0">Theorem.<span class="_ _19"> </span><span class="ffb">Ev<span class="_ _12"></span>er<span class="_ _d"></span>y<span class="_ _3"> </span>nonsingular<span class="_ _3"> </span>(inver<span class="_ _12"></span>tible)<span class="_ _3"> </span>matr<span class="_ _12"></span>ix<span class="_ _3"> </span>has<span class="_ _3"> </span>a<span class="_ _3"> </span><span class="ff4 fs3">L<span class="_ _1"></span>U<span class="_ _a"></span>P<span class="_ _13"> </span><span class="ffb fs2">factor<span class="_ _12"></span>ization,<span class="_ _8"> </span>which<span class="_ _5"> </span>is<span class="_ _3"> </span>to<span class="_ _3"> </span>say,<span class="_ _3"> </span>for</span></span></span></div><div class="t m0 x3 hd yc0 ffb fs2 fc0 sc0 ls0 ws0">a<span class="_ _b"> </span><span class="ff4 fs3">n<span class="_ _18"> </span><span class="ff6">×<span class="_ _e"> </span></span>n<span class="_ _13"> </span></span>matr<span class="_ _12"></span>ix<span class="_ _6"> </span><span class="ff4 fs3">A<span class="_ _12"></span></span>,<span class="_ _13"> </span>there<span class="_ _b"> </span>e<span class="_ _12"></span>xist<span class="_ _12"></span>s<span class="_ _b"> </span>a<span class="_ _b"> </span>per<span class="_ _d"></span>mutation<span class="_ _b"> </span><span class="ff4 fs3">P<span class="_ _a"></span></span>,<span class="_ _13"> </span>a<span class="_ _b"> </span>low<span class="_ _12"></span>er<span class="_ _b"> </span>tr<span class="_ _12"></span>ianglular<span class="_ _b"> </span>matr<span class="_ _12"></span>ix<span class="_ _b"> </span><span class="ff4 fs3">L<span class="_ _13"> </span></span>and<span class="_ _b"> </span>an<span class="_ _b"> </span>uppe<span class="_ _12"></span>r</div><div class="t m0 x3 hd yc1 ffb fs2 fc0 sc0 ls0 ws0">triangular<span class="_ _11"> </span>matrix<span class="_ _9"> </span><span class="ff4 fs3">U<span class="_ _8"> </span></span>such<span class="_ _c"> </span>that</div><div class="t m0 x3a h6 yc2 ff4 fs3 fc0 sc0 ls0 ws0">P</div><div class="t m0 x28 h8 yc3 ff6 fs4 fc0 sc0 ls0 ws0">−<span class="ff5">1</span></div><div class="t m0 x2a h6 yc2 ff4 fs3 fc0 sc0 ls0 ws0">A<span class="_ _18"> </span><span class="ff6">=<span class="_ _e"> </span></span>L<span class="_ _1"></span>U<span class="_ _a"></span><span class="ff5">.</span></div><div class="t m0 x3 hd yc4 ffb fs2 fc0 sc0 ls0 ws0">Proof.<span class="_ _6"> </span><span class="ff2">First<span class="_ _c"> </span>we<span class="_ _11"> </span>show<span class="_ _c"> </span>that<span class="_ _11"> </span>such<span class="_ _5"> </span>a<span class="_ _11"> </span>factoriza<span class="_ _1"></span>tion<span class="_ _11"> </span>necessarily<span class="_ _5"> </span>e<span class="_ _1"></span>xists.<span class="_ _8"> </span>As<span class="_ _8"> </span><span class="ff4 fs3">A<span class="_ _3"> </span></span>a<span class="_ _11"> </span>square<span class="_ _11"> </span>matrix<span class="_ _c"> </span>there</span></div><div class="t m0 x3 h3 yc5 ff2 fs2 fc0 sc0 ls0 ws0">exist<span class="_ _c"> </span>a<span class="_ _11"> </span>sequence<span class="_ _11"> </span>of<span class="_ _c"> </span>elementar<span class="_ _12"></span>y<span class="_ _11"> </span>matrices<span class="_ _c"> </span>such<span class="_ _11"> </span>that</div><div class="t m0 x19 h6 yc6 ff4 fs3 fc0 sc0 ls0 ws0">E</div><div class="t m0 x34 h8 yc7 ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x3a h6 yc6 ff4 fs3 fc0 sc0 ls0 ws0">E</div><div class="t m0 x28 h8 yc7 ff5 fs4 fc0 sc0 ls0 ws0">2</div><div class="t m0 x29 h6 yc6 ff6 fs3 fc0 sc0 ls0 ws0">·<span class="_ _a"> </span>·<span class="_ _10"> </span>·<span class="_ _a"> </span><span class="ff4">E</span></div><div class="t m0 x68 h4 yc7 ff4 fs4 fc0 sc0 ls0 ws0">s</div><div class="t m0 x59 h6 yc6 ff4 fs3 fc0 sc0 ls0 ws0">A<span class="_ _18"> </span><span class="ff6">=<span class="_ _a"> </span></span>U<span class="_ _10"> </span><span class="ff5">.</span></div><div class="t m0 x3 h3 yc8 ff2 fs2 fc0 sc0 ls0 ws0">wher<span class="_ _1"></span>e<span class="_ _e"> </span><span class="ff4 fs3">U<span class="_ _5"> </span></span>is<span class="_ _18"> </span>the<span class="_ _18"> </span>upper<span class="_ _18"> </span>triangular<span class="_ _18"> </span>matrix<span class="_ _18"> </span>pr<span class="_ _1"></span>oduced<span class="_ _18"> </span>b<span class="_ _1"></span>y<span class="_ _18"> </span>gaussian<span class="_ _18"> </span>elimina<span class="_ _1"></span>tion.<span class="_ _5"> </span>Let<span class="_ _18"> </span><span class="ff4 fs3">L<span class="_ _18"> </span><span class="ff6">=<span class="_ _7"> </span><span class="ff5">(</span></span>E</span></div><div class="t m0 x70 h8 yc9 ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x71 h6 yc8 ff4 fs3 fc0 sc0 ls0 ws0">E</div><div class="t m0 x72 h8 yc9 ff5 fs4 fc0 sc0 ls0 ws0">2</div><div class="t m0 x73 h6 yc8 ff6 fs3 fc0 sc0 ls0 ws0">·<span class="_ _a"> </span>·<span class="_ _10"> </span>·<span class="_ _a"> </span><span class="ff4">E</span></div><div class="t m0 x74 h4 yc9 ff4 fs4 fc0 sc0 ls0 ws0">s</div><div class="t m0 x75 h5 yc8 ff5 fs3 fc0 sc0 ls0 ws0">)</div><div class="t m0 x76 h8 yca ff6 fs4 fc0 sc0 ls0 ws0">−<span class="ff5">1</span></div><div class="t m0 x77 ha yc8 ff6 fs3 fc0 sc0 ls0 ws0">=</div><div class="t m0 x3 h6 ycb ff4 fs3 fc0 sc0 ls0 ws0">E</div><div class="t m0 x6e h4 ycc ff4 fs4 fc0 sc0 ls0 ws0">T</div><div class="t m0 x6e h4 ycd ff4 fs4 fc0 sc0 ls0 ws0">s</div><div class="t m0 x6f h6 ycb ff6 fs3 fc0 sc0 ls0 ws0">·<span class="_ _a"> </span>·<span class="_ _10"> </span>·<span class="_ _a"> </span><span class="ff4">E</span></div><div class="t m0 x5 h4 ycc ff4 fs4 fc0 sc0 ls0 ws0">T</div><div class="t m0 x5 h8 yce ff5 fs4 fc0 sc0 ls0 ws0">2</div><div class="t m0 x78 h6 ycb ff4 fs3 fc0 sc0 ls0 ws0">E</div><div class="t m0 x79 h4 ycc ff4 fs4 fc0 sc0 ls0 ws0">T</div><div class="t m0 x79 h8 yce ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x7 h3 ycb ff2 fs2 fc0 sc0 ls0 ws0">.<span class="_ _3"> </span>T<span class="_ _12"></span>hen<span class="_ _3"> </span><span class="ff4 fs3">A<span class="_ _18"> </span><span class="ff6">=<span class="_ _7"> </span></span>L<span class="_ _4"></span>U<span class="_ _b"> </span><span class="ff2 fs2">as<span class="_ _c"> </span>intended.</span></span></div><div class="t m0 x2 h3 ycf ff2 fs2 fc0 sc0 ls0 ws0">The<span class="_ _3"> </span>addition<span class="_ _3"> </span>of<span class="_ _5"> </span>the<span class="_ _3"> </span>permutation<span class="_ _3"> </span>matrix<span class="_ _5"> </span><span class="ff4 fs3">P<span class="_ _13"> </span></span>allows<span class="_ _5"> </span>us<span class="_ _3"> </span>to<span class="_ _5"> </span>r<span class="_ _1"></span>educe<span class="_ _3"> </span>the<span class="_ _5"> </span><span class="ff4 fs3">E</span></div><div class="t m0 x7a h8 yd0 ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x7b h6 ycf ff5 fs3 fc0 sc0 ls0 ws0">,<span class="_ _a"> </span>.<span class="_ _10"> </span>.<span class="_ _a"> </span>.<span class="_ _10"> </span>,<span class="_ _a"> </span><span class="ff4">E</span></div><div class="t m0 x7c h4 yd0 ff4 fs4 fc0 sc0 ls0 ws0">S</div><div class="t m0 x7d h3 ycf ff2 fs2 fc0 sc0 ls0 ws0">to<span class="_ _5"> </span>be<span class="_ _3"> </span>only</div><div class="t m0 x3 h3 yd1 ff2 fs2 fc0 sc0 ls0 ws0">r<span class="_ _1"></span>ow<span class="_ _c"> </span>addition<span class="_ _11"> </span>and<span class="_ _11"> </span>scaling<span class="_ _11"> </span>operations,<span class="_ _11"> </span>wher<span class="_ _1"></span>e<span class="_ _c"> </span><span class="ff4 fs3">P<span class="_ _b"> </span></span>is<span class="_ _11"> </span>the<span class="_ _11"> </span>only<span class="_ _11"> </span>piv<span class="_ _1"></span>ot<span class="_ _11"> </span>operation<span class="_ _c"> </span>for<span class="_ _c"> </span>the<span class="_ _11"> </span><span class="ff3">ﬁ</span>rst<span class="_ _11"> </span>step<span class="_ _c"> </span>of</div><div class="t m0 x3 h3 yd2 ff2 fs2 fc0 sc0 ls0 ws0">gaussian<span class="_ _11"> </span>elimination.<span class="_ _8"> </span>Since<span class="_ _5"> </span>only<span class="_ _11"> </span>pivot<span class="_ _c"> </span>operations<span class="_ _11"> </span>are<span class="_ _11"> </span>non<span class="_ _11"> </span>triangular<span class="_ _5"> </span>w<span class="_ _1"></span>e<span class="_ _11"> </span>factor<span class="_ _11"> </span>out<span class="_ _5"> </span>the<span class="_ _11"> </span>piv<span class="_ _1"></span>ot</div><div class="t m0 x3 h3 ya7 ff2 fs2 fc0 sc0 ls0 ws0">matrix<span class="_ _c"> </span><span class="ff4 fs3">P<span class="_ _8"> </span></span>to<span class="_ _c"> </span>lea<span class="_ _1"></span>v<span class="_ _1"></span>e<span class="_ _c"> </span><span class="ff4 fs3">L<span class="_ _3"> </span></span>low<span class="_ _1"></span>er<span class="_ _c"> </span>triangular<span class="_ _1"></span>.</div></div><div class="pi" data-data='{"ctm":[1.000000,0.000000,0.000000,1.000000,0.000000,0.000000]}'></div></div>
+<div id="pf5" class="pf w0 h0" data-page-no="5"><div class="pc pc5 w0 h0"><div class="t m0 xa h3 y2f ff2 fs6 fc0 sc0 ls0 ws0">F<span class="_ _0"></span>A<span class="_ _1"></span>CT<span class="_ _1"></span>ORIN<span class="_ _1"></span>G<span class="_ _9"> </span>MA<span class="_ _4"></span>TRICIES<span class="_ _14"> </span><span class="fs2">5</span></div><div class="t m0 x2 h3 y30 ff2 fs2 fc0 sc0 ls0 ws0">No<span class="_ _1"></span>w<span class="_ _1"></span>,<span class="_ _19"> </span>y<span class="_ _1"></span>ou<span class="_ _b"> </span>migh<span class="_ _1"></span>t<span class="_ _b"> </span>think<span class="_ _12"></span>,<span class="_ _13"> </span>wh<span class="_ _1"></span>y<span class="_ _b"> </span>is<span class="_ _19"> </span>this<span class="_ _b"> </span>factorization<span class="_ _8"> </span>ev<span class="_ _1"></span>en<span class="_ _b"> </span>usef<span class="_ _12"></span>ul.<span class="_ _1b"> </span>W<span class="_ _4"></span>ell<span class="_ _8"> </span>suppose<span class="_ _19"> </span>we<span class="_ _b"> </span>ha<span class="_ _4"></span>ve<span class="_ _b"> </span>a</div><div class="t m0 x3 h3 y7d ff2 fs2 fc0 sc0 ls0 ws0">syst<span class="_ _1"></span>em<span class="_ _c"> </span>of<span class="_ _c"> </span>equations</div><div class="t m0 x25 h6 yd3 ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x9 h8 yd4 ff5 fs4 fc0 sc0 ls0 ws0">11</div><div class="t m0 xb h6 yd3 ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x26 h8 yd4 ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x27 h6 yd3 ff6 fs3 fc0 sc0 ls0 ws0">+<span class="_ _e"> </span><span class="ff4">a</span></div><div class="t m0 xd h8 yd4 ff5 fs4 fc0 sc0 ls0 ws0">12</div><div class="t m0 x28 h6 yd3 ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x29 h8 yd4 ff5 fs4 fc0 sc0 ls0 ws0">2</div><div class="t m0 x2a h6 yd3 ff6 fs3 fc0 sc0 ls0 ws0">+<span class="_ _10"> </span>·<span class="_ _10"> </span>·<span class="_ _a"> </span>·<span class="_ _10"> </span>+<span class="_ _e"> </span><span class="ff4">a</span></div><div class="t m0 x2b h4 yd4 ff5 fs4 fc0 sc0 ls0 ws0">1<span class="ff4">n</span></div><div class="t m0 x2c h6 yd3 ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x2d h4 yd4 ff4 fs4 fc0 sc0 ls0 ws0">n</div><div class="t m0 x2e h6 yd3 ff6 fs3 fc0 sc0 ls0 ws0">=<span class="_ _7"> </span><span class="ff4">b</span></div><div class="t m0 x21 h8 yd4 ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x25 h6 yd5 ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x9 h8 yd6 ff5 fs4 fc0 sc0 ls0 ws0">21</div><div class="t m0 xb h6 yd5 ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x26 h8 yd6 ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x27 h6 yd5 ff6 fs3 fc0 sc0 ls0 ws0">+<span class="_ _e"> </span><span class="ff4">a</span></div><div class="t m0 xd h8 yd6 ff5 fs4 fc0 sc0 ls0 ws0">22</div><div class="t m0 x28 h6 yd5 ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x29 h8 yd6 ff5 fs4 fc0 sc0 ls0 ws0">2</div><div class="t m0 x2a h6 yd5 ff6 fs3 fc0 sc0 ls0 ws0">+<span class="_ _10"> </span>·<span class="_ _10"> </span>·<span class="_ _a"> </span>·<span class="_ _10"> </span>+<span class="_ _e"> </span><span class="ff4">a</span></div><div class="t m0 x2b h4 yd6 ff5 fs4 fc0 sc0 ls0 ws0">2<span class="ff4">n</span></div><div class="t m0 x2c h6 yd5 ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x2d h4 yd6 ff4 fs4 fc0 sc0 ls0 ws0">n</div><div class="t m0 x2e h6 yd5 ff6 fs3 fc0 sc0 ls0 ws0">=<span class="_ _7"> </span><span class="ff4">b</span></div><div class="t m0 x21 h8 yd6 ff5 fs4 fc0 sc0 ls0 ws0">2</div><div class="t m0 x10 h3 yd7 ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x10 h3 yd8 ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x10 h3 yd9 ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x2f h6 yda ff4 fs3 fc0 sc0 ls0 ws0">a</div><div class="t m0 x30 h4 ydb ff4 fs4 fc0 sc0 ls0 ws0">n<span class="_ _12"></span><span class="ff5">1</span></div><div class="t m0 x31 h6 yda ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x32 h8 ydb ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x33 h6 yda ff6 fs3 fc0 sc0 ls0 ws0">+<span class="_ _e"> </span><span class="ff4">a</span></div><div class="t m0 x34 h4 ydb ff4 fs4 fc0 sc0 ls0 ws0">n<span class="_ _12"></span><span class="ff5">2</span></div><div class="t m0 x1b h6 yda ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x35 h8 ydb ff5 fs4 fc0 sc0 ls0 ws0">2</div><div class="t m0 x36 h6 yda ff6 fs3 fc0 sc0 ls0 ws0">+<span class="_ _10"> </span>·<span class="_ _10"> </span>·<span class="_ _a"> </span>·<span class="_ _10"> </span>+<span class="_ _e"> </span><span class="ff4">a</span></div><div class="t m0 x1e h4 ydb ff4 fs4 fc0 sc0 ls0 ws0">n<span class="_ _12"></span>n</div><div class="t m0 x49 h6 yda ff4 fs3 fc0 sc0 ls0 ws0">x</div><div class="t m0 x2d h4 ydb ff4 fs4 fc0 sc0 ls0 ws0">n</div><div class="t m0 x2e h6 yda ff6 fs3 fc0 sc0 ls0 ws0">=<span class="_ _7"> </span><span class="ff4">b</span></div><div class="t m0 x21 h4 ydb ff4 fs4 fc0 sc0 ls0 ws0">n</div><div class="t m0 x23 h5 yda ff5 fs3 fc0 sc0 ls0 ws0">.</div><div class="t m0 x2 h3 ydc ff2 fs2 fc0 sc0 ls0 ws0">If<span class="_ _3"> </span><span class="ff4 fs3">A<span class="_ _5"> </span></span>is<span class="_ _11"> </span>the<span class="_ _11"> </span>matrix<span class="_ _c"> </span>of<span class="_ _11"> </span>coe<span class="ff3">ﬃ</span>cients<span class="_ _3"> </span><span class="ff4 fs3">A</span></div><div class="t m0 x19 h4 ydd ff4 fs4 fc0 sc0 ls0 ws0">i<span class="_ _e"> </span>j</div><div class="t m0 xd h6 ydc ff6 fs3 fc0 sc0 ls0 ws0">=<span class="_ _7"> </span><span class="ff4">a</span></div><div class="t m0 x7e h4 ydd ff4 fs4 fc0 sc0 ls0 ws0">i<span class="_ _e"> </span>j</div><div class="t m0 xf h3 ydc ff2 fs2 fc0 sc0 ls0 ws0">,<span class="_ _c"> </span>we<span class="_ _c"> </span>can<span class="_ _11"> </span>then<span class="_ _11"> </span>write<span class="_ _c"> </span>this<span class="_ _11"> </span>equation<span class="_ _c"> </span>in<span class="_ _11"> </span>the<span class="_ _11"> </span>form</div><div class="t m0 x35 h6 yde ff4 fs3 fc0 sc0 ls0 ws0">A<span class="_ _12"></span><span class="ffa">x<span class="_ _7"> </span><span class="ff6">=<span class="_ _7"> </span></span>b<span class="ff5">.</span></span></div><div class="t m0 x2 h3 ydf ff2 fs2 fc0 sc0 ls0 ws0">T<span class="_ _0"></span>o<span class="_ _b"> </span>solv<span class="_ _1"></span>e<span class="_ _19"> </span>this<span class="_ _19"> </span>we<span class="_ _b"> </span><span class="ff3">ﬁ</span>nd<span class="_ _19"> </span>a<span class="_ _19"> </span><span class="ff4 fs3">L<span class="_ _1"></span>U<span class="_ _2"> </span><span class="ff2 fs2">factorization<span class="_ _b"> </span>such<span class="_ _19"> </span>that<span class="_ _6"> </span></span>A<span class="_ _5"> </span><span class="ff6">=<span class="_ _9"> </span></span>L<span class="_ _1"></span>U<span class="_ _a"></span><span class="ff2 fs2">,<span class="_ _6"> </span>w<span class="_ _1"></span>hich<span class="_ _19"> </span>giv<span class="_ _1"></span>es<span class="_ _19"> </span>the<span class="_ _19"> </span>equation</span></span></div><div class="t m0 x3 h3 ye0 ff4 fs3 fc0 sc0 ls0 ws0">L<span class="_ _1"></span>U<span class="_ _a"></span><span class="ffa">x<span class="_ _7"> </span><span class="ff6">=<span class="_ _7"> </span></span>b<span class="ff2 fs2">.<span class="_ _5"> </span>Let<span class="_ _c"> </span></span>y<span class="_ _7"> </span><span class="ff6">=<span class="_ _10"> </span></span></span>U<span class="_ _10"> </span><span class="ffa">x<span class="ff2 fs2">,<span class="_ _c"> </span>then<span class="_ _c"> </span>we<span class="_ _c"> </span>need<span class="_ _c"> </span>to<span class="_ _9"> </span>solv<span class="_ _1"></span>e<span class="_ _c"> </span><span class="ff4 fs3">L<span class="_ _d"></span><span class="ffa">y<span class="_ _7"> </span><span class="ff6">=<span class="_ _e"> </span></span>b</span></span>,<span class="_ _c"> </span>which<span class="_ _c"> </span>follo<span class="_ _1"></span>ws<span class="_ _9"> </span>by<span class="_ _c"> </span>simple<span class="_ _c"> </span>pr<span class="_ _1"></span>or<span class="_ _1"></span>oga<span class="_ _1"></span>tion,<span class="_ _c"> </span>and</span></span></div><div class="t m0 x3 h3 ye1 ff2 fs2 fc0 sc0 ls0 ws0">then<span class="_ _9"> </span><span class="ff4 fs3">U<span class="_ _10"></span><span class="ffa">x<span class="_ _e"> </span><span class="ff6">=<span class="_ _7"> </span></span>y</span></span>.</div><div class="t m0 x2 h3 ye2 ff2 fs2 fc0 sc0 ls0 ws0">No<span class="_ _1"></span>w<span class="_ _5"> </span>this<span class="_ _3"> </span>migh<span class="_ _1"></span>t<span class="_ _5"> </span>seem<span class="_ _5"> </span>more<span class="_ _5"> </span>comple<span class="_ _1"></span>x<span class="_ _5"> </span>than<span class="_ _3"> </span>gaussian<span class="_ _5"> </span>elimination,<span class="_ _5"> </span>and<span class="_ _3"> </span>in<span class="_ _5"> </span>some<span class="_ _3"> </span>sense<span class="_ _5"> </span>it<span class="_ _3"> </span>is.</div><div class="t m0 x3 h3 ye3 ff2 fs2 fc0 sc0 ls0 ws0">How<span class="_ _1"></span>e<span class="_ _1"></span>v<span class="_ _1"></span>er<span class="_ _1"></span>,<span class="_ _8"> </span>in<span class="_ _8"> </span>many<span class="_ _3"> </span>cases<span class="_ _8"> </span>we<span class="_ _3"> </span>consider<span class="_ _8"> </span>syst<span class="_ _1"></span>ems<span class="_ _8"> </span>of<span class="_ _3"> </span>equations<span class="_ _8"> </span>w<span class="_ _1"></span>her<span class="_ _1"></span>e<span class="_ _8"> </span><span class="ffa fs3">b</span>.<span class="_ _17"> </span>Since<span class="_ _8"> </span><span class="ffa fs3">b<span class="_ _8"> </span></span>changes<span class="_ _3"> </span>with</div><div class="t m0 x3 h3 ye4 ff2 fs2 fc0 sc0 ls0 ws0">gaussian<span class="_ _8"> </span>elimination,<span class="_ _b"> </span>it<span class="_ _b"> </span>would<span class="_ _8"> </span>r<span class="_ _1"></span>equir<span class="_ _1"></span>e<span class="_ _8"> </span>a<span class="_ _b"> </span>new<span class="_ _8"> </span>computation<span class="_ _8"> </span>at<span class="_ _8"> </span>ev<span class="_ _1"></span>er<span class="_ _12"></span>y<span class="_ _b"> </span>computa<span class="_ _1"></span>tion,<span class="_ _b"> </span>with<span class="_ _b"> </span><span class="ff4 fs3">L<span class="_ _1"></span>U</span></div><div class="t m0 x3 h3 ye5 ff2 fs2 fc0 sc0 ls0 ws0">factoriza<span class="_ _1"></span>tion<span class="_ _c"> </span>we<span class="_ _c"> </span>need<span class="_ _11"> </span>only<span class="_ _11"> </span>one<span class="_ _11"> </span>factoriza<span class="_ _1"></span>tion<span class="_ _c"> </span>of<span class="_ _11"> </span>the<span class="_ _11"> </span>matrix.</div><div class="t m0 x2 h3 ye6 ff2 fs2 fc0 sc0 ls0 ws0">Let’<span class="_ _4"></span>s<span class="_ _3"> </span>consider<span class="_ _8"> </span>a<span class="_ _3"> </span>simple<span class="_ _3"> </span>example,<span class="_ _3"> </span>given<span class="_ _3"> </span>the<span class="_ _3"> </span>matrix<span class="_ _19"> </span><span class="ff4 fs3">A<span class="_ _9"> </span><span class="ff6">=</span></span></div><div class="t m0 x42 h7 ye7 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x42 h7 ye8 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x42 h7 ye9 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x42 h7 yea ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x7f h5 yeb ff6 fs3 fc0 sc0 ls0 ws0">−<span class="ff5">1<span class="_ _f"> </span>1<span class="_ _f"> </span>2</span></div><div class="t m0 x44 h5 yec ff5 fs3 fc0 sc0 ls0 ws0">2<span class="_ _1c"> </span>0<span class="_ _f"> </span>4</div><div class="t m0 x44 h5 yed ff5 fs3 fc0 sc0 ls0 ws0">1<span class="_ _1c"> </span>3<span class="_ _f"> </span>5</div><div class="t m0 x5f h7 ye7 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x5f h7 ye8 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x5f h7 ye9 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x5f h7 yea ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x80 h3 ye6 ff3 fs2 fc0 sc0 ls0 ws0">ﬁ<span class="ff2">nd<span class="_ _3"> </span>a<span class="_ _8"> </span>fact<span class="_ _1"></span>orization</span></div><div class="t m0 x3 h6 yee ff4 fs3 fc0 sc0 ls0 ws0">P</div><div class="t m0 x6e h8 yef ff6 fs4 fc0 sc0 ls0 ws0">−<span class="ff5">1</span></div><div class="t m0 x81 h3 yf0 ff4 fs3 fc0 sc0 ls0 ws0">A<span class="_ _18"> </span><span class="ff6">=<span class="_ _18"> </span></span>L<span class="_ _4"></span>U<span class="_ _10"></span><span class="ff2 fs2">.<span class="_ _6"> </span>T<span class="_ _0"></span>o<span class="_ _5"> </span>do<span class="_ _5"> </span>this,<span class="_ _3"> </span>let’<span class="_ _4"></span>s<span class="_ _5"> </span>perform<span class="_ _5"> </span>gaussian<span class="_ _11"> </span>elimination<span class="_ _5"> </span>on<span class="_ _b"> </span><span class="ff4 fs3">A<span class="_ _d"></span></span>.<span class="_ _6"> </span>W<span class="_ _1d"></span>e<span class="_ _5"> </span>perform<span class="_ _5"> </span>the<span class="_ _5"> </span>f<span class="_ _1"></span>ollo<span class="_ _1"></span>wing</span></div><div class="t m0 x3 h3 yf1 ff2 fs2 fc0 sc0 ls0 ws0">operations.</div><div class="t m0 x2 h3 yf2 ff2 fs2 fc0 sc0 ls0 ws0">1.<span class="_ _6"> </span>Swap<span class="_ _c"> </span>r<span class="_ _1"></span>ow<span class="_ _1"></span>s<span class="_ _11"> </span><span class="ff4 fs3">r</span></div><div class="t m0 x82 h8 yf3 ff5 fs4 fc0 sc0 ls0 ws0">2</div><div class="t m0 x55 h6 yf2 ff6 fs3 fc0 sc0 ls0 ws0">↔<span class="_ _7"> </span><span class="ff4">r</span></div><div class="t m0 x83 h8 yf3 ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x84 h3 yf2 ff2 fs2 fc0 sc0 ls0 ws0">.</div><div class="t m0 x6f h3 yf4 ff2 fs2 fc0 sc0 ls0 ws0">2.<span class="_ _6"> </span>A<span class="_ _1"></span>dd<span class="_ _c"> </span>ro<span class="_ _1"></span>w<span class="_ _c"> </span><span class="ff4 fs3">r</span></div><div class="t m0 x85 h8 yf5 ff5 fs4 fc0 sc0 ls0 ws0">2</div><div class="t m0 x86 h6 yf4 ff6 fs3 fc0 sc0 ls0 ws0">7−<span class="_ _0"></span>→<span class="_ _e"> </span><span class="ff4">r</span></div><div class="t m0 x17 h8 yf5 ff5 fs4 fc0 sc0 ls0 ws0">2</div><div class="t m0 x87 h6 yf4 ff6 fs3 fc0 sc0 ls0 ws0">+<span class="_ _10"> </span><span class="ff4">r</span></div><div class="t m0 x88 h8 yf5 ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x0 h5 yf4 ff5 fs3 fc0 sc0 ls0 ws0">/2</div><div class="t m0 x6f h3 yf6 ff2 fs2 fc0 sc0 ls0 ws0">3.<span class="_ _6"> </span>A<span class="_ _1"></span>dd<span class="_ _c"> </span>ro<span class="_ _1"></span>w<span class="_ _c"> </span><span class="ff4 fs3">r</span></div><div class="t m0 x85 h8 yf7 ff5 fs4 fc0 sc0 ls0 ws0">3</div><div class="t m0 x86 h6 yf6 ff6 fs3 fc0 sc0 ls0 ws0">7−<span class="_ _0"></span>→<span class="_ _e"> </span><span class="ff4">r</span></div><div class="t m0 x17 h8 yf7 ff5 fs4 fc0 sc0 ls0 ws0">2</div><div class="t m0 x87 h6 yf6 ff6 fs3 fc0 sc0 ls0 ws0">−<span class="_ _10"> </span><span class="ff4">r</span></div><div class="t m0 x88 h8 yf7 ff5 fs4 fc0 sc0 ls0 ws0">1</div><div class="t m0 x0 h5 yf6 ff5 fs3 fc0 sc0 ls0 ws0">/2</div><div class="t m0 x6f h3 yf8 ff2 fs2 fc0 sc0 ls0 ws0">4.<span class="_ _6"> </span>A<span class="_ _1"></span>dd<span class="_ _c"> </span>ro<span class="_ _1"></span>w<span class="_ _c"> </span><span class="ff4 fs3">r</span></div><div class="t m0 x85 h8 yf9 ff5 fs4 fc0 sc0 ls0 ws0">3</div><div class="t m0 x86 h6 yf8 ff6 fs3 fc0 sc0 ls0 ws0">7−<span class="_ _0"></span>→<span class="_ _e"> </span><span class="ff4">r</span></div><div class="t m0 x17 h8 yf9 ff5 fs4 fc0 sc0 ls0 ws0">3</div><div class="t m0 x87 h6 yf8 ff6 fs3 fc0 sc0 ls0 ws0">−<span class="_ _10"> </span><span class="ff5">3<span class="ff4">r</span></span></div><div class="t m0 x0 h8 yf9 ff5 fs4 fc0 sc0 ls0 ws0">2</div><div class="t m0 x2 h3 yfa ff2 fs2 fc0 sc0 ls0 ws0">T<span class="_ _0"></span>o<span class="_ _c"> </span>g<span class="_ _1"></span>et</div><div class="t m0 xc h6 yfb ff4 fs3 fc0 sc0 ls0 ws0">U<span class="_ _c"> </span><span class="ff6">=</span></div><div class="t m0 x1b h7 yfc ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x1b h7 yfd ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x1b h7 yfe ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x1b h7 yff ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x35 h5 y100 ff5 fs3 fc0 sc0 ls0 ws0">1<span class="_ _f"> </span><span class="ff6">−</span>1<span class="_ _f"> </span><span class="ff6">−</span>2</div><div class="t m0 x68 h5 y101 ff5 fs3 fc0 sc0 ls0 ws0">4<span class="_ _1e"> </span>7</div><div class="t m0 x47 h5 y102 ff5 fs3 fc0 sc0 ls0 ws0">8</div><div class="t m0 x89 h7 yfc ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x89 h7 yfd ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x89 h7 yfe ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x89 h7 yff ff7 fs3 fc0 sc0 ls0 ws0"></div></div><div class="pi" data-data='{"ctm":[1.000000,0.000000,0.000000,1.000000,0.000000,0.000000]}'></div></div>
+<div id="pf6" class="pf w0 h0" data-page-no="6"><div class="pc pc6 w0 h0"><div class="t m0 xa h3 y2f ff2 fs6 fc0 sc0 ls0 ws0">F<span class="_ _0"></span>A<span class="_ _1"></span>CT<span class="_ _1"></span>ORIN<span class="_ _1"></span>G<span class="_ _9"> </span>MA<span class="_ _1d"></span>TRICIES<span class="_ _14"> </span><span class="fs2">6</span></div><div class="t m0 x2 h3 y30 ff2 fs2 fc0 sc0 ls0 ws0">No<span class="_ _1"></span>w<span class="_ _c"> </span>let<span class="_ _11"> </span>us<span class="_ _11"> </span>write<span class="_ _c"> </span>the<span class="_ _11"> </span><span class="ff4 fs3">L<span class="_ _5"> </span></span>matrix<span class="_ _11"> </span>as<span class="_ _11"> </span>the<span class="_ _11"> </span>in<span class="_ _1"></span>v<span class="_ _1"></span>erse<span class="_ _11"> </span>of<span class="_ _c"> </span>the<span class="_ _11"> </span>follo<span class="_ _1"></span>wing<span class="_ _c"> </span>matrices,</div><div class="t m0 x8a h6 y103 ff4 fs3 fc0 sc0 ls0 ws0">L</div><div class="t m0 x8b h8 y104 ff6 fs4 fc0 sc0 ls0 ws0">−<span class="ff5">1</span></div><div class="t m0 x8c ha y103 ff6 fs3 fc0 sc0 ls0 ws0">=</div><div class="t m0 x83 h7 y105 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x83 h7 y106 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x83 h7 y107 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x83 h7 y108 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x8d h5 y109 ff5 fs3 fc0 sc0 ls0 ws0">1<span class="_ _1c"> </span>0<span class="_ _f"> </span>0</div><div class="t m0 x8d h5 y10a ff5 fs3 fc0 sc0 ls0 ws0">0<span class="_ _1c"> </span>1<span class="_ _f"> </span>0</div><div class="t m0 x8 h5 y10b ff6 fs3 fc0 sc0 ls0 ws0">−<span class="ff5">1<span class="_ _f"> </span>0<span class="_ _f"> </span>1</span></div><div class="t m0 xb h7 y105 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 xb h7 y106 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 xb h7 y107 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 xb h7 y108 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x8e h7 y105 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x8e h7 y106 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x8e h7 y107 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x8e h7 y108 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x19 h5 y109 ff5 fs3 fc0 sc0 ls0 ws0">1<span class="_ _1c"> </span>0<span class="_ _f"> </span>0</div><div class="t m0 x1 h5 y10a ff6 fs3 fc0 sc0 ls0 ws0">−<span class="ff5">2<span class="_ _f"> </span>1<span class="_ _f"> </span>0</span></div><div class="t m0 x19 h5 y10b ff5 fs3 fc0 sc0 ls0 ws0">0<span class="_ _1c"> </span>0<span class="_ _f"> </span>1</div><div class="t m0 x50 h7 y105 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x50 h7 y106 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x50 h7 y107 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x50 h7 y108 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x59 h7 y105 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x59 h7 y106 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x59 h7 y107 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x59 h7 y108 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x52 h5 y109 ff6 fs3 fc0 sc0 ls0 ws0">−<span class="ff5">1<span class="_ _f"> </span>0<span class="_ _f"> </span>0</span></div><div class="t m0 x1d h5 y10a ff5 fs3 fc0 sc0 ls0 ws0">0<span class="_ _1c"> </span>1<span class="_ _f"> </span>0</div><div class="t m0 x1d h5 y10b ff5 fs3 fc0 sc0 ls0 ws0">0<span class="_ _1c"> </span>0<span class="_ _f"> </span>1</div><div class="t m0 x20 h7 y105 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x20 h7 y106 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x20 h7 y107 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x20 h7 y108 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x4b ha y103 ff6 fs3 fc0 sc0 ls0 ws0">=</div><div class="t m0 x8f h7 y105 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x8f h7 y106 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x8f h7 y107 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x8f h7 y108 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x13 h5 y109 ff6 fs3 fc0 sc0 ls0 ws0">−<span class="ff5">1<span class="_ _f"> </span>0<span class="_ _f"> </span>0</span></div><div class="t m0 x90 h5 y10a ff5 fs3 fc0 sc0 ls0 ws0">2<span class="_ _1c"> </span>1<span class="_ _f"> </span>0</div><div class="t m0 x90 h5 y10b ff5 fs3 fc0 sc0 ls0 ws0">1<span class="_ _1c"> </span>0<span class="_ _f"> </span>1</div><div class="t m0 x7a h7 y10c ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x7a h7 y10d ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x7a h7 y107 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x7a h7 y108 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x2 h3 y10e ff2 fs2 fc0 sc0 ls0 ws0">with<span class="_ _c"> </span><span class="ff4 fs3">P<span class="_ _c"> </span><span class="ff6">=</span></span></div><div class="t m0 x91 h7 y10f ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x91 h7 y110 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x91 h7 y111 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x91 h7 y112 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x92 h5 y113 ff5 fs3 fc0 sc0 ls0 ws0">1<span class="_ _f"> </span>0<span class="_ _f"> </span>0</div><div class="t m0 x92 h5 y114 ff5 fs3 fc0 sc0 ls0 ws0">0<span class="_ _f"> </span>0<span class="_ _f"> </span>1</div><div class="t m0 x92 h5 y115 ff5 fs3 fc0 sc0 ls0 ws0">0<span class="_ _f"> </span>1<span class="_ _f"> </span>0</div><div class="t m0 x16 h7 y10f ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x16 h7 y110 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x16 h7 y111 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x16 h7 y112 ff7 fs3 fc0 sc0 ls0 ws0"></div><div class="t m0 x83 h3 y10e ff2 fs2 fc0 sc0 ls0 ws0">.</div></div><div class="pi" data-data='{"ctm":[1.000000,0.000000,0.000000,1.000000,0.000000,0.000000]}'></div></div>
+</div>
+<div class="loading-indicator">
+<img alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAMAAACdt4HsAAAABGdBTUEAALGPC/xhBQAAAwBQTFRFAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAQAAAwAACAEBDAIDFgQFHwUIKggLMggPOgsQ/w1x/Q5v/w5w9w9ryhBT+xBsWhAbuhFKUhEXUhEXrhJEuxJKwBJN1xJY8hJn/xJsyhNRoxM+shNF8BNkZxMfXBMZ2xRZlxQ34BRb8BRk3hVarBVA7RZh8RZi4RZa/xZqkRcw9Rdjihgsqxg99BhibBkc5hla9xli9BlgaRoapho55xpZ/hpm8xpfchsd+Rtibxsc9htgexwichwdehwh/hxk9Rxedx0fhh4igB4idx4eeR4fhR8kfR8g/h9h9R9bdSAb9iBb7yFX/yJfpCMwgyQf8iVW/iVd+iVZ9iVWoCYsmycjhice/ihb/Sla+ylX/SpYmisl/StYjisfkiwg/ixX7CxN9yxS/S1W/i1W6y1M9y1Q7S5M6S5K+i5S6C9I/i9U+jBQ7jFK/jFStTIo+DJO9zNM7TRH+DRM/jRQ8jVJ/jZO8DhF9DhH9jlH+TlI/jpL8jpE8zpF8jtD9DxE7zw9/z1I9j1A9D5C+D5D4D8ywD8nwD8n90A/8kA8/0BGxEApv0El7kM5+ENA+UNAykMp7kQ1+0RB+EQ+7EQ2/0VCxUUl6kU0zkUp9UY8/kZByUkj1Eoo6Usw9Uw3300p500t3U8p91Ez11Ij4VIo81Mv+FMz+VM0/FM19FQw/lQ19VYv/lU1/1cz7Fgo/1gy8Fkp9lor4loi/1sw8l0o9l4o/l4t6l8i8mAl+WEn8mEk52Id9WMk9GMk/mMp+GUj72Qg8mQh92Uj/mUn+GYi7WYd+GYj6mYc62cb92ch8Gce7mcd6Wcb6mcb+mgi/mgl/Gsg+2sg+Wog/moj/msi/mwh/m0g/m8f/nEd/3Ic/3Mb/3Qb/3Ua/3Ya/3YZ/3cZ/3cY/3gY/0VC/0NE/0JE/w5wl4XsJQAAAPx0Uk5TAAAAAAAAAAAAAAAAAAAAAAABCQsNDxMWGRwhJioyOkBLT1VTUP77/vK99zRpPkVmsbbB7f5nYabkJy5kX8HeXaG/11H+W89Xn8JqTMuQcplC/op1x2GZhV2I/IV+HFRXgVSN+4N7n0T5m5RC+KN/mBaX9/qp+pv7mZr83EX8/N9+5Nip1fyt5f0RQ3rQr/zo/cq3sXr9xrzB6hf+De13DLi8RBT+wLM+7fTIDfh5Hf6yJMx0/bDPOXI1K85xrs5q8fT47f3q/v7L/uhkrP3lYf2ryZ9eit2o/aOUmKf92ILHfXNfYmZ3a9L9ycvG/f38+vr5+vz8/Pv7+ff36M+a+AAAAAFiS0dEQP7ZXNgAAAj0SURBVFjDnZf/W1J5Fsf9D3guiYYwKqglg1hqplKjpdSojYizbD05iz5kTlqjqYwW2tPkt83M1DIm5UuomZmkW3bVrmupiCY1mCNKrpvYM7VlTyjlZuM2Y+7nXsBK0XX28xM8957X53zO55z3OdcGt/zi7Azbhftfy2b5R+IwFms7z/RbGvI15w8DdkVHsVi+EGa/ZZ1bYMDqAIe+TRabNv02OiqK5b8Z/em7zs3NbQO0GoD0+0wB94Ac/DqQEI0SdobIOV98Pg8AfmtWAxBnZWYK0vYfkh7ixsVhhMDdgZs2zc/Pu9HsVwc4DgiCNG5WQoJ/sLeXF8070IeFEdzpJh+l0pUB+YBwRJDttS3cheJKp9MZDMZmD5r7+vl1HiAI0qDtgRG8lQAlBfnH0/Miqa47kvcnccEK2/1NCIdJ96Ctc/fwjfAGwXDbugKgsLggPy+csiOZmyb4LiEOjQMIhH/YFg4TINxMKxxaCmi8eLFaLJVeyi3N2eu8OTctMzM9O2fjtsjIbX5ewf4gIQK/5gR4uGP27i5LAdKyGons7IVzRaVV1Jjc/PzjP4TucHEirbUjEOyITvQNNH+A2MLj0NYDAM1x6RGk5e9raiQSkSzR+XRRcUFOoguJ8NE2kN2XfoEgsUN46DFoDlZi0DA3Bwiyg9TzpaUnE6kk/OL7xgdE+KBOgKSkrbUCuHJ1bu697KDrGZEoL5yMt5YyPN9glo9viu96GtEKQFEO/34tg1omEVVRidBy5bUdJXi7R4SIxWJzPi1cYwMMV1HO10gqnQnLFygPEDxSaPPuYPlEiD8B3IIrqDevvq9ytl1JPjhhrMBdIe7zaHG5oZn5sQf7YirgJqrV/aWHLPnPCQYis2U9RthjawHIFa0NnZcpZbCMTbRmnszN3mz5EwREJmX7JrQ6nU0eyFvbtX2dyi42/yqcQf40fnIsUsfSBIJIixhId7OCA7aA8nR3sTfF4EHn3d5elaoeONBEXXR/hWdzgZvHMrMjXWwtVczxZ3nwdm76fBvJfAvtajUgKPfxO1VHHRY5f6PkJBCBwrQcSor8WFIQFgl5RFQw/RuWjwveDGjr16jVvT3UBmXPYgdw0jPFOyCgEem5fw06BMqTu/+AGMeJjtrA8aGRFhJpqEejvlvl2qeqJC2J3+nSRHwhWlyZXvTkrLSEhAQuRxoW5RXA9aZ/yESUkMrv7IpffIWXbhSW5jkVlhQUpHuxHdbQt0b6ZcWF4vdHB9MjWNs5cgsAatd0szvu9rguSmFxWUVZSUmM9ERocbarPfoQ4nETNtofiIvzDIpCFUJqzgPFYI+rVt3k9MH2ys0bOFw1qG+R6DDelnmuYAcGF38vyHKxE++M28BBu47PbrE5kR62UB6qzSFQyBtvVZfDdVdwF2tO7jsrugCK93Rxoi1mf+QHtgNOyo3bxgsEis9i+a3BAA8GWlwHNRlYmTdqkQ64DobhHwNuzl0mVctKGKhS5jGBfW5mdjgJAs0nbiP9KyCVUSyaAwAoHvSPXGYMDgjRGCq0qgykE64/WAffrP5bPVl6ToJeZFFJDMCkp+/BUjUpwYvORdXWi2IL8uDR2NjIdaYJAOy7UpnlqlqHW3A5v66CgbsoQb3PLT2MB1mR+BkWiqTvACAuOnivEwFn82TixYuxsWYTQN6u7hI6Qg3KWvtLZ6/xy2E+rrqmCHhfiIZCznMyZVqSAAV4u4Dj4GwmpiYBoYXxeKSWgLvfpRaCl6qV4EbK4MMNcKVt9TVZjCWnIcjcgAV+9K+yXLCY2TwyTk1OvrjD0I4027f2DAgdwSaNPZ0xQGFq+SAQDXPvMe/zPBeyRFokiPwyLdRUODZtozpA6GeMj9xxbB24l4Eo5Di5VtUMdajqHYHOwbK5SrAVz/mDUoqzj+wJSfsiwJzKvJhh3aQxdmjsnqdicGCgu097X3G/t7tDq2wiN5bD1zIOL1aZY8fTXZMFAtPwguYBHvl5Soj0j8VDSEb9vQGN5hbS06tUqapIuBuHDzoTCItS/ER+DiUpU5C964Ootk3cZj58cdsOhycz4pvvXGf23W3q7I4HkoMnLOkR0qKCUDo6h2TtWgAoXvYz/jXZH4O1MQIzltiuro0N/8x6fygsLmYHoVOEIItnATyZNg636V8Mm3eDcK2avzMh6/bSM6V5lNwCjLAVMlfjozevB5mjk7qF0aNR1x27TGsoLC3dx88uwOYQIGsY4PmvM2+mnyO6qVGL9sq1GqF1By6dE+VRThQX54RG7qESTUdAfns7M/PGwHs29WrI8t6DO6lWW4z8vES0l1+St5dCsl9j6Uzjs7OzMzP/fnbKYNQjlhcZ1lt0dYWkinJG9JeFtLIAAEGPIHqjoW3F0fpKRU0e9aJI9Cfo4/beNmwwGPTv3hhSnk4bf16JcOXH3yvY/CIJ0LlP5gO8A5nsHDs8PZryy7TRgCxnLq+ug2V7PS+AWeiCvZUx75RhZjzl+bRxYkhuPf4NmH3Z3PsaSQXfCkBhePuf8ZSneuOrfyBLEYrqchXcxPYEkwwg1Cyc4RPA7Oyvo6cQw2ujbhRRLDLXdimVVVQgUjBGqFy7FND2G7iMtwaE90xvnHr18BekUSHHhoe21vY+Za+yZZ9zR13d5crKs7JrslTiUsATFDD79t2zU8xhvRHIlP7xI61W+3CwX6NRd7WkUmK0SuVBMpHo5PnncCcrR3g+a1rTL5+mMJ/f1r1C1XZkZASITEttPCWmoUel6ja1PwiCrATxKfDgXfNR9lH9zMtxJIAZe7QZrOu1wng2hTGk7UHnkI/b39IgDv8kdCXb4aFnoDKmDaNPEITJZDKY/KEObR84BTqH1JNX+mLBOxCxk7W9ezvz5vVr4yvdxMvHj/X94BT11+8BxN3eJvJqPvvAfaKE6fpa3eQkFohaJyJzGJ1D6kmr+m78J7iMGV28oz0ygRHuUG1R6e3TqIXEVQHQ+9Cz0cYFRAYQzMMXLz6Vgl8VoO0lsMeMoPGpqUmdZfiCbPGr/PRF4i0je6PBaBSS/vjHN35hK+QnoTP+//t6Ny+Cw5qVHv8XF+mWyZITVTkAAAAASUVORK5CYII="/>
+</div>
+</body>
+</html>

@@ -1,0 +1,1033 @@
+<!DOCTYPE html>
+<!-- Created by pdf2htmlEX (https://github.com/coolwanglu/pdf2htmlex) -->
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta charset="utf-8"/>
+<meta name="generator" content="pdf2htmlEX"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+<style type="text/css">
+/* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab filetype=css: */
+/*! 
+ * Base CSS for pdf2htmlEX
+ * Copyright 2012,2013 Lu Wang <coolwanglu@gmail.com> 
+ * https://github.com/coolwanglu/pdf2htmlEX/blob/master/share/LICENSE
+ */
+/* Part 1: Web Page Layout: Free to modify, except for a few of them which are required by pdf2htmlEX.js, see the comments */
+#sidebar { /* Sidebar */
+  position:absolute;
+  top:0;
+  left:0;
+  bottom:0;
+  width:250px;
+  padding:0;
+  margin:0px;
+  overflow:auto;
+}
+#page-container { /* PDF container */
+  position:absolute; /* required for calculating relative positions of pages in pdf2htmlEX.js */
+  top:0;
+  left:0px;
+  margin:0; 
+  padding:0;
+  border:0; /* required for lazy page loading in pdf2htmlEX.js (page visibility test) */
+}
+@media screen {
+  /* for sidebar */
+  #sidebar.opened + #page-container { left:250px; }
+  #page-container {
+    /* `bottom' and `right' are required for lazy page loading in pdf2htmlEX.js (page visibility test)
+     * alternatively you may set width and height
+     */
+    bottom:0;
+    right:0;
+    overflow:auto;
+  }
+  .loading-indicator {
+    display:none;
+  }
+  .loading-indicator.active {
+    display:block;
+    position:absolute;
+    width:64px;
+    height:64px;
+    top:50%;
+    left:50%;
+    margin-top:-32px;
+    margin-left:-32px;
+  }
+  .loading-indicator img {
+    position:absolute;
+    top:0;
+    left:0;
+    bottom:0;
+    right:0;
+  }
+}
+@media print { 
+  @page { margin:0; }
+  html { margin:0; }
+  body { 
+    margin:0; 
+    -webkit-print-color-adjust:exact; /* enable printing background images for WebKit */
+  }
+  #sidebar { display:none; }
+  #page-container {
+    width:auto;
+    height:auto;
+    overflow:visible;
+    background-color:transparent;
+  }
+  .d { display:none; }
+}
+/* Part 2: Page Elements: Modify with caution
+ * The followings are base classes, some of which are meant to be override by PDF specific classes
+ * So do not increase the specificity (e.g. ".classname" -> "#page-container .classname")
+ */
+.pf { /* page */
+  position:relative;
+  background-color:white;
+  overflow: hidden;
+  margin:0; 
+  border:0; /* required by pdf2htmlEX.js for page visibility test */
+}
+.pc { /* content of a page */
+  position:absolute;
+  border:0;
+  padding:0;
+  margin:0;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  display:block;
+  /* set transform-origin for scaling */
+  transform-origin:0% 0%;
+  -ms-transform-origin:0% 0%;
+  -webkit-transform-origin:0% 0%;
+}
+.pc.opened { /* used by pdf2htmlEX.js, to show/hide pages */
+  display:block;
+}
+.bf { /* images that occupies the whole page */
+  position:absolute;
+  border:0;
+  margin:0;
+  top:0;
+  bottom:0;
+  width:100%;
+  height:100%;
+  -ms-user-select:none;
+  -moz-user-select:none;
+  -webkit-user-select:none;
+  user-select:none;
+}
+.bi { /* images that cover only a part of the page */
+  position:absolute;
+  border:0;
+  margin:0;
+  -ms-user-select:none;
+  -moz-user-select:none;
+  -webkit-user-select:none;
+  user-select:none;
+}
+@media print {
+  .pf {
+    margin:0;
+    box-shadow:none;
+    page-break-after:always;
+    page-break-inside:avoid;
+  }
+  @-moz-document url-prefix() {
+    /* fix page truncation for FireFox */
+    .pf {
+      overflow:visible;
+      border:1px solid #FFFFFF;
+    }
+    .pc {overflow:visible;}
+  }
+}
+.c { /* clip box */
+  position:absolute;
+  border:0;
+  padding:0;
+  margin:0;
+  overflow:hidden;
+  display:block;
+}
+.t { /* text line */
+  position:absolute;
+  white-space:pre;
+  font-size:1px;
+  transform-origin:0% 100%;
+  -ms-transform-origin:0% 100%;
+  -webkit-transform-origin:0% 100%;
+  unicode-bidi:bidi-override;/* For rtl languages, e.g. Hebrew, we don't want the default Unicode behaviour */
+  -moz-font-feature-settings:"liga" 0;/* We don't want Firefox to recognize ligatures */
+}
+.t:after { /* webkit #35443 */
+  content: '';
+}
+.t:before { /* Workaround Blink(up to 41)/Webkit bug of word-spacing with leading spaces (chromium #404444 and pdf2htmlEX #412) */
+  content: '';
+  display: inline-block;
+}
+.t span { /* text blocks within a line */
+  /* Blink(up to 41)/Webkit have bug with negative word-spacing and inline-block (pdf2htmlEX #416), so keep normal span inline. */
+  position:relative;
+  unicode-bidi:bidi-override; /* For rtl languages, e.g. Hebrew, we don't want the default Unicode behaviour */
+}
+._ { /* text shift */
+  /* Blink(up to 41)/Webkit have bug with inline element, continuous spaces and word-spacing. Workaround by inline-block. */
+  display: inline-block;
+  color: transparent;
+  z-index: -1;
+}
+/* selection background should not be opaque, for fallback mode */
+::selection{
+  background: rgba(127,255,255,0.4);
+}
+::-moz-selection{
+  background: rgba(127,255,255,0.4);
+}
+.pi { /* info for Javascript */
+  display:none;
+}
+.l { /* annotation links */
+}
+/* transparent color - WebKit */
+.d { /* css drawing */
+  position:absolute;
+  transform-origin:0% 100%;
+  -ms-transform-origin:0% 100%;
+  -webkit-transform-origin:0% 100%;
+}
+/* for the forms */
+.it {
+  border: none;
+  background-color: rgba(255, 255, 255, 0.0);
+}
+
+.ir:hover {
+  cursor: pointer;
+}
+
+/* Base CSS END */
+</style>
+<style type="text/css">
+/* vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab filetype=css: */
+/*! 
+ * Fancy styles for pdf2htmlEX
+ * Copyright 2012,2013 Lu Wang <coolwanglu@gmail.com> 
+ * https://github.com/coolwanglu/pdf2htmlEX/blob/master/share/LICENSE
+ */
+@keyframes fadein { from { opacity:0;} to { opacity:1;} }
+@-webkit-keyframes fadein { from { opacity:0;} to { opacity:1;} }
+@keyframes swing {
+  0%  { transform: rotate(0deg); }
+  10% { transform: rotate(0deg); }
+  90% { transform: rotate(720deg); }
+  100%{ transform: rotate(720deg); }
+}
+@-webkit-keyframes swing {
+  0%  { -webkit-transform: rotate(0deg); }
+  10% { -webkit-transform: rotate(0deg); }
+  90% { -webkit-transform: rotate(720deg); }
+  100%{ -webkit-transform: rotate(720deg); }
+}
+
+@media screen { 
+    #sidebar {
+        /* Remove all coloration */
+    }
+    #outline {
+        font-family:Georgia,Times,"Times New Roman",serif;
+        font-size:13px;
+        margin:2em 1em;
+    }
+    #outline ul {
+        padding:0;
+    }
+    #outline li {
+        list-style-type:none;
+        margin:1em 0;
+    }
+    #outline li > ul {
+        margin-left: 1em;
+    }
+    #outline a,
+    #outline a:visited,
+    #outline a:hover,
+    #outline a:active {
+        line-height:1.2;
+        color:#e8e8e8;
+        text-overflow:ellipsis;
+        white-space:nowrap;
+        text-decoration:none;
+        display:block;
+        overflow:hidden;
+        outline:0;
+    }
+    #outline a:hover {
+        color:rgb(0,204,255);
+    }
+    #page-container {
+        -webkit-transition:left 500ms;
+        transition:left 500ms;
+    }
+    .pf {
+        margin: 13px auto;
+    }
+    .pc {
+        display: block !important;
+    }
+
+    .loading-indicator.active {
+        /* 
+         * use 0.01s instead of 0s,
+         * since YUI Compressor will change 0s to 0,
+         * which is not recognized by Firefox
+         */
+        -webkit-animation: swing 1.5s ease-in-out 0.01s infinite alternate none;
+        animation: swing 1.5s ease-in-out 0.01s infinite alternate none;
+    }
+}
+ /* Fancy CSS END */
+</style>
+<style type="text/css">
+.ff0{font-family:sans-serif;visibility:hidden;}
+@font-face{font-family:ff1;src:url('data:application/font-woff;base64,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')format("woff");}.ff1{font-family:ff1;line-height:0.993000;font-style:normal;font-weight:normal;visibility:visible;}
+@font-face{font-family:ff2;src:url('data:application/font-woff;base64,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')format("woff");}.ff2{font-family:ff2;line-height:0.701000;font-style:normal;font-weight:normal;visibility:visible;}
+@font-face{font-family:ff3;src:url('data:application/font-woff;base64,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')format("woff");}.ff3{font-family:ff3;line-height:0.862000;font-style:normal;font-weight:normal;visibility:visible;}
+@font-face{font-family:ff4;src:url('data:application/font-woff;base64,d09GRgABAAAAAAmcAA0AAAAADNQAAwACAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAciBYFQ0dERUYAAAFMAAAAHQAAACAAPQAET1MvMgAAAWwAAABCAAAAVlUuYL5jbWFwAAABsAAAAHcAAAFqFJAfFWdhc3AAAAIoAAAACAAAAAj//wADZ2x5ZgAAAjAAAAScAAAFzE3CeFRoZWFkAAAGzAAAADMAAAA2EcLNrGhoZWEAAAcAAAAAHQAAACQEzwInaG10eAAAByAAAAAzAAAAQBmiAexsb2NhAAAHVAAAACIAAAAiCgYIZG1heHAAAAd4AAAAHQAAACAAVABIbmFtZQAAB5gAAAHOAAAC/SlQze5wb3N0AAAJaAAAADMAAABCAMkBV3icY2BgYGQAguvLq+eB6BvmLpdgNABMcAbjAAB4nGNgZGBg4ANiCQYQYGJgBEJ+IGYB8xgABO8AQgAAAHicY2Bk3MH4hYGVgYGpi2kPAwNDD4RmfMBgyMgEFGVgY2aAAUYGJBCQ5prC4MCgwFDMtO3/K6DKbQxiMDUAEW8LmAAAeJxjYGBgZoBgGQZGBhBIAfIYwXwWBg8gzcfAwcDEwMagwGAKlMtkyGco/v8fKK7AYMCQDOTngfj/H/+/8n/5/8X/5/+fAzUHCTCyMcAFGZmABBO6AogTkAELKxs7Bye6SXgBFzeI5AERvHxAgp8k3TQGAJFWE8kAAAAAAf//AAJ4nF1U22/bVBj3sRPbcZqkTn2JU1+SeLk0SbPWt/SStslCw3pdSjvWezvUdhRpRQK2letYVx6gmhjsAQkJEEJ7RUJCCO1hbPA0aRKTEOuExB8Az1yelnGOs1YVL7aPffz9vt/lOxiOpZ/8Ce7jn2JhLINhgKNIPZFKp2yr6JiGCkSBMJyiY1vpAtATQZwieU5UAbifdLY7F5TOpPVG1BnmM79kqoyfCdT0gJzRKNrfUgXlj+uvFYrTn9+oXwo6+dONXKlS/nCvp2LRQk/W2fmkVOmBgNgcvHwF8QV4ZzmhH/CpBGWbhmOzpG4bRUMAKaUc0xt6bEi1Tm0PsiT+7uOf1bBGEFpYxcmoVqZhHQP+fxfWyWNY0TSKTtGk4pYzBGDvKT1BUpCOwHOQXQHYVnMRJKjL385STIskN64R9J3NWjk/yhKMJOssFZZfmlrcDkfKVt8EHRz7OuynH148V111uoDGt0cJWaq9fP606mSrXSbikYU63oP4A3ChAhcpdQBEplWAGFmpHEBvi6i/g8aM/+0FifGFN+enLyUEMZ5uj8x25Gql/nzIFwpF+jS5L6VP8IOyKCgbY6Nbk2A1dG5o8tX5qiqrUVnzZI6NLkzMETSDE7hxvDpgKnFDUORI76nJUv9ZDMMxGfa3j9/EFCyGYcm4DVyfOZ41eZ1v6q8/NaDIEiDV+AeYdAtJetbWIhbfsbLcwVsR8q+bGvi1BacpX6NXO6M0zVAugguNPeQF1AJ5UYIIR8ihR1cJN1AIxv3GWqYhCuitaSBT4CYebQd3d2br6zFWbG8X/WRgyq5mImG5d6qLpBgP46GHaifLXoJpTeTLejZnjdW37i1feWVYFZWMghdOVLIrM9lyzce0gkyEkBXC7xFVuS3wk3kF+ZV48jf4AtzB0jAvnIofhU9Zh2GBnQ+CIvLpglzoFF6IE0yAjugDqdnLby8OLEY5XiKFtmPPmjO/9c7kuE2G8UoZXdq9/X5ftyBFOR/bBpKrSHeIh4fw72DOIWLyUBQRpQAqzQkmT7FPVYEz5uphg7es555/5735cSNqXY9aN/wd1VpOUzKV0by/eGJ3eWV38FGyTfM//hJdwSTHlspdy0uFco3lIGYcw7B/8c/gbEPX21wM11w0XAjWOTDH+Ibv3sCDq7YkdV/XBFHV8uBW4yM1iHwNxEAgGdYeFNQYz8WRdjA5uAhuYQVY1W0f+QWPBQUm/xBiALj5VsBR2K2ode34+pgq+ECsc4OhN21Jy1nTkt18BrOIx+ZmUuo5+QPva6L/YZbOjHwfCzRXboahd/vQOwbxaibMtezgrHLnylUR7F9dmNu9srSw83tykBWi6dHYUFtESj9cvrpze++DxqNMIj+/mqsk4vmls/kq5BaHtV+EtZ+BuSiAtFtYdFA4BEglCE9BtzzPqYQoiM2UpOFJgpqAlAdhvKF+zXF/UDKE3PhMTwrGl6IJQJJ+QJ/vt1v5dESsJ7L1qUon6SMA4LzuV8qLhyr9Pb0/trSG9bUR2Ue1MMF1P+31vd6psdFQ0OsNxbN2fz1HMh4ccL7Qrp+GRYdHjI6R/wBHAgwgeJxjYGRgYGBmaE7f/Ds8nt/mKwM38wugCMMNc5dLcFrm/ysmcaZtQC4HAxNIFAB5TgyzAHicY2BkYGDa9v8VkNRhAAImcQZGBlQgAABVcwL7AAAAeJxj/MIABoy+IAKIvjCoA3EkEBsBsRYQy4DZexiUmHQYlBjFGBSBtAJYvItBEQB0dQufAAAAAAAAAAAAAAAAQABkAKQA+AEqAXwBtAHuAhoCWgKIAuYAAHicY2BkYGAQYHBlYGIAARDJyAAScwDzGQAK1ACdAAAAeJxtUctq20AUPaPYhprS9gvKpSsbHHmkLBKbNBBcDC04Cwe6F/Jgq0SSkcYR7hd01z/p32QT+iFd9sx4CllUI+ae+5hzz50B8Aa/oHD6SvwOWOGt+hZwhIH6EfAZPqingHvoR72A+3gXTQIeMP6Zlar3it6zP+Wwwnv1JeAIr9X3gM/wSf0MuIeh+hNwHxINAx5gGH3EAjX2OKJBgS12sBCMkGNMm2DGdYkJcQrNNSO65UzG1+fIUDGyorU8a5hx6JR5YOae7Dl9w+jRM1/7HpY955hydX7FrC/R0tZk3uKG/V3Xjmcds2BNjtb3feS+YWTJ2srrvfOnDdGCWtbUrcmERb0/NsV2Z2WUjyWZzS4nkmo9k9vSNEWeVbLK7M6UmaXzIPd1Xhh7lNH1ztr9fDrtui7Oyjaum+3NeCJdYXeyNq1pHs1GlnVl5S4rjSxW60S7dtRTcq4DNTmd7l5qKnW4cmrK/cGaRlb1xjQMrPwcBetLOmZTHGj/DbUMF2H81cccSHhhLwc8+Qmz52F3T5TgiiTUtqRqI2msZX5SSJuk5/xTnVzhBRF8GvjqlbZUVPtXde994VtrUgsLTNMWdSVaX8Rap/Ifkr+1mX/KAAB4nGNgYgCD/80MRgzYgAAQMzIwMTAzCDOIMIgyiDGIM0gwuDG4M/gwBDIEMYQBAHiGBCAA')format("woff");}.ff4{font-family:ff4;line-height:0.716000;font-style:normal;font-weight:normal;visibility:visible;}
+@font-face{font-family:ff5;src:url('data:application/font-woff;base64,d09GRgABAAAAAAcIAA0AAAAACSQAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAciBYFQ0dERUYAAAFMAAAAHQAAACAAPwAET1MvMgAAAWwAAABFAAAAVlk/f71jbWFwAAABtAAAAJUAAAGieJO1mGdhc3AAAAJMAAAACAAAAAj//wADZ2x5ZgAAAlQAAAKUAAAC+AjlfYVoZWFkAAAE6AAAADMAAAA2E27JpmhoZWEAAAUcAAAAIAAAACQGkgBFaG10eAAABTwAAAA7AAAASCWIAxtsb2NhAAAFeAAAACYAAAAmBW4Etm1heHAAAAWgAAAAHgAAACAAVwA2bmFtZQAABcAAAAD2AAABvA0Mdshwb3N0AAAGuAAAAFAAAABnY0F9ZXicY2BgYGQAguvLq+eB6BvmLpdgNABMcAbjAAB4nGNgZGBg4ANiCQYQYGJgBEJBIGYB8xgABQUARAAAAHicY2Bk8mT8wsDKwMDUxbSHgYGhB0IzPmAwZGQCijKwMTPAACMQJ8A4AWmuKQwODApKKUxn/wQAVZ5l3gBVwwAA+/gLywAAAHicY2BgYGaAYBkGRgYQmAPkMYL5LAwNYFoAKMLDoMCgyWDAEM0Qy1CjOEnxkhKHkpCSlJKcUsr//0BVCgwaDPrYZf8//n/n//X/a/+v+d93r/Ke1T3Wu3/ufr376e5aqI04ASMbA1wJIxOQYEJXAHE6CLCwgik2dvxGIgMOBk78CriINwsOBBgE0YX4yTAGDgCNDyQ/AAAAAAAAAf//AAJ4nD2SzU8TURTF730jnRZKadNOP6AfTJvOgBWFzrQdUhgCkUCbkmJiDCEhtgmCiIlijGxMZEFYQCIs6sqNC00a/gLDgihtDDGBTRN3rITEHYpxoWmnvmnRzcy8eefc9zv3PkDor8exnxxBOwC6LMg5nC5WIDE5jqIpl07lzUtbG+TIOlUu7h5mrKMIm4VzKgUf9fmaPruf2ggrqhiTBVFY2dhaMudT6Rw5Sp0XNuswas0c7hbLU6D71PoIviQlYABcKKGKXlk7/cisV59DYz8KfdiLX8BCFw6WMYSCgpywx6WoE3u9bx121tR63xnxRPA1f1Wrdbdbu/DGWLDpnaG1I7S2GaCFC9kkLhQ0cDaHhJFKZdbNDRQ9zLqHc9UsclMfrI/AL6pvoyxSNGaTIxiTbKHgbN/AnUqleI1cyJ5/XJNUu3bJTUuvKQqF1vOAzBzgMRipiBUTfIwXE8xBObBa/ca4VwNIjvkdZYdvZocWqtUavW5qE+Kl4Yc3UxsmP4eGaxZSyngRq745JZVW5gLUJ4MRT/EP2AHCej/iSdSjsTzH+zGJeLq3uL29uLeffmjEZe2V6fH4vrHwuRC9l4qm5xvnnhEVfTp7mJ5HVA0InCkNpqHqNDkBBVi6Z9KpupCcaCfa72Xzh/JXpeomYg+3oN1lOvQ+MJRFZXh8DxwIdFZ0RnRCogUpFr0zdEou/cHKgs7nN0jRePg66mNwOOk3w89nH+XF1fhEdiGbXAk9zU9MDY4lhIVOxt/R7Q50d0hx7Z1vqU9OjCaERbRMr23HZ/KTt17cHtzKPUs+yPZciXA9zs62m6ryZDxGfwCNotY/EZWoYIBWoNcnFubakfsfVMvhG/09+d1xoZRKezGAv/2vr3N4nGNgZGBgYGZgqI9IXB7Pb/OVgZv5BVCE4Ya5yyU4LfsngPkQ01kgl4OBCSQKAEkfC8oAeJxjYGRgYDr7J4CBgYWBgeH/I+ZDDEARFCAEAHeTBNp4nGP8wgAGjL4MDCwQ2gCIZRnPMNgxRjMYAdkRQKzEcILBAyhvB8JMEgwmTDVAej+DDXMohA0AQ7YJwwAAAAAAAAAAAAAAABwAOABIAGYAfgCUAKAAtgDSAPIBAAEYAWIBfAAAeJxjYGRgYBBiMGZgZgABJiBmZACJOYD5DAAJXwCOAAB4nG2PQUrDQBSGv7RJUBFx6XJw3YZksinduNF2Y6EgdOG6oWRhAkkK7W08gZfwAK48hxdw4W/6QIQMM/O+9+Z//8wAV7wRcBrX3BoHRNwZj4h5Mh5L8WocSvNhHHHJl3FMFJxJGYTnylzf9csBF+TGI+kfjMfc82wcSvNuHHHDp3Gs+jcbChpaSmoqOeckpExES9Y8wqZo2rKuXJ6kE7dcq9JxUMNRi+7QHhVWMtnKYs+LkmJb7hUXvWPXx4adJA7fuzvmWn82pzzT6dR2L1XGTCZ11S3qZlc4n6Ru7voLFTM/1fRpNht6z/Cn3L/PuIHGH6o4PyUAAHicY2BiAIP/zQxGDNiAEBAzMjAxMDNwM/AAecIMdgwODPGMTIzMjCwM7xmWMkximMKVWFSUX16UmZ5RwgtmpiTlgHnsqTmpual5JQAevxJ6')format("woff");}.ff5{font-family:ff5;line-height:1.661000;font-style:normal;font-weight:normal;visibility:visible;}
+@font-face{font-family:ff6;src:url('data:application/font-woff;base64,d09GRgABAAAAAAQAAA0AAAAABaAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAciBYFQ0dERUYAAAFMAAAAHQAAACAAMwAET1MvMgAAAWwAAAA+AAAAVlRgX9djbWFwAAABrAAAAE8AAAFSAEgHNmdhc3AAAAH8AAAACAAAAAj//wADZ2x5ZgAAAgQAAABQAAAAULdrqSxoZWFkAAACVAAAADMAAAA2EgrMiGhoZWEAAAKIAAAAHAAAACQEPgPuaG10eAAAAqQAAAAWAAAAFgfwAD5sb2NhAAACvAAAAA4AAAAOACgAFG1heHAAAALMAAAAHQAAACAASgAPbmFtZQAAAuwAAADyAAABsBS4JzZwb3N0AAAD4AAAAB8AAAAu/68AQnicY2BgYGQAguvLq+eB6BvmLpdgNABMcAbjAAB4nGNgZGBg4ANiCQYQYGJgBEJWIGYB8xgABIEAOAAAAHicY2BkXMH4hYGVgYGpi2kPAwNDD4RmfMBgyMgEFGVgY2aAAUYGJBCQ5prC4MCgwGDL+B8s+R+hBgDxoAnjAAB4nGNgYGBmgGAZBkYGEPAB8hjBfBYGAyDNAYRMQFqBQZvB9v9/BOv/4/83/5+A6gIDRjYGOJcRpIeJARUwQqyCAhYGdMCKITLkAACsmAt+AAAAAAH//wACAAEAPgAAAj4B/wALAAAlIxUjNSM1MzUzFTMCPuQ45OQ45OXl5Tji4gACAD4AfwI+AYIAAwAHAAABITUhESE1IQI+/gACAP4AAgABSjj+/Th4nGNgZGBgYGZgUDwbURDPb/OVgZv5BVCE4Ya5yyU4bcfAwGTH+B/I5WBgAokCACscCiIAeJxjYGRgYPzPAATML0Akkx0DIwMqYAUAOxYCMwPoAAAAAAAAAU0AAAABAAACfAA+AD4AAAAAAAAAAAAAAAAAFAAoAAB4nGNgZGBgYGPgYWBiAAEQycgAEnMA8xkABDUAWgAAAHicbY89TsNAEIU/J44FEkKUlAN1YvmniSLRUCQNSKnCBWJFLrCljSPlLtyBG1DTcA4uQI3EizMU/HjtmW/Gb97uAuc8E3F8Lrh2joi5cR6QsHQecsWTc6z16jzijHfnRP1PKaP4VJX1UweOOKF0Hkh/6zwUPTjH0rw4j7jkzTlR/4MVFYEtNS2NnEtSMsaihU54B6sqbOu2sTLNxrZYqhPo2CsSur3ivRzWmt/xqKJa1zvleW/X9TmwkcQoemtjpu/b41jl+jfxWEiTM5VF23TzNmwqK9LMZnbYTSkvJnqLLJ/+Ocn/d7Efd7DfU189Tzv8AAB4nGNgYgCD/80MRgzYABsQMzIwMTAz8DEoAABA5QHxAA==')format("woff");}.ff6{font-family:ff6;line-height:0.511000;font-style:normal;font-weight:normal;visibility:visible;}
+@font-face{font-family:ff7;src:url('data:application/font-woff;base64,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')format("woff");}.ff7{font-family:ff7;line-height:2.995000;font-style:normal;font-weight:normal;visibility:visible;}
+@font-face{font-family:ff8;src:url('data:application/font-woff;base64,d09GRgABAAAAAARUAA0AAAAABfAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAciBYFQ0dERUYAAAFMAAAAHAAAACAAMgAET1MvMgAAAWgAAABCAAAAVlUWYA1jbWFwAAABrAAAAEwAAAFKBPEGgWdhc3AAAAH4AAAACAAAAAj//wADZ2x5ZgAAAgAAAACoAAAAqCKh+K1oZWFkAAACqAAAADMAAAA2EYDNK2hoZWEAAALcAAAAHgAAACQEiwPlaG10eAAAAvwAAAAUAAAAFAcqABNsb2NhAAADEAAAAAwAAAAMAAAAVG1heHAAAAMcAAAAHQAAACAASAA+bmFtZQAAAzwAAAD3AAABvAzZMrdwb3N0AAAENAAAAB0AAAAs/44AlXicY2BgYGQAguvLq+eB6BvmLpdgNABMcAbjAAB4nGNgZGBg4ANiCQYQYGJgBEIWMAbxGAAEdgA3eJxjYGT4xfiFgZWBgamLaQ8DA0MPhGZ8wGDIyAQUZWBjZoABRgYkEJDmmsLgwKDAUMe0+v93oMrVDJwwNQAmbAvOAAB4nGNgYGBmgGAZBkYGEHAB8hjBfBYGDSDNBqQZGZgYFBjq/v8H8sH0/8f/26DqgYCRjQHOYWQCEkwMqIARYgXtAAtNTScGAABQwwl2AAAAAf//AAIAAQAT//cB3gKrADoAACUOAiMiNTQSNTQmIyIGBw4BByMTIzUzNjU0DwE1NjcXBzMVIwMXPgMzMh4CFRQCFRQzMj4CNwHeGR47Hy1SEQwgXhwgIB1LiniCCykaUE0FH6KsTQIRJ0BIHwsTGA5REAcQGBATaSQmKC4PATIFDA9kKS9dbQIMJiwJGwEBEAkSBXQm/uMCGzdLLwUNHxcT/uQJEwkbExgAAAB4nGNgZGBgYGZgCPo33y2e3+YrAzfzC6AIww1zl0twWvj/d8Z7TKuBXA4GJpAoAGG9DLgAeJxjYGRgYFr9/zsDA/MLBiBgvMfAyIAKWAF2swR1AAAD6AAAAAAAAAFNAAAAAQAAAfQAEwAAAAAAAAAAAAAAVHicY2BkYGBgZbBmANEMDExAzAhmO4D5DAAImgCHAAAAeJxtj81Kw0AUhb9pk6Ai4tLl4LoN+dmUbtxou1EoCF24lIaShQkkKbRv4xP4Ej6AK5/DF3DhMb0gQoaZud+9c+6ZGeCCNxzHccm1sSPkxnhExKPxWIpX40CaD+OQc76MI0J3IqULTpX5vuuXHWfkxiPp74zH3PJkHEjzbhxyxadxpPo3awoaWkpqKjnnxCRMREtW3MO6aNqyrnweJxO/XKnSsVfDgWfhvj0oPMhkI4sdL0qKTblTXPSOXR8btpJ4st7dM9f6sznmqU6ntmdSpcxkUlfdom62hc/ixM99f6Fimk01sySdDb1n+FP+32f8QOMPdo4+nQB4nGNgYgCD/80MRgzYACsQMzIwMTAzJAIAPWsCIwAAAA==')format("woff");}.ff8{font-family:ff8;line-height:0.692000;font-style:normal;font-weight:normal;visibility:visible;}
+@font-face{font-family:ff9;src:url('data:application/font-woff;base64,d09GRgABAAAAAAWYAA0AAAAAB5wAAwACAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAciBYFQ0dERUYAAAFMAAAAHQAAACAAMwAET1MvMgAAAWwAAABCAAAAVlUOYCVjbWFwAAABsAAAAEsAAAFSBUkLJmdhc3AAAAH8AAAACAAAAAj//wADZ2x5ZgAAAgQAAAEHAAABCNomHg9oZWFkAAADDAAAADMAAAA2EcfNkGhoZWEAAANAAAAAHQAAACQEngIsaG10eAAAA2AAAAAWAAAAFgW7ADRsb2NhAAADeAAAAA4AAAAOAIQARG1heHAAAAOIAAAAHQAAACAASgAybmFtZQAAA6gAAAHNAAAC8d0k4qdwb3N0AAAFeAAAAB8AAAAu/6QAR3icY2BgYGQAguvLq+eB6BvmLpdgNABMcAbjAAB4nGNgZGBg4ANiCQYQYGJgBEJWIGYB8xgABIEAOAAAAHicY2BkrGH8wsDKwMDUxbSHgYGhB0IzPmAwZGQCijKwMTPAACMDEghIc01hcGBQYDBimvH/DVDlDAYRmBoA9d0K3wAAeJxjYGBgZoBgGQZGBhDwAfIYwXwWBgMgzQGETEBaAcgz+v8fwfr/+P+V/5ehusCAkY0BzmUE6WFiQAWMEKuQAQsDK8NwAgClwwt4AAAAAAH//wACeJxjYGIw+f+GiYVpBoMUgx4DA6MIH6uSHquJHauxkZi4GLORmbmZqYm6HqOyEhs7m6iIuBwjEwsjp4Cyvk+Cj76yACcjhGNgGS1p/ULdh5dXkNdVS92Tj5+Pz5PRXlLZx8JdV15e193CR9lI2c/SQ0/BUDXqn4KJrf2UOZZahvqm5lPnWFuYMjAy2ANt/wl0hxYDgyq7oomZPaMdk6mJGshiIzFRETZlJT1GUxMzYzCHnY3d2MjczJzxp9y/FGb2j5LyaoHuWsGiSpKKIpwiEmVRye1erpH5O6I5+Lm3bRPjYn8noxGi4Rina6AoIinDJi3ukZ0d4ZBo7pbExuPPwMAAAJbgMggAeJxjYGRgYGBmaHZe97Q5nt/mKwM38wugCMMNc5dLcNrk/xsmFqYZQC4HAxNIFAB1BgyJAHicY2BkYGCa8f8NkLRiAAImFgZGBlTACgBR9QLPAAAAAfQAAAAAAAABTQAAAAEAAAI6ADQAPwAAAAAAAAAAAAAAAABEAIQAAHicY2BkYGBgY9BnYGIAARDJyAAScwDzGQAHoAB9AAAAeJxdUcFq20AQfas4JoXS9gvKlF5scGRJKTg2wZAa3JNzcKB3IS+SwJKMtI7wB+TWb+m39Fj6GT330LfrbQvViJ03O7Nv3s4CeIWvUDh/e/zwWOG1yj0OMFTPHl/gnfrm8QAD9cvjS7wJ3ns8xCBYslINXjD67k5ZrPBWffI4wEvVe3yBj+qLxwNcqZ8eX0IC5fEQV8EHrNDggBNalMhRwEAwQoYxfYw5bYYJcYKINie6RwXt6jOkqLmzoTc8q5mx6JzZM/NI9oyx5u7JMd+5HoY9F5jSemch6yt09A2ZcyzZ33btedYyC7bk6FzfJ6477qxZWzu9D+60JlpRy5aKQ2DVHE5tmRdGRtlY4vl8NpEkiuZyX+m2zNJaNqkpdJUaBnt5bLJSm5OM7gpjDovptO/7MK26sGnz5XgifWkK2epOt096J+umNvKQVlpWm+3MdqOYipc6UpAVaYfSUKbFtRVTHY5Gt7JpdrrlxsZdomR9xUDvyiP9nxut/RS0m3vIuQun9e925yhm7tqv9nVi3JKCwtaUrCUJI1k4eXRxcs0/ieJb/GWBzQGfncaOWhr3mPaZb1zTiLTCAt12ZVNLFN2EUZTI/wy/ASY8fyMAAAB4nGNgYgCD/80MRgzYABsQMzIwMTAzCDOIAgBA6QHrAA==')format("woff");}.ff9{font-family:ff9;line-height:0.684000;font-style:normal;font-weight:normal;visibility:visible;}
+@font-face{font-family:ffa;src:url('data:application/font-woff;base64,d09GRgABAAAAAAQkAA0AAAAABcAAAwAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAciBYFQ0dERUYAAAFMAAAAHAAAACAAMgAET1MvMgAAAWgAAABCAAAAVlUwXz1jbWFwAAABrAAAAEsAAAFKAG0Kw2dhc3AAAAH4AAAACAAAAAj//wADZ2x5ZgAAAgAAAAB4AAAAeAo0OlxoZWFkAAACeAAAADMAAAA2EafMi2hoZWEAAAKsAAAAHgAAACQETgOIaG10eAAAAswAAAAUAAAAFAdOADRsb2NhAAAC4AAAAAwAAAAMAAAAPG1heHAAAALsAAAAHgAAACAASgAqbmFtZQAAAwwAAAD3AAABvAzcNrhwb3N0AAAEBAAAAB0AAAAs/44AU3icY2BgYGQAguvLq+eB6BvmLpdgNABMcAbjAAB4nGNgZGBg4ANiCQYQYGJgBEIWMAbxGAAEdgA3eJxjYGTkYfzCwMrAwNTFtIeBgaEHQjM+YDBkZAKKMrAxM8AAIwMSCEhzTWFwYFBgsGHK+D8LqDKDIQ2mBgDLHwoZAAB4nGNgYGBmgGAZBkYGEHAB8hjBfBYGDSDNBqQZGZgYFBhs/v8H8sH0/8f/T0DVAwEjGwOcw8gEJJgYUAEjxApcgAWP3FABAAbFCTQAAAAAAf//AAIAAwA0/5oB5AJoABsAIQAmAAAlIyInByM3LgE1NDY7ATczBzMVIwczFSMHFjsBAyMiBgczByMeARcB5LomHjA2NzxHj2dILDYsPFBFhJhDFhi+hjhKbAixFJ0GNScICniLIHdFZZRubjKuMqgGAY5lSTIvThcAAAB4nGNgZGBgYGZg6OkQ2BbPb/OVgZv5BVCE4Ya5yyU4bfJ/FuMTpgwgl4OBCSQKAEvSC+QAeJxjYGRgYMr4P4uBgfkFAxAwPmFgZEAFrABkfwPbAAAD6AAAAAAAAAFNAAAAAQAAAhgANAAAAAAAAAAAAAAAPHicY2BkYGBgZVBnYGYAASYgZmQAiTmA+QwABtQAdQAAeJxtj81Kw0AUhb9pk6Ai4tLl4LoN+dmUbtxou1EoCF24taFkYQJJCu3b+AS+hA/gyufwBVx4TC+IkGFm7nfvnHtmBrjgDcdxXHJt7Ai5MR4R8Wg8luLVOJDmwzjknC/jiNCdSOmCU2W+7/plxxm58Uj6O+MxtzwZB9K8G4dc8Wkcqf7NmoKGlpKaSs45MQkT0ZIV97AumrasK5/HycQvV6p07NVw4Fm4bw8KDzLZyGLHi5JiU+4UF71j18eGrSSerHf3zLX+bI55qtOp7ZlUKTOZ1FW3qJtt4bM48XPfX6iYZlPNLElnQ+8Z/pT/9xk/0PgDeZg+pQB4nGNgYgCD/80MRgzYACsQMzIwMTAzyAMAPSkB4QAAAA==')format("woff");}.ffa{font-family:ffa;line-height:0.718000;font-style:normal;font-weight:normal;visibility:visible;}
+@font-face{font-family:ffb;src:url('data:application/font-woff;base64,d09GRgABAAAAAAUQAA0AAAAABsAAAwABAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAciBYFQ0dERUYAAAFMAAAAHQAAACAAMwAET1MvMgAAAWwAAABFAAAAVlSmYv9jbWFwAAABtAAAAEsAAAFSA8oKuWdhc3AAAAIAAAAACAAAAAj//wADZ2x5ZgAAAggAAAFGAAABVJfWgK9oZWFkAAADUAAAADMAAAA2EiLl0GhoZWEAAAOEAAAAHgAAACQESwKVaG10eAAAA6QAAAAYAAAAGAgbAB1sb2NhAAADvAAAAA4AAAAOAKoAaG1heHAAAAPMAAAAHQAAACAASgBQbmFtZQAAA+wAAAD5AAABxSyvSPhwb3N0AAAE6AAAACUAAAA0bJpu+HicY2BgYGQAguvLq+eB6BvmLpdgNABMcAbjAAB4nGNgZGBg4ANiCQYQYGJgBEJWIGYB8xgABIEAOAAAAHicY2BknMf4hYGVgYGpi2kPAwNDD4RmfMBgyMgEFGVgY2aAgUYGJBCQ5prC4MCgwHyAcef/r0AdOxm4gcKMIDkAI+wMUgAAAHicY2BgYGaAYBkGRgYQ8AHyGMF8FgYDIM0BhExAWoF5I/OB//8RrP+P/wT/cYXqAgNGNgY4lxGkh4kBFTBCrBqUgJU6xgAA5IQMiQAAAAAB//8AAnicJc/LTsJAGAXguTDtFKRFaCkUW3Cm3AItsQUhUUZRYmJiiMYLCUsTY2JcuPYFTHTDzoUv4cqE5zDGJ3Gt07j7z5+zOB9AwPn9QUu4AjE4AQCqOlQVy4wjAePIMhXOQjzgpg45awz6AiVPHRkwHgo8VPsh4kzH//3BUBC07PVuVNWrdMskdblbYutpCJuz1sV5MHs8eiWUYgQ1baPq0Q9i+E53Wi/RM/+whhFNZyiBb5ODZy1fj9tt4swzRiFNkFu9moa3i50Xw7MLhGSzna1R8S7POk44OR2ZT02GFdX2Go0ukACApUdIT5BoeILxkAtNuX8M+3uQq4lFngLJwCSXCxwjkX+IUrZr7wXb2vh+4Y95y/WbdD4qRxYpKXZnn8PV8XsuZ3m5WpEEPaZpk++v66lDbN/0i58Vi66xaFNO+AONljN3AAB4nGNgZGBgYJac6fvPeW88v81XBm7mF0ARhhvmLpfgNPP/r0wTGHcCuRwMTCBRAIFDDS4AeJxjYGRgYNz5/ysDA9NMBiBgmsDAyIAK2ABqhQPkAAAB9AAAAAAAAAFNAAAAAQAAApkAGgJAAAMAAAAAAAAAAAAAAGgAqgAAeJxjYGRgYGBj8GVgYgABEMnIABJzAPMZAAqOAJsAAAB4nG2PzWrCQBSFv8Qk0CLFZZdDu9WQn4XipqvGTQWh4KJrg7gwgTGCz9MH6GP0Cbrrc3Tf03ihCA6ZnG/O3HuSC9zxQcB5jXgwDoh5Mg5JeDUe8Mi7cST/yzhmyI9xQhKMVBlENzq5vuuPA24pjUPVPxsPqHgzjuR/Gsfc822cMAxC1tR4DuxoaZRckpIzFi1Y8QLr2h92bePKNB+7xUqOp+PEXi347rSXLBWy0fkol2W92R2lVZ/Y9erZqsRRKD2TzrX/Y6bm5Lqf2LtQXc5MMW3TVa3f1q5IMzd3/SengryY6CmyfMZF1vmnpNdHcxcjueu9v5gCPukAAAB4nGNgYgCD/80MRgzYABsQMzIwMTAzMjHMZk3MKchIBABVugRsAAAA')format("woff");}.ffb{font-family:ffb;line-height:0.452000;font-style:normal;font-weight:normal;visibility:visible;}
+@font-face{font-family:ffc;src:url('data:application/font-woff;base64,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')format("woff");}.ffc{font-family:ffc;line-height:0.694000;font-style:normal;font-weight:normal;visibility:visible;}
+@font-face{font-family:ffd;src:url('data:application/font-woff;base64,d09GRgABAAAAAATYAA0AAAAAB4wAAQAAAAAAAAAAAAAAAAAAAAAAAAAAAABGRlRNAAABMAAAABoAAAAciBYFQ0dERUYAAAFMAAAAHAAAACAAMgAET1MvMgAAAWgAAAA+AAAAVlSTX1FjbWFwAAABqAAAAEwAAAFKBJkGrWdhc3AAAAH0AAAACAAAAAj//wADZ2x5ZgAAAfwAAAB8AAAAfLs82RxoZWFkAAACeAAAADEAAAA2EprNH2hoZWEAAAKsAAAAGwAAACQFXwLxaG10eAAAAsgAAAAUAAAAFAYtAEZsb2NhAAAC3AAAAAwAAAAMAAAAPm1heHAAAALoAAAAHQAAACAATAApbmFtZQAAAwgAAAGvAAADgdVq9WJwb3N0AAAEuAAAAB0AAAAs/44AaXicY2BgYGQAguvLq+eB6BvmLpdgNABMcAbjAAB4nGNgZGBg4ANiCQYQYGJgBEIWMAbxGAAEdgA3eJxjYGQsY5zAwMrAwNTFtIeBgaEHQjM+YDBkZAKKMrAyM8AAIwMSCEhzTWFwYFBgCGKaBuJDSIgaALfDCJEAAHicY2BgYGaAYBkGRgYQcAHyGMF8FgYNIM0GpBkZmBgUGIL+/wfywfT/x/83QdUDASMbA5zDyAQkmBhQASPECtIAC8k6BhIAAB9vCUoAAAAB//8AAgAFAEYAAALIApYADQATABwAIQAlAAAhIwMjESMRITIWFRQGBwMRPgE1NAcRIiYrAREzMhMnBiMXIREjEQLIz8NKpgFAaYVEPwYrMokEJQmhnArgrxdBpf6wTgEP/vECll9lQ18TAT/+5RJOL2LyASII/tH+8ecE4wI+/cJ4nGNgZGBgAOIJhSFz4/ltvjJwM78AijDcMHe5BKfdGBiYTjBNA3I5GJhAogA4cgqGAAAAeJxjYGRgYJrGAARMr8HkCQZGBlTACgA47gJXAAH0AAAAAAAAAU0AAAABAAAC6wBGAAAAAAAAAAAAAAA+eJxjYGRgYGBlUANiEGACYkYGkJgDmM8AAAbpAHYAAAB4nI2RzU7bQBSFz5hA1Q1i0RUC6S7TBY5tdZFmCSgSlRAII8TWScaxVeMJk4mALU9S9QG67qov1Q1Ljs0UlSgg/DPz3eszc89cA9jELyg8Xaf46Vnhk9r1HOCD2ve8hq/qj+cOdoLE8zq2gmvPG9gOflOpOh8Z/WhXNazQxV/PATZV4nkNVn3z3EFfPXhehwQnnjfwJbjHASw0MjiOEwhGuON4jBJjFMxrVIzTli1mjAU5yeCqzZ/jCJekG65wVAmG/FaTm9li2q5IECLi3KXC8Z5hgB7v3GvzZ22IOaOQWc38Z+DA6szpiYzu5LgcF5muJC0yO9OSW3Ml6fnRpdyUrpChqd3Q2KmWJIykWzg3G/R6ObN5kw3neVhrxx33WawpO+F4S1OHnBc8eMWSKYtaRmN8p9CYemJu5dAsRpVOnV2MmT2jbEpJ1XYEZ3q6qDLCW+ce8H1vWVmq8LQ65l57fky4Z4w+S7448kBWGRZvkJ/jZI9PEsX99zdh2c3KpshzEy4otvyFZbu50GhjNWznphG40HZemlqiKA6jKJJlJ6/5WO3ifxP/PDwCTZ+uBQB4nGNgYgCD/80MRgzYACsQMzIwMTAzmAIAPT8B9wAAAA==')format("woff");}.ffd{font-family:ffd;line-height:0.662000;font-style:normal;font-weight:normal;visibility:visible;}
+@font-face{font-family:ffe;src:url('data:application/font-woff;base64,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')format("woff");}.ffe{font-family:ffe;line-height:0.993000;font-style:normal;font-weight:normal;visibility:visible;}
+.m0{transform:matrix(0.250000,0.000000,0.000000,0.250000,0,0);-ms-transform:matrix(0.250000,0.000000,0.000000,0.250000,0,0);-webkit-transform:matrix(0.250000,0.000000,0.000000,0.250000,0,0);}
+.v0{vertical-align:0.000000px;}
+.ls0{letter-spacing:0.000000px;}
+.sc_{text-shadow:none;}
+.sc0{text-shadow:-0.015em 0 transparent,0 0.015em transparent,0.015em 0 transparent,0 -0.015em  transparent;}
+@media screen and (-webkit-min-device-pixel-ratio:0){
+.sc_{-webkit-text-stroke:0px transparent;}
+.sc0{-webkit-text-stroke:0.015em transparent;text-shadow:none;}
+}
+.ws0{word-spacing:0.000000px;}
+._b{margin-left:-21.997421px;}
+._e{margin-left:-5.220402px;}
+._17{margin-left:-4.024890px;}
+._7{margin-left:-2.829378px;}
+._1{margin-left:-1.753418px;}
+._4{width:1.633866px;}
+._a{width:3.571525px;}
+._14{width:5.021150px;}
+._18{width:6.641817px;}
+._f{width:7.659146px;}
+._13{width:8.890980px;}
+._11{width:9.960807px;}
+._2{width:10.998710px;}
+._0{width:12.154372px;}
+._10{width:13.349884px;}
+._3{width:14.425845px;}
+._9{width:15.661207px;}
+._6{width:16.816869px;}
+._5{width:18.052231px;}
+._d{width:19.765798px;}
+._8{width:22.913980px;}
+._16{width:25.544106px;}
+._19{width:28.413335px;}
+._1a{width:30.124719px;}
+._c{width:53.917591px;}
+._15{width:86.303237px;}
+._12{width:87.957703px;}
+.fc0{color:rgb(0,0,0);}
+.fs1{font-size:27.895200px;}
+.fs2{font-size:29.090800px;}
+.fs0{font-size:39.850400px;}
+.y3c{bottom:121.654000px;}
+.y8c{bottom:147.511000px;}
+.y3a{bottom:151.542000px;}
+.y3b{bottom:151.557000px;}
+.y88{bottom:152.851000px;}
+.y87{bottom:154.345000px;}
+.y3d{bottom:156.500000px;}
+.y89{bottom:158.460000px;}
+.y8b{bottom:161.090000px;}
+.y8d{bottom:165.354000px;}
+.y8a{bottom:170.117000px;}
+.y39{bottom:175.500000px;}
+.y86{bottom:179.505000px;}
+.y83{bottom:182.943000px;}
+.y84{bottom:186.559000px;}
+.y85{bottom:186.868000px;}
+.y38{bottom:191.042000px;}
+.y82{bottom:198.484000px;}
+.y81{bottom:214.026000px;}
+.y35{bottom:215.000000px;}
+.y37{bottom:215.015000px;}
+.y36{bottom:223.020000px;}
+.y80{bottom:229.568000px;}
+.y33{bottom:238.958000px;}
+.y34{bottom:242.575000px;}
+.y7f{bottom:245.110000px;}
+.y32{bottom:254.500000px;}
+.y7e{bottom:257.214000px;}
+.y7c{bottom:260.651000px;}
+.y7d{bottom:264.577000px;}
+.y31{bottom:270.042000px;}
+.y7b{bottom:276.193000px;}
+.y30{bottom:285.583000px;}
+.y7a{bottom:291.735000px;}
+.y2e{bottom:306.175000px;}
+.y78{bottom:307.719000px;}
+.y2f{bottom:310.290000px;}
+.y75{bottom:313.059000px;}
+.y74{bottom:314.553000px;}
+.y77{bottom:321.298000px;}
+.y2d{bottom:321.717000px;}
+.y79{bottom:325.562000px;}
+.y76{bottom:330.325000px;}
+.y2c{bottom:337.258000px;}
+.y29{bottom:337.259000px;}
+.y2a{bottom:340.875000px;}
+.y72{bottom:342.558000px;}
+.y0{bottom:346.000000px;}
+.y2b{bottom:346.117000px;}
+.y73{bottom:351.190000px;}
+.y28{bottom:356.429000px;}
+.y65{bottom:360.579000px;}
+.y70{bottom:363.204000px;}
+.y24{bottom:363.263000px;}
+.y64{bottom:366.556000px;}
+.y5b{bottom:367.154000px;}
+.y25{bottom:367.378000px;}
+.y5f{bottom:369.117000px;}
+.y6e{bottom:369.545000px;}
+.y27{bottom:370.008000px;}
+.y63{bottom:372.534000px;}
+.y6d{bottom:375.523000px;}
+.y5c{bottom:375.951000px;}
+.y26{bottom:378.297000px;}
+.y62{bottom:378.511000px;}
+.y5d{bottom:380.066000px;}
+.y69{bottom:380.464000px;}
+.y6c{bottom:381.500000px;}
+.y5e{bottom:382.696000px;}
+.y66{bottom:383.901000px;}
+.y61{bottom:384.489000px;}
+.y71{bottom:386.312000px;}
+.y5a{bottom:386.698000px;}
+.y6b{bottom:387.478000px;}
+.y68{bottom:387.826000px;}
+.y59{bottom:389.505000px;}
+.y60{bottom:390.467000px;}
+.y6f{bottom:390.648000px;}
+.y23{bottom:391.460000px;}
+.y67{bottom:391.495000px;}
+.y6a{bottom:393.455000px;}
+.y22{bottom:407.002000px;}
+.y58{bottom:407.352000px;}
+.y21{bottom:422.544000px;}
+.y55{bottom:422.678000px;}
+.y56{bottom:431.475000px;}
+.y57{bottom:435.590000px;}
+.y1d{bottom:439.668000px;}
+.y54{bottom:442.222000px;}
+.y1e{bottom:442.547000px;}
+.y53{bottom:445.029000px;}
+.y1f{bottom:446.502000px;}
+.y20{bottom:450.617000px;}
+.y1c{bottom:453.247000px;}
+.y52{bottom:456.439000px;}
+.y51{bottom:471.981000px;}
+.y1b{bottom:472.343000px;}
+.y50{bottom:487.522000px;}
+.y1a{bottom:487.885000px;}
+.y4f{bottom:503.064000px;}
+.y19{bottom:503.427000px;}
+.y4e{bottom:518.606000px;}
+.y17{bottom:522.555000px;}
+.y18{bottom:525.435000px;}
+.y14{bottom:529.390000px;}
+.y4a{bottom:534.590000px;}
+.y15{bottom:536.134000px;}
+.y16{bottom:539.751000px;}
+.y4c{bottom:539.930000px;}
+.y4b{bottom:541.424000px;}
+.y13{bottom:543.449000px;}
+.y49{bottom:546.674000px;}
+.y48{bottom:548.169000px;}
+.y4d{bottom:551.785000px;}
+.y47{bottom:555.716000px;}
+.y12{bottom:556.293000px;}
+.y46{bottom:567.739000px;}
+.y11{bottom:571.835000px;}
+.y45{bottom:583.281000px;}
+.y10{bottom:587.376000px;}
+.ya6{bottom:599.826000px;}
+.yd{bottom:604.498000px;}
+.y44{bottom:606.099000px;}
+.yf{bottom:609.438000px;}
+.yc{bottom:610.674000px;}
+.yb{bottom:613.663000px;}
+.ya5{bottom:615.368000px;}
+.y7{bottom:619.932000px;}
+.ye{bottom:628.088000px;}
+.ya{bottom:628.806000px;}
+.y43{bottom:628.917000px;}
+.ya4{bottom:630.909000px;}
+.y9{bottom:631.795000px;}
+.y8{bottom:634.784000px;}
+.ya3{bottom:646.451000px;}
+.y41{bottom:648.825000px;}
+.y42{bottom:648.840000px;}
+.y6{bottom:653.191000px;}
+.y40{bottom:664.366000px;}
+.y9a{bottom:665.118000px;}
+.ya0{bottom:666.621000px;}
+.y5{bottom:668.732000px;}
+.ya1{bottom:670.059000px;}
+.y99{bottom:671.295000px;}
+.y8e{bottom:672.500000px;}
+.y9f{bottom:673.984000px;}
+.y98{bottom:674.284000px;}
+.ya2{bottom:677.653000px;}
+.y93{bottom:679.059000px;}
+.y3f{bottom:679.908000px;}
+.y92{bottom:680.553000px;}
+.y4{bottom:684.274000px;}
+.y94{bottom:684.668000px;}
+.y9c{bottom:685.271000px;}
+.y9d{bottom:688.709000px;}
+.y97{bottom:689.427000px;}
+.y96{bottom:692.416000px;}
+.y9b{bottom:692.634000px;}
+.y95{bottom:695.405000px;}
+.y9e{bottom:696.303000px;}
+.y3{bottom:699.816000px;}
+.y2{bottom:715.358000px;}
+.y91{bottom:727.462000px;}
+.y1{bottom:730.899000px;}
+.y3e{bottom:730.914000px;}
+.y90{bottom:734.825000px;}
+.y8f{bottom:738.493000px;}
+.he{height:12.829043px;}
+.h6{height:18.522413px;}
+.ha{height:19.869016px;}
+.hc{height:20.363554px;}
+.h9{height:20.858104px;}
+.h4{height:25.305004px;}
+.h8{height:26.102012px;}
+.h5{height:27.217823px;}
+.h7{height:27.656178px;}
+.h3{height:28.572737px;}
+.h2{height:29.011091px;}
+.hd{height:61.500000px;}
+.h1{height:186.500000px;}
+.hb{height:400.000000px;}
+.h0{height:841.890000px;}
+.w3{width:74.000000px;}
+.w1{width:193.500000px;}
+.w2{width:261.000000px;}
+.w0{width:595.276000px;}
+.x2{left:127.559000px;}
+.x42{left:138.336000px;}
+.x1{left:142.503000px;}
+.x44{left:144.015000px;}
+.x43{left:149.295000px;}
+.x45{left:158.056000px;}
+.x18{left:169.845000px;}
+.x31{left:175.000000px;}
+.x19{left:179.029000px;}
+.x59{left:180.851000px;}
+.x46{left:181.966000px;}
+.x38{left:183.863000px;}
+.x5a{left:186.666000px;}
+.x47{left:188.096000px;}
+.x39{left:190.866000px;}
+.x5b{left:192.727000px;}
+.x3b{left:196.636000px;}
+.x3a{left:209.697000px;}
+.x61{left:210.929000px;}
+.x62{left:214.595000px;}
+.x3c{left:216.045000px;}
+.x65{left:219.446000px;}
+.x5c{left:221.132000px;}
+.x48{left:222.989000px;}
+.x66{left:225.639000px;}
+.x49{left:228.667000px;}
+.x60{left:231.000000px;}
+.x21{left:234.268000px;}
+.x56{left:236.157000px;}
+.x28{left:237.426000px;}
+.x14{left:239.075000px;}
+.x6{left:241.425000px;}
+.x7{left:245.141000px;}
+.x3{left:248.091000px;}
+.x1d{left:249.132000px;}
+.x0{left:252.500000px;}
+.x8{left:254.132000px;}
+.x5d{left:255.183000px;}
+.x3f{left:257.430000px;}
+.x9{left:259.113000px;}
+.x10{left:260.374000px;}
+.x40{left:263.109000px;}
+.x67{left:265.504000px;}
+.xc{left:267.681000px;}
+.x63{left:268.828000px;}
+.xa{left:270.132000px;}
+.x22{left:272.410000px;}
+.xb{left:275.622000px;}
+.xd{left:278.072000px;}
+.x4{left:279.458000px;}
+.x64{left:280.913000px;}
+.x11{left:282.468000px;}
+.x57{left:283.645000px;}
+.x5{left:285.356000px;}
+.x68{left:287.096000px;}
+.x29{left:289.228000px;}
+.x1e{left:291.090000px;}
+.x2a{left:292.954000px;}
+.x23{left:294.653000px;}
+.x69{left:295.923000px;}
+.x3d{left:300.354000px;}
+.x2b{left:303.534000px;}
+.x12{left:305.255000px;}
+.x41{left:307.190000px;}
+.x2c{left:309.066000px;}
+.x24{left:310.764000px;}
+.xe{left:313.500000px;}
+.x3e{left:315.106000px;}
+.x58{left:316.655000px;}
+.xf{left:319.584000px;}
+.x36{left:321.043000px;}
+.x37{left:324.769000px;}
+.x4a{left:326.201000px;}
+.x15{left:328.450000px;}
+.x13{left:330.697000px;}
+.x16{left:335.454000px;}
+.x2d{left:337.416000px;}
+.x17{left:339.242000px;}
+.x2e{left:341.142000px;}
+.x5e{left:343.560000px;}
+.x4b{left:344.716000px;}
+.x25{left:350.467000px;}
+.x2f{left:351.722000px;}
+.x5f{left:352.885000px;}
+.x26{left:353.984000px;}
+.x30{left:355.199000px;}
+.x27{left:358.357000px;}
+.x4f{left:360.387000px;}
+.x4c{left:365.453000px;}
+.x4d{left:369.767000px;}
+.x4e{left:376.265000px;}
+.x32{left:379.675000px;}
+.x33{left:382.993000px;}
+.x34{left:387.974000px;}
+.x50{left:393.571000px;}
+.x35{left:395.253000px;}
+.x1f{left:402.264000px;}
+.x51{left:408.890000px;}
+.x20{left:416.871000px;}
+.x52{left:419.648000px;}
+.x54{left:425.140000px;}
+.x53{left:431.603000px;}
+.x1a{left:436.061000px;}
+.x55{left:440.035000px;}
+.x1b{left:441.210000px;}
+.x1c{left:450.996000px;}
+@media print{
+.v0{vertical-align:0.000000pt;}
+.ls0{letter-spacing:0.000000pt;}
+.ws0{word-spacing:0.000000pt;}
+._b{margin-left:-29.329894pt;}
+._e{margin-left:-6.960537pt;}
+._17{margin-left:-5.366521pt;}
+._7{margin-left:-3.772505pt;}
+._1{margin-left:-2.337890pt;}
+._4{width:2.178489pt;}
+._a{width:4.762033pt;}
+._14{width:6.694867pt;}
+._18{width:8.855756pt;}
+._f{width:10.212194pt;}
+._13{width:11.854640pt;}
+._11{width:13.281076pt;}
+._2{width:14.664947pt;}
+._0{width:16.205829pt;}
+._10{width:17.799845pt;}
+._3{width:19.234460pt;}
+._9{width:20.881610pt;}
+._6{width:22.422492pt;}
+._5{width:24.069642pt;}
+._d{width:26.354398pt;}
+._8{width:30.551973pt;}
+._16{width:34.058809pt;}
+._19{width:37.884447pt;}
+._1a{width:40.166292pt;}
+._c{width:71.890122pt;}
+._15{width:115.070982pt;}
+._12{width:117.276938pt;}
+.fs1{font-size:37.193600pt;}
+.fs2{font-size:38.787733pt;}
+.fs0{font-size:53.133867pt;}
+.y3c{bottom:162.205333pt;}
+.y8c{bottom:196.681333pt;}
+.y3a{bottom:202.056000pt;}
+.y3b{bottom:202.076000pt;}
+.y88{bottom:203.801333pt;}
+.y87{bottom:205.793333pt;}
+.y3d{bottom:208.666667pt;}
+.y89{bottom:211.280000pt;}
+.y8b{bottom:214.786667pt;}
+.y8d{bottom:220.472000pt;}
+.y8a{bottom:226.822667pt;}
+.y39{bottom:234.000000pt;}
+.y86{bottom:239.340000pt;}
+.y83{bottom:243.924000pt;}
+.y84{bottom:248.745333pt;}
+.y85{bottom:249.157333pt;}
+.y38{bottom:254.722667pt;}
+.y82{bottom:264.645333pt;}
+.y81{bottom:285.368000pt;}
+.y35{bottom:286.666667pt;}
+.y37{bottom:286.686667pt;}
+.y36{bottom:297.360000pt;}
+.y80{bottom:306.090667pt;}
+.y33{bottom:318.610667pt;}
+.y34{bottom:323.433333pt;}
+.y7f{bottom:326.813333pt;}
+.y32{bottom:339.333333pt;}
+.y7e{bottom:342.952000pt;}
+.y7c{bottom:347.534667pt;}
+.y7d{bottom:352.769333pt;}
+.y31{bottom:360.056000pt;}
+.y7b{bottom:368.257333pt;}
+.y30{bottom:380.777333pt;}
+.y7a{bottom:388.980000pt;}
+.y2e{bottom:408.233333pt;}
+.y78{bottom:410.292000pt;}
+.y2f{bottom:413.720000pt;}
+.y75{bottom:417.412000pt;}
+.y74{bottom:419.404000pt;}
+.y77{bottom:428.397333pt;}
+.y2d{bottom:428.956000pt;}
+.y79{bottom:434.082667pt;}
+.y76{bottom:440.433333pt;}
+.y2c{bottom:449.677333pt;}
+.y29{bottom:449.678667pt;}
+.y2a{bottom:454.500000pt;}
+.y72{bottom:456.744000pt;}
+.y0{bottom:461.333333pt;}
+.y2b{bottom:461.489333pt;}
+.y73{bottom:468.253333pt;}
+.y28{bottom:475.238667pt;}
+.y65{bottom:480.772000pt;}
+.y70{bottom:484.272000pt;}
+.y24{bottom:484.350667pt;}
+.y64{bottom:488.741333pt;}
+.y5b{bottom:489.538667pt;}
+.y25{bottom:489.837333pt;}
+.y5f{bottom:492.156000pt;}
+.y6e{bottom:492.726667pt;}
+.y27{bottom:493.344000pt;}
+.y63{bottom:496.712000pt;}
+.y6d{bottom:500.697333pt;}
+.y5c{bottom:501.268000pt;}
+.y26{bottom:504.396000pt;}
+.y62{bottom:504.681333pt;}
+.y5d{bottom:506.754667pt;}
+.y69{bottom:507.285333pt;}
+.y6c{bottom:508.666667pt;}
+.y5e{bottom:510.261333pt;}
+.y66{bottom:511.868000pt;}
+.y61{bottom:512.652000pt;}
+.y71{bottom:515.082667pt;}
+.y5a{bottom:515.597333pt;}
+.y6b{bottom:516.637333pt;}
+.y68{bottom:517.101333pt;}
+.y59{bottom:519.340000pt;}
+.y60{bottom:520.622667pt;}
+.y6f{bottom:520.864000pt;}
+.y23{bottom:521.946667pt;}
+.y67{bottom:521.993333pt;}
+.y6a{bottom:524.606667pt;}
+.y22{bottom:542.669333pt;}
+.y58{bottom:543.136000pt;}
+.y21{bottom:563.392000pt;}
+.y55{bottom:563.570667pt;}
+.y56{bottom:575.300000pt;}
+.y57{bottom:580.786667pt;}
+.y1d{bottom:586.224000pt;}
+.y54{bottom:589.629333pt;}
+.y1e{bottom:590.062667pt;}
+.y53{bottom:593.372000pt;}
+.y1f{bottom:595.336000pt;}
+.y20{bottom:600.822667pt;}
+.y1c{bottom:604.329333pt;}
+.y52{bottom:608.585333pt;}
+.y51{bottom:629.308000pt;}
+.y1b{bottom:629.790667pt;}
+.y50{bottom:650.029333pt;}
+.y1a{bottom:650.513333pt;}
+.y4f{bottom:670.752000pt;}
+.y19{bottom:671.236000pt;}
+.y4e{bottom:691.474667pt;}
+.y17{bottom:696.740000pt;}
+.y18{bottom:700.580000pt;}
+.y14{bottom:705.853333pt;}
+.y4a{bottom:712.786667pt;}
+.y15{bottom:714.845333pt;}
+.y16{bottom:719.668000pt;}
+.y4c{bottom:719.906667pt;}
+.y4b{bottom:721.898667pt;}
+.y13{bottom:724.598667pt;}
+.y49{bottom:728.898667pt;}
+.y48{bottom:730.892000pt;}
+.y4d{bottom:735.713333pt;}
+.y47{bottom:740.954667pt;}
+.y12{bottom:741.724000pt;}
+.y46{bottom:756.985333pt;}
+.y11{bottom:762.446667pt;}
+.y45{bottom:777.708000pt;}
+.y10{bottom:783.168000pt;}
+.ya6{bottom:799.768000pt;}
+.yd{bottom:805.997333pt;}
+.y44{bottom:808.132000pt;}
+.yf{bottom:812.584000pt;}
+.yc{bottom:814.232000pt;}
+.yb{bottom:818.217333pt;}
+.ya5{bottom:820.490667pt;}
+.y7{bottom:826.576000pt;}
+.ye{bottom:837.450667pt;}
+.ya{bottom:838.408000pt;}
+.y43{bottom:838.556000pt;}
+.ya4{bottom:841.212000pt;}
+.y9{bottom:842.393333pt;}
+.y8{bottom:846.378667pt;}
+.ya3{bottom:861.934667pt;}
+.y41{bottom:865.100000pt;}
+.y42{bottom:865.120000pt;}
+.y6{bottom:870.921333pt;}
+.y40{bottom:885.821333pt;}
+.y9a{bottom:886.824000pt;}
+.ya0{bottom:888.828000pt;}
+.y5{bottom:891.642667pt;}
+.ya1{bottom:893.412000pt;}
+.y99{bottom:895.060000pt;}
+.y8e{bottom:896.666667pt;}
+.y9f{bottom:898.645333pt;}
+.y98{bottom:899.045333pt;}
+.ya2{bottom:903.537333pt;}
+.y93{bottom:905.412000pt;}
+.y3f{bottom:906.544000pt;}
+.y92{bottom:907.404000pt;}
+.y4{bottom:912.365333pt;}
+.y94{bottom:912.890667pt;}
+.y9c{bottom:913.694667pt;}
+.y9d{bottom:918.278667pt;}
+.y97{bottom:919.236000pt;}
+.y96{bottom:923.221333pt;}
+.y9b{bottom:923.512000pt;}
+.y95{bottom:927.206667pt;}
+.y9e{bottom:928.404000pt;}
+.y3{bottom:933.088000pt;}
+.y2{bottom:953.810667pt;}
+.y91{bottom:969.949333pt;}
+.y1{bottom:974.532000pt;}
+.y3e{bottom:974.552000pt;}
+.y90{bottom:979.766667pt;}
+.y8f{bottom:984.657333pt;}
+.he{height:17.105390pt;}
+.h6{height:24.696550pt;}
+.ha{height:26.492022pt;}
+.hc{height:27.151406pt;}
+.h9{height:27.810805pt;}
+.h4{height:33.740005pt;}
+.h8{height:34.802683pt;}
+.h5{height:36.290431pt;}
+.h7{height:36.874903pt;}
+.h3{height:38.096982pt;}
+.h2{height:38.681455pt;}
+.hd{height:82.000000pt;}
+.h1{height:248.666667pt;}
+.hb{height:533.333333pt;}
+.h0{height:1122.520000pt;}
+.w3{width:98.666667pt;}
+.w1{width:258.000000pt;}
+.w2{width:348.000000pt;}
+.w0{width:793.701333pt;}
+.x2{left:170.078667pt;}
+.x42{left:184.448000pt;}
+.x1{left:190.004000pt;}
+.x44{left:192.020000pt;}
+.x43{left:199.060000pt;}
+.x45{left:210.741333pt;}
+.x18{left:226.460000pt;}
+.x31{left:233.333333pt;}
+.x19{left:238.705333pt;}
+.x59{left:241.134667pt;}
+.x46{left:242.621333pt;}
+.x38{left:245.150667pt;}
+.x5a{left:248.888000pt;}
+.x47{left:250.794667pt;}
+.x39{left:254.488000pt;}
+.x5b{left:256.969333pt;}
+.x3b{left:262.181333pt;}
+.x3a{left:279.596000pt;}
+.x61{left:281.238667pt;}
+.x62{left:286.126667pt;}
+.x3c{left:288.060000pt;}
+.x65{left:292.594667pt;}
+.x5c{left:294.842667pt;}
+.x48{left:297.318667pt;}
+.x66{left:300.852000pt;}
+.x49{left:304.889333pt;}
+.x60{left:308.000000pt;}
+.x21{left:312.357333pt;}
+.x56{left:314.876000pt;}
+.x28{left:316.568000pt;}
+.x14{left:318.766667pt;}
+.x6{left:321.900000pt;}
+.x7{left:326.854667pt;}
+.x3{left:330.788000pt;}
+.x1d{left:332.176000pt;}
+.x0{left:336.666667pt;}
+.x8{left:338.842667pt;}
+.x5d{left:340.244000pt;}
+.x3f{left:343.240000pt;}
+.x9{left:345.484000pt;}
+.x10{left:347.165333pt;}
+.x40{left:350.812000pt;}
+.x67{left:354.005333pt;}
+.xc{left:356.908000pt;}
+.x63{left:358.437333pt;}
+.xa{left:360.176000pt;}
+.x22{left:363.213333pt;}
+.xb{left:367.496000pt;}
+.xd{left:370.762667pt;}
+.x4{left:372.610667pt;}
+.x64{left:374.550667pt;}
+.x11{left:376.624000pt;}
+.x57{left:378.193333pt;}
+.x5{left:380.474667pt;}
+.x68{left:382.794667pt;}
+.x29{left:385.637333pt;}
+.x1e{left:388.120000pt;}
+.x2a{left:390.605333pt;}
+.x23{left:392.870667pt;}
+.x69{left:394.564000pt;}
+.x3d{left:400.472000pt;}
+.x2b{left:404.712000pt;}
+.x12{left:407.006667pt;}
+.x41{left:409.586667pt;}
+.x2c{left:412.088000pt;}
+.x24{left:414.352000pt;}
+.xe{left:418.000000pt;}
+.x3e{left:420.141333pt;}
+.x58{left:422.206667pt;}
+.xf{left:426.112000pt;}
+.x36{left:428.057333pt;}
+.x37{left:433.025333pt;}
+.x4a{left:434.934667pt;}
+.x15{left:437.933333pt;}
+.x13{left:440.929333pt;}
+.x16{left:447.272000pt;}
+.x2d{left:449.888000pt;}
+.x17{left:452.322667pt;}
+.x2e{left:454.856000pt;}
+.x5e{left:458.080000pt;}
+.x4b{left:459.621333pt;}
+.x25{left:467.289333pt;}
+.x2f{left:468.962667pt;}
+.x5f{left:470.513333pt;}
+.x26{left:471.978667pt;}
+.x30{left:473.598667pt;}
+.x27{left:477.809333pt;}
+.x4f{left:480.516000pt;}
+.x4c{left:487.270667pt;}
+.x4d{left:493.022667pt;}
+.x4e{left:501.686667pt;}
+.x32{left:506.233333pt;}
+.x33{left:510.657333pt;}
+.x34{left:517.298667pt;}
+.x50{left:524.761333pt;}
+.x35{left:527.004000pt;}
+.x1f{left:536.352000pt;}
+.x51{left:545.186667pt;}
+.x20{left:555.828000pt;}
+.x52{left:559.530667pt;}
+.x54{left:566.853333pt;}
+.x53{left:575.470667pt;}
+.x1a{left:581.414667pt;}
+.x55{left:586.713333pt;}
+.x1b{left:588.280000pt;}
+.x1c{left:601.328000pt;}
+}
+</style>
+<script>
+/*
+ Copyright 2012 Mozilla Foundation 
+ Copyright 2013 Lu Wang <coolwanglu@gmail.com>
+ Apachine License Version 2.0 
+*/
+(function(){function b(a,b,e,f){var c=(a.className||"").split(/\s+/g);""===c[0]&&c.shift();var d=c.indexOf(b);0>d&&e&&c.push(b);0<=d&&f&&c.splice(d,1);a.className=c.join(" ");return 0<=d}if(!("classList"in document.createElement("div"))){var e={add:function(a){b(this.element,a,!0,!1)},contains:function(a){return b(this.element,a,!1,!1)},remove:function(a){b(this.element,a,!1,!0)},toggle:function(a){b(this.element,a,!0,!0)}};Object.defineProperty(HTMLElement.prototype,"classList",{get:function(){if(this._classList)return this._classList;
+var a=Object.create(e,{element:{value:this,writable:!1,enumerable:!0}});Object.defineProperty(this,"_classList",{value:a,writable:!1,enumerable:!1});return a},enumerable:!0})}})();
+</script>
+<script>
+(function(){/*
+ pdf2htmlEX.js: Core UI functions for pdf2htmlEX 
+ Copyright 2012,2013 Lu Wang <coolwanglu@gmail.com> and other contributors 
+ https://github.com/coolwanglu/pdf2htmlEX/blob/master/share/LICENSE 
+*/
+var pdf2htmlEX=window.pdf2htmlEX=window.pdf2htmlEX||{},CSS_CLASS_NAMES={page_frame:"pf",page_content_box:"pc",page_data:"pi",background_image:"bi",link:"l",input_radio:"ir",__dummy__:"no comma"},DEFAULT_CONFIG={container_id:"page-container",sidebar_id:"sidebar",outline_id:"outline",loading_indicator_cls:"loading-indicator",preload_pages:3,render_timeout:100,scale_step:0.9,key_handler:!0,hashchange_handler:!0,view_history_handler:!0,__dummy__:"no comma"},EPS=1E-6;
+function invert(a){var b=a[0]*a[3]-a[1]*a[2];return[a[3]/b,-a[1]/b,-a[2]/b,a[0]/b,(a[2]*a[5]-a[3]*a[4])/b,(a[1]*a[4]-a[0]*a[5])/b]}function transform(a,b){return[a[0]*b[0]+a[2]*b[1]+a[4],a[1]*b[0]+a[3]*b[1]+a[5]]}function get_page_number(a){return parseInt(a.getAttribute("data-page-no"),16)}function disable_dragstart(a){for(var b=0,c=a.length;b<c;++b)a[b].addEventListener("dragstart",function(){return!1},!1)}
+function clone_and_extend_objs(a){for(var b={},c=0,e=arguments.length;c<e;++c){var h=arguments[c],d;for(d in h)h.hasOwnProperty(d)&&(b[d]=h[d])}return b}
+function Page(a){if(a){this.shown=this.loaded=!1;this.page=a;this.num=get_page_number(a);this.original_height=a.clientHeight;this.original_width=a.clientWidth;var b=a.getElementsByClassName(CSS_CLASS_NAMES.page_content_box)[0];b&&(this.content_box=b,this.original_scale=this.cur_scale=this.original_height/b.clientHeight,this.page_data=JSON.parse(a.getElementsByClassName(CSS_CLASS_NAMES.page_data)[0].getAttribute("data-data")),this.ctm=this.page_data.ctm,this.ictm=invert(this.ctm),this.loaded=!0)}}
+Page.prototype={hide:function(){this.loaded&&this.shown&&(this.content_box.classList.remove("opened"),this.shown=!1)},show:function(){this.loaded&&!this.shown&&(this.content_box.classList.add("opened"),this.shown=!0)},rescale:function(a){this.cur_scale=0===a?this.original_scale:a;this.loaded&&(a=this.content_box.style,a.msTransform=a.webkitTransform=a.transform="scale("+this.cur_scale.toFixed(3)+")");a=this.page.style;a.height=this.original_height*this.cur_scale+"px";a.width=this.original_width*this.cur_scale+
+"px"},view_position:function(){var a=this.page,b=a.parentNode;return[b.scrollLeft-a.offsetLeft-a.clientLeft,b.scrollTop-a.offsetTop-a.clientTop]},height:function(){return this.page.clientHeight},width:function(){return this.page.clientWidth}};function Viewer(a){this.config=clone_and_extend_objs(DEFAULT_CONFIG,0<arguments.length?a:{});this.pages_loading=[];this.init_before_loading_content();var b=this;document.addEventListener("DOMContentLoaded",function(){b.init_after_loading_content()},!1)}
+Viewer.prototype={scale:1,cur_page_idx:0,first_page_idx:0,init_before_loading_content:function(){this.pre_hide_pages()},initialize_radio_button:function(){for(var a=document.getElementsByClassName(CSS_CLASS_NAMES.input_radio),b=0;b<a.length;b++)a[b].addEventListener("click",function(){this.classList.toggle("checked")})},init_after_loading_content:function(){this.sidebar=document.getElementById(this.config.sidebar_id);this.outline=document.getElementById(this.config.outline_id);this.container=document.getElementById(this.config.container_id);
+this.loading_indicator=document.getElementsByClassName(this.config.loading_indicator_cls)[0];for(var a=!0,b=this.outline.childNodes,c=0,e=b.length;c<e;++c)if("ul"===b[c].nodeName.toLowerCase()){a=!1;break}a||this.sidebar.classList.add("opened");this.find_pages();if(0!=this.pages.length){disable_dragstart(document.getElementsByClassName(CSS_CLASS_NAMES.background_image));this.config.key_handler&&this.register_key_handler();var h=this;this.config.hashchange_handler&&window.addEventListener("hashchange",
+function(a){h.navigate_to_dest(document.location.hash.substring(1))},!1);this.config.view_history_handler&&window.addEventListener("popstate",function(a){a.state&&h.navigate_to_dest(a.state)},!1);this.container.addEventListener("scroll",function(){h.update_page_idx();h.schedule_render(!0)},!1);[this.container,this.outline].forEach(function(a){a.addEventListener("click",h.link_handler.bind(h),!1)});this.initialize_radio_button();this.render()}},find_pages:function(){for(var a=[],b={},c=this.container.childNodes,
+e=0,h=c.length;e<h;++e){var d=c[e];d.nodeType===Node.ELEMENT_NODE&&d.classList.contains(CSS_CLASS_NAMES.page_frame)&&(d=new Page(d),a.push(d),b[d.num]=a.length-1)}this.pages=a;this.page_map=b},load_page:function(a,b,c){var e=this.pages;if(!(a>=e.length||(e=e[a],e.loaded||this.pages_loading[a]))){var e=e.page,h=e.getAttribute("data-page-url");if(h){this.pages_loading[a]=!0;var d=e.getElementsByClassName(this.config.loading_indicator_cls)[0];"undefined"===typeof d&&(d=this.loading_indicator.cloneNode(!0),
+d.classList.add("active"),e.appendChild(d));var f=this,g=new XMLHttpRequest;g.open("GET",h,!0);g.onload=function(){if(200===g.status||0===g.status){var b=document.createElement("div");b.innerHTML=g.responseText;for(var d=null,b=b.childNodes,e=0,h=b.length;e<h;++e){var p=b[e];if(p.nodeType===Node.ELEMENT_NODE&&p.classList.contains(CSS_CLASS_NAMES.page_frame)){d=p;break}}b=f.pages[a];f.container.replaceChild(d,b.page);b=new Page(d);f.pages[a]=b;b.hide();b.rescale(f.scale);disable_dragstart(d.getElementsByClassName(CSS_CLASS_NAMES.background_image));
+f.schedule_render(!1);c&&c(b)}delete f.pages_loading[a]};g.send(null)}void 0===b&&(b=this.config.preload_pages);0<--b&&(f=this,setTimeout(function(){f.load_page(a+1,b)},0))}},pre_hide_pages:function(){var a="@media screen{."+CSS_CLASS_NAMES.page_content_box+"{display:none;}}",b=document.createElement("style");b.styleSheet?b.styleSheet.cssText=a:b.appendChild(document.createTextNode(a));document.head.appendChild(b)},render:function(){for(var a=this.container,b=a.scrollTop,c=a.clientHeight,a=b-c,b=
+b+c+c,c=this.pages,e=0,h=c.length;e<h;++e){var d=c[e],f=d.page,g=f.offsetTop+f.clientTop,f=g+f.clientHeight;g<=b&&f>=a?d.loaded?d.show():this.load_page(e):d.hide()}},update_page_idx:function(){var a=this.pages,b=a.length;if(!(2>b)){for(var c=this.container,e=c.scrollTop,c=e+c.clientHeight,h=-1,d=b,f=d-h;1<f;){var g=h+Math.floor(f/2),f=a[g].page;f.offsetTop+f.clientTop+f.clientHeight>=e?d=g:h=g;f=d-h}this.first_page_idx=d;for(var g=h=this.cur_page_idx,k=0;d<b;++d){var f=a[d].page,l=f.offsetTop+f.clientTop,
+f=f.clientHeight;if(l>c)break;f=(Math.min(c,l+f)-Math.max(e,l))/f;if(d===h&&Math.abs(f-1)<=EPS){g=h;break}f>k&&(k=f,g=d)}this.cur_page_idx=g}},schedule_render:function(a){if(void 0!==this.render_timer){if(!a)return;clearTimeout(this.render_timer)}var b=this;this.render_timer=setTimeout(function(){delete b.render_timer;b.render()},this.config.render_timeout)},register_key_handler:function(){var a=this;window.addEventListener("DOMMouseScroll",function(b){if(b.ctrlKey){b.preventDefault();var c=a.container,
+e=c.getBoundingClientRect(),c=[b.clientX-e.left-c.clientLeft,b.clientY-e.top-c.clientTop];a.rescale(Math.pow(a.config.scale_step,b.detail),!0,c)}},!1);window.addEventListener("keydown",function(b){var c=!1,e=b.ctrlKey||b.metaKey,h=b.altKey;switch(b.keyCode){case 61:case 107:case 187:e&&(a.rescale(1/a.config.scale_step,!0),c=!0);break;case 173:case 109:case 189:e&&(a.rescale(a.config.scale_step,!0),c=!0);break;case 48:e&&(a.rescale(0,!1),c=!0);break;case 33:h?a.scroll_to(a.cur_page_idx-1):a.container.scrollTop-=
+a.container.clientHeight;c=!0;break;case 34:h?a.scroll_to(a.cur_page_idx+1):a.container.scrollTop+=a.container.clientHeight;c=!0;break;case 35:a.container.scrollTop=a.container.scrollHeight;c=!0;break;case 36:a.container.scrollTop=0,c=!0}c&&b.preventDefault()},!1)},rescale:function(a,b,c){var e=this.scale;this.scale=a=0===a?1:b?e*a:a;c||(c=[0,0]);b=this.container;c[0]+=b.scrollLeft;c[1]+=b.scrollTop;for(var h=this.pages,d=h.length,f=this.first_page_idx;f<d;++f){var g=h[f].page;if(g.offsetTop+g.clientTop>=
+c[1])break}g=f-1;0>g&&(g=0);var g=h[g].page,k=g.clientWidth,f=g.clientHeight,l=g.offsetLeft+g.clientLeft,m=c[0]-l;0>m?m=0:m>k&&(m=k);k=g.offsetTop+g.clientTop;c=c[1]-k;0>c?c=0:c>f&&(c=f);for(f=0;f<d;++f)h[f].rescale(a);b.scrollLeft+=m/e*a+g.offsetLeft+g.clientLeft-m-l;b.scrollTop+=c/e*a+g.offsetTop+g.clientTop-c-k;this.schedule_render(!0)},fit_width:function(){var a=this.cur_page_idx;this.rescale(this.container.clientWidth/this.pages[a].width(),!0);this.scroll_to(a)},fit_height:function(){var a=this.cur_page_idx;
+this.rescale(this.container.clientHeight/this.pages[a].height(),!0);this.scroll_to(a)},get_containing_page:function(a){for(;a;){if(a.nodeType===Node.ELEMENT_NODE&&a.classList.contains(CSS_CLASS_NAMES.page_frame)){a=get_page_number(a);var b=this.page_map;return a in b?this.pages[b[a]]:null}a=a.parentNode}return null},link_handler:function(a){var b=a.target,c=b.getAttribute("data-dest-detail");if(c){if(this.config.view_history_handler)try{var e=this.get_current_view_hash();window.history.replaceState(e,
+"","#"+e);window.history.pushState(c,"","#"+c)}catch(h){}this.navigate_to_dest(c,this.get_containing_page(b));a.preventDefault()}},navigate_to_dest:function(a,b){try{var c=JSON.parse(a)}catch(e){return}if(c instanceof Array){var h=c[0],d=this.page_map;if(h in d){for(var f=d[h],h=this.pages[f],d=2,g=c.length;d<g;++d){var k=c[d];if(null!==k&&"number"!==typeof k)return}for(;6>c.length;)c.push(null);var g=b||this.pages[this.cur_page_idx],d=g.view_position(),d=transform(g.ictm,[d[0],g.height()-d[1]]),
+g=this.scale,l=[0,0],m=!0,k=!1,n=this.scale;switch(c[1]){case "XYZ":l=[null===c[2]?d[0]:c[2]*n,null===c[3]?d[1]:c[3]*n];g=c[4];if(null===g||0===g)g=this.scale;k=!0;break;case "Fit":case "FitB":l=[0,0];k=!0;break;case "FitH":case "FitBH":l=[0,null===c[2]?d[1]:c[2]*n];k=!0;break;case "FitV":case "FitBV":l=[null===c[2]?d[0]:c[2]*n,0];k=!0;break;case "FitR":l=[c[2]*n,c[5]*n],m=!1,k=!0}if(k){this.rescale(g,!1);var p=this,c=function(a){l=transform(a.ctm,l);m&&(l[1]=a.height()-l[1]);p.scroll_to(f,l)};h.loaded?
+c(h):(this.load_page(f,void 0,c),this.scroll_to(f))}}}},scroll_to:function(a,b){var c=this.pages;if(!(0>a||a>=c.length)){c=c[a].view_position();void 0===b&&(b=[0,0]);var e=this.container;e.scrollLeft+=b[0]-c[0];e.scrollTop+=b[1]-c[1]}},get_current_view_hash:function(){var a=[],b=this.pages[this.cur_page_idx];a.push(b.num);a.push("XYZ");var c=b.view_position(),c=transform(b.ictm,[c[0],b.height()-c[1]]);a.push(c[0]/this.scale);a.push(c[1]/this.scale);a.push(this.scale);return JSON.stringify(a)}};
+pdf2htmlEX.Viewer=Viewer;})();
+</script>
+<script>
+try{
+pdf2htmlEX.defaultViewer = new pdf2htmlEX.Viewer({});
+}catch(e){}
+</script>
+<title></title>
+</head>
+<body>
+<div id="sidebar">
+<div id="outline">
+</div>
+</div>
+<div id="page-container">
+<div id="pf1" class="pf w0 h0" data-page-no="1"><div class="pc pc1 w0 h0"><img class="bi x0 y0 w1 h1" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAYMAAAF1CAIAAACFzRFBAAAACXBIWXMAABYlAAAWJQFJUiTwAAAD4klEQVR42u3dsQqDMBCAYa8kW97/Td0OrlvpFCxYtfb7JkEhcJgfMiWW/VTV6zkze+/Ld7wvBNxA2NXA6R5GACgRgBIBSgSgRIASASgRoEQASgQoEYASAUoEoESAEgEoEaBEAEoEKBGAEgFKBKBEgBIBKBGgRABKBCgRgBIBSgSgRIASASgRoEQASgQoEYASAUoEoESAEgEoEaBEAEoEKBGAEgFKBKBEgBIBKBGgRABKBCgRgBIBSgSgRIASASgRoEQASgQoEYASAUoEoESAEgEoEaBEAEoEKBGAEgFKBKBEgBIBKBGgRABKBCgRgBIBSgSgRIASASgRoEQASgQoEYASAUoEoESAEgEoEaBEAEoEKBGAEgFKBKBEgBIBKBGgRABKBCgRgBIBSgSgRIASASgRoEQASgQoEYASAUoEoESAEgEoEaBEAEoEKBGAEgFKBKBEgBIBKBGgRABKBCgRgBIBSgSgRIASASgRoEQASgQokREASgSgRIASASgRoEQASgQoEYASAUoEoESAEgEoEaBEAEoEKBGAEgFKBKBEgBIBKBGgRABKBCgRgBIBSgSgRIASASgRoEQASgQoEYASAUoEoETAD2gffb2u6xjD1KrKEGBHYVMBTmcASgQoEYASAUoEoESAEgEoEaBEAEoEKBGAEgFKBKBEgBIBKBGgRABKBCgRgBIBSgSgRIASASgRoEQASgQoEYASAUoEoESAEgEoEaBEAEoEKBGAEgFKBKBEgBIBKBGgRABKBCgRgBIBSgSgRIASASgRoEQASgQoEYASAUoEoESAEgEoEaBEAEoEKBGAEgFKBKBEgBIBKBGgRABKBCgRgBIBSgSgRIASASgRoEQASgQoEYASAUoEoESAEgEoEaBEAEoEKBGAEgFKBKBEgBIBKBGgRABKBCgRgBIBSgSgRIASASgRoEQASgQoEYASAUoEoESAEgEoEaBEAEoEKBGAEgFKBKBEgBIBKBGgRABKBCgRgBIBSgSgRIASASgRoEQASgQoEYASAUoEoESAEgEoEaBERgAoEYASAUoEoESAEgEoEaBEAEoEKBGAEgEX0ozgr2Rm7/34davK8JkIvwjgdAagRIASASgRoEQASgQoEYASAUoEoESAEgEoEaBEAEoEKBGAEgFKBKBEgBIBKBGgRABKBCgRgBIBl+UO2Ds462bX7VzwyZw7YAGnMwAlApQIQIkAJQJQIkCJAJQIUCIAJQKUCECJACUCUCJAiQCUCFAiACUClAhAiQAlAlAiQIkAlAhQIgAlApQIQIkAJQJQIkCJAJQIUCIAJQKUCECJACUC2KYZAXCAiJi8fQJ3byni3Nr2YAAAAABJRU5ErkJggg=="/><div class="t m0 x1 h2 y1 ff1 fs0 fc0 sc0 ls0 ws0">One<span class="_ _0"> </span>of<span class="_ _0"> </span>the<span class="_ _0"> </span>most<span class="_ _0"> </span>common<span class="_ _0"> </span>pr<span class="_ _1"></span>oblems<span class="_ _0"> </span>found<span class="_ _0"> </span>in<span class="_ _0"> </span>quantum<span class="_ _0"> </span>mechanics<span class="_ _0"> </span>t<span class="_ _1"></span>extbooks,</div><div class="t m0 x2 h2 y2 ff1 fs0 fc0 sc0 ls0 ws0">is<span class="_ _0"> </span>tha<span class="_ _1"></span>t<span class="_ _0"> </span>o<span class="_ _1"></span>f<span class="_ _0"> </span>the<span class="_ _0"> </span>inﬁnit<span class="_ _1"></span>e<span class="_ _0"> </span>squar<span class="_ _1"></span>e<span class="_ _2"> </span>w<span class="_ _1"></span>ell.<span class="_ _3"> </span>While<span class="_ _2"> </span>it<span class="_ _2"> </span>is<span class="_ _2"> </span>a<span class="_ _0"> </span>v<span class="_ _1"></span>er<span class="_ _4"></span>y<span class="_ _2"> </span>abstracted<span class="_ _2"> </span>model,<span class="_ _2"> </span>the<span class="_ _2"> </span>inﬁnite</div><div class="t m0 x2 h2 y3 ff1 fs0 fc0 sc0 ls0 ws0">squar<span class="_ _1"></span>e<span class="_ _5"> </span>w<span class="_ _1"></span>ell<span class="_ _5"> </span>illustrat<span class="_ _1"></span>es<span class="_ _5"> </span>man<span class="_ _1"></span>y<span class="_ _5"> </span>of<span class="_ _6"> </span>the<span class="_ _6"> </span>principles<span class="_ _5"> </span>of<span class="_ _6"> </span>quantum<span class="_ _6"> </span>mechanics<span class="_ _5"> </span>and<span class="_ _6"> </span>can</div><div class="t m0 x2 h2 y4 ff1 fs0 fc0 sc0 ls0 ws0">actually<span class="_ _2"> </span>ser<span class="_ _4"></span>ve<span class="_ _2"> </span>as<span class="_ _0"> </span>a<span class="_ _2"> </span>usef<span class="_ _4"></span>ul<span class="_ _2"> </span>model<span class="_ _0"> </span>in<span class="_ _0"> </span>cases<span class="_ _0"> </span>of<span class="_ _2"> </span>very<span class="_ _0"> </span>steep<span class="_ _2"> </span>potentials.</div><div class="t m0 x1 h2 y5 ff1 fs0 fc0 sc0 ls0 ws0">Let’<span class="_ _7"></span>s<span class="_ _3"> </span>get<span class="_ _3"> </span>to<span class="_ _3"> </span>the<span class="_ _3"> </span>actual<span class="_ _3"> </span>problem.<span class="_ _8"> </span>Consider<span class="_ _3"> </span>a<span class="_ _9"> </span>particle<span class="_ _3"> </span>of<span class="_ _3"> </span>mass<span class="_ _9"> </span><span class="ff2">m<span class="_ _9"> </span></span>and<span class="_ _3"> </span>energy</div><div class="t m0 x2 h2 y6 ff2 fs0 fc0 sc0 ls0 ws0">E<span class="_ _3"> </span><span class="ff3">&gt;<span class="_ _0"> </span><span class="ff4">0<span class="_ _0"> </span><span class="ff1">trapped<span class="_ _0"> </span>in<span class="_ _0"> </span>a<span class="_ _2"> </span>potential<span class="_ _2"> </span></span></span></span>V<span class="_ _a"> </span><span class="ff5">(<span class="_ _4"></span></span>x<span class="_ _4"></span><span class="ff5">)<span class="_ _0"> </span><span class="ff1">as<span class="_ _0"> </span>follo<span class="_ _1"></span>ws.</span></span></div><div class="t m0 x3 h3 y7 ff2 fs0 fc0 sc0 ls0 ws0">V<span class="_ _a"> </span><span class="ff5">(<span class="_ _4"></span></span>x<span class="_ _4"></span><span class="ff5">)<span class="_ _0"> </span><span class="ff6">=</span></span></div><div class="t m0 x4 h4 y8 ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x4 h4 y9 ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x4 h4 ya ff7 fs0 fc0 sc0 ls0 ws0"><span class="_ _b"></span></div><div class="t m0 x4 h4 yb ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x4 h4 yc ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x4 h4 yd ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x5 h3 ye ff4 fs0 fc0 sc0 ls0 ws0">0<span class="_ _c"> </span>0<span class="_ _0"> </span><span class="ff5">≤<span class="_ _3"> </span><span class="ff2">x<span class="_ _3"> </span></span>≤<span class="_ _3"> </span><span class="ff2">L</span></span></div><div class="t m0 x5 h2 yf ff5 fs0 fc0 sc0 ls0 ws0">∞ <span class="ff1">otherwise</span></div><div class="t m0 x2 h2 y10 ff1 fs0 fc0 sc0 ls0 ws0">No<span class="_ _1"></span>w<span class="_ _1"></span>,<span class="_ _d"> </span>while<span class="_ _6"> </span>this<span class="_ _6"> </span>problem<span class="_ _6"> </span>is<span class="_ _5"> </span>phrased<span class="_ _5"> </span>in<span class="_ _6"> </span>the<span class="_ _5"> </span>conte<span class="_ _1"></span>xt<span class="_ _5"> </span>of<span class="_ _6"> </span>Phy<span class="_ _1"></span>sics<span class="_ _5"> </span>it<span class="_ _6"> </span>reduces<span class="_ _6"> </span>to<span class="_ _6"> </span>a</div><div class="t m0 x2 h2 y11 ff1 fs0 fc0 sc0 ls0 ws0">simple<span class="_ _0"> </span>dierential<span class="_ _0"> </span>equation.<span class="_ _5"> </span>Namely<span class="_ _e"></span>,<span class="_ _3"> </span>our<span class="_ _0"> </span>particle<span class="_ _3"> </span>inside<span class="_ _0"> </span>the<span class="_ _3"> </span>bo<span class="_ _7"></span>x<span class="_ _3"> </span>will<span class="_ _0"> </span>satisfy<span class="_ _3"> </span>the</div><div class="t m0 x2 h2 y12 ff1 fs0 fc0 sc0 ls0 ws0">time<span class="_ _2"> </span>independent<span class="_ _0"> </span>Schröding<span class="_ _1"></span>er<span class="_ _2"> </span>equation</div><div class="t m0 x6 h4 y13 ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x7 h3 y14 ff5 fs0 fc0 sc0 ls0 ws0">−</div><div class="t m0 x8 h5 y15 ff8 fs0 fc0 sc0 ls0 ws0">~</div><div class="t m0 x9 h6 y16 ff9 fs1 fc0 sc0 ls0 ws0">2</div><div class="t m0 x0 h7 y17 ff4 fs0 fc0 sc0 ls0 ws0">2<span class="ff2">m</span></div><div class="t m0 xa h5 y15 ff2 fs0 fc0 sc0 ls0 ws0">d</div><div class="t m0 xb h6 y16 ff9 fs1 fc0 sc0 ls0 ws0">2</div><div class="t m0 xc h5 y17 ff2 fs0 fc0 sc0 ls0 ws0">d<span class="_ _4"></span>x</div><div class="t m0 xd h6 y18 ff9 fs1 fc0 sc0 ls0 ws0">2</div><div class="t m0 x5 h3 y14 ff6 fs0 fc0 sc0 ls0 ws0">+<span class="_ _f"> </span><span class="ff2">V<span class="_ _a"> </span><span class="ff5">(<span class="_ _4"></span></span>x<span class="_ _4"></span><span class="ff5">)</span></span></div><div class="t m0 xe h4 y13 ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 xf h5 y14 ff3 fs0 fc0 sc0 ls0 ws0">ψ<span class="_ _0"> </span><span class="ff6">=<span class="_ _0"> </span><span class="ff2">E<span class="_ _a"> </span></span></span>ψ<span class="_ _a"></span>.</div><div class="t m0 x2 h2 y19 ff1 fs0 fc0 sc0 ls0 ws0">In<span class="_ _0"> </span>our<span class="_ _10"> </span>case<span class="_ _0"> </span>we<span class="_ _0"> </span>know<span class="_ _0"> </span>the<span class="_ _0"> </span>particle<span class="_ _10"> </span>can<span class="_ _0"> </span>not<span class="_ _10"> </span>exist<span class="_ _0"> </span>outside<span class="_ _0"> </span>of<span class="_ _0"> </span>the<span class="_ _10"> </span>bo<span class="_ _1"></span>x<span class="_ _10"> </span>f<span class="_ _1"></span>or<span class="_ _10"> </span>the<span class="_ _0"> </span>purely</div><div class="t m0 x2 h2 y1a ff1 fs0 fc0 sc0 ls0 ws0">r<span class="_ _1"></span>eason<span class="_ _9"> </span>that<span class="_ _3"> </span>a<span class="_ _3"> </span>particle<span class="_ _9"> </span>shouldn’<span class="_ _1"></span>t<span class="_ _3"> </span>exist<span class="_ _3"> </span>in<span class="_ _9"> </span>an<span class="_ _9"> </span>inﬁnit<span class="_ _1"></span>e<span class="_ _9"> </span>potential.<span class="_ _8"> </span>How<span class="_ _7"></span>ever<span class="_ _7"></span>,<span class="_ _9"> </span>mathe-</div><div class="t m0 x2 h2 y1b ff1 fs0 fc0 sc0 ls0 ws0">matically<span class="_ _2"> </span>it<span class="_ _0"> </span>is<span class="_ _0"> </span>equally<span class="_ _2"> </span>clear<span class="_ _0"> </span>that<span class="_ _0"> </span>as<span class="_ _2"> </span><span class="ff2">V<span class="_ _3"> </span><span class="ff5">−<span class="_ _e"></span>→<span class="_ _2"> </span>∞</span></span></div><div class="t m0 x10 h3 y1c ff4 fs0 fc0 sc0 ls0 ws0">2<span class="ff2">m<span class="ff5">(</span>V<span class="_ _0"> </span><span class="ff5">−<span class="_ _11"> </span></span>E<span class="_ _a"></span><span class="ff5">)</span></span></div><div class="t m0 xd h5 y1d ff8 fs0 fc0 sc0 ls0 ws0">~</div><div class="t m0 x11 h6 y1e ff9 fs1 fc0 sc0 ls0 ws0">2</div><div class="t m0 x12 h8 y1f ff3 fs0 fc0 sc0 ls0 ws0">ψ<span class="_ _0"> </span><span class="ff6">=<span class="_ _2"> </span></span>ψ</div><div class="t m0 x13 h9 y20 ff5 fs2 fc0 sc0 ls0 ws0">00</div><div class="t m0 x2 h2 y21 ff1 fs0 fc0 sc0 ls0 ws0">can<span class="_ _11"> </span>only<span class="_ _2"> </span>be<span class="_ _2"> </span>satisﬁed<span class="_ _11"> </span>by<span class="_ _11"> </span><span class="ff3">ψ<span class="_ _0"> </span><span class="ff6">=<span class="_ _2"> </span><span class="ff4">0</span></span></span>.<span class="_ _3"> </span>So<span class="_ _11"> </span>for<span class="_ _0"> </span><span class="ff2">x<span class="_ _10"> </span><span class="ffa">&lt;<span class="_ _2"> </span><span class="ff5">[(<span class="ff4">0<span class="_ _7"></span><span class="ff3">,<span class="_ _f"> </span><span class="ff2">l<span class="_ _4"></span><span class="ff5">)]<span class="ff1">,<span class="_ _2"> </span></span></span></span>ψ<span class="_ _a"></span><span class="ff5">(<span class="_ _4"></span><span class="ff2">x<span class="_ _4"></span></span>)<span class="_ _2"> </span><span class="ff6">=<span class="_ _2"> </span><span class="ff4">0<span class="ff1">.<span class="_ _10"> </span>What<span class="_ _11"> </span>about<span class="_ _2"> </span>inside<span class="_ _11"> </span>the</span></span></span></span></span></span></span></span></span></div><div class="t m0 x2 h2 y22 ff1 fs0 fc0 sc0 ls0 ws0">squar<span class="_ _1"></span>e<span class="_ _0"> </span>well?<span class="_ _10"> </span>W<span class="_ _7"></span>e<span class="_ _2"> </span>can<span class="_ _0"> </span>start<span class="_ _0"> </span>by<span class="_ _2"> </span>solving<span class="_ _2"> </span>the<span class="_ _0"> </span>dierential<span class="_ _2"> </span>equation<span class="_ _2"> </span>as<span class="_ _0"> </span>follo<span class="_ _1"></span>w<span class="_ _1"></span>,<span class="_ _0"> </span>ﬁrst<span class="_ _0"> </span>let’<span class="_ _7"></span>s</div><div class="t m0 x2 h2 y23 ff1 fs0 fc0 sc0 ls0 ws0">simplify<span class="_ _0"> </span>some<span class="_ _0"> </span>of<span class="_ _2"> </span>the<span class="_ _0"> </span>constants.</div><div class="t m0 x14 h8 y24 ff3 fs0 fc0 sc0 ls0 ws0">ψ</div><div class="t m0 x7 h9 y25 ff5 fs2 fc0 sc0 ls0 ws0">00</div><div class="t m0 x8 h3 y24 ff6 fs0 fc0 sc0 ls0 ws0">=<span class="_ _2"> </span><span class="ff5">−<span class="_ _4"></span><span class="ff2">k</span></span></div><div class="t m0 xb h6 y25 ff9 fs1 fc0 sc0 ls0 ws0">2</div><div class="t m0 x4 h5 y24 ff3 fs0 fc0 sc0 ls0 ws0">ψ,<span class="_ _12"> </span><span class="ff2">k<span class="_ _10"> </span><span class="ff6">=</span></span></div><div class="t m0 x15 h3 y26 ff5 fs0 fc0 sc0 ls0 ws0">√</div><div class="t m0 x16 h7 y27 ff4 fs0 fc0 sc0 ls0 ws0">2<span class="ff2">m<span class="_ _4"></span>E</span></div><div class="t m0 x17 h5 y28 ff8 fs0 fc0 sc0 ls0 ws0">~</div><div class="t m0 x2 h2 y29 ff1 fs0 fc0 sc0 ls0 ws0">No<span class="_ _1"></span>w<span class="_ _3"> </span>as<span class="_ _3"> </span><span class="ff3">ψ</span></div><div class="t m0 x18 h9 y2a ff5 fs2 fc0 sc0 ls0 ws0">00</div><div class="t m0 x19 h2 y29 ff6 fs0 fc0 sc0 ls0 ws0">=<span class="_ _3"> </span><span class="ff3">α<span class="_ _4"></span>ψ<span class="_ _9"> </span><span class="ff1">we<span class="_ _10"> </span>know<span class="_ _10"> </span>we<span class="_ _10"> </span>are<span class="_ _10"> </span>looking<span class="_ _10"> </span>at<span class="_ _3"> </span>an<span class="_ _10"> </span>equation<span class="_ _3"> </span>of<span class="_ _10"> </span>the<span class="_ _3"> </span>form<span class="_ _10"> </span><span class="ff2">e</span></span></span></div><div class="t m0 x1a h9 y2b ff5 fs2 fc0 sc0 ls0 ws0">√</div><div class="t m0 x1b ha y2a ffb fs2 fc0 sc0 ls0 ws0">α<span class="_ _4"></span><span class="ffc">x</span></div><div class="t m0 x1c h2 y2c ff1 fs0 fc0 sc0 ls0 ws0">.<span class="_ _d"> </span>In</div><div class="t m0 x2 h2 y2d ff1 fs0 fc0 sc0 ls0 ws0">our<span class="_ _2"> </span>case,<span class="_ _0"> </span>that<span class="_ _0"> </span>is</div><div class="t m0 x1d h3 y2e ff3 fs0 fc0 sc0 ls0 ws0">ψ<span class="_ _4"></span><span class="ff5">(<span class="_ _4"></span><span class="ff2">x<span class="_ _a"></span></span>)<span class="_ _11"> </span><span class="ff6">=<span class="_ _3"> </span><span class="ff2">Ae</span></span></span></div><div class="t m0 x1e ha y2f ffc fs2 fc0 sc0 ls0 ws0">i<span class="_ _4"></span>k<span class="_ _a"> </span>x</div><div class="t m0 x12 h5 y2e ff6 fs0 fc0 sc0 ls0 ws0">+<span class="_ _11"> </span><span class="ff2">B<span class="_ _a"></span>x<span class="_ _11"> </span></span>+<span class="_ _13"> </span><span class="ff2">C<span class="_ _4"></span><span class="ff3">.</span></span></div><div class="t m0 x2 h2 y30 ff1 fs0 fc0 sc0 ls0 ws0">This<span class="_ _2"> </span>is<span class="_ _2"> </span>the<span class="_ _11"> </span>general<span class="_ _11"> </span>solution<span class="_ _2"> </span>to<span class="_ _13"> </span>our<span class="_ _2"> </span>dierential<span class="_ _11"> </span>equation.<span class="_ _10"> </span>In<span class="_ _11"> </span>order<span class="_ _11"> </span>for<span class="_ _11"> </span>our<span class="_ _11"> </span>solution</div><div class="t m0 x2 h2 y31 ff1 fs0 fc0 sc0 ls0 ws0">to<span class="_ _3"> </span>satisfy<span class="_ _9"> </span>the<span class="_ _9"> </span>phy<span class="_ _1"></span>sical<span class="_ _9"> </span>constraints<span class="_ _9"> </span>of<span class="_ _3"> </span>the<span class="_ _9"> </span>wa<span class="_ _7"></span>ve<span class="_ _3"> </span>equation<span class="_ _9"> </span>it<span class="_ _3"> </span>must<span class="_ _9"> </span>be<span class="_ _9"> </span>continuous,</div><div class="t m0 x2 h2 y32 ff1 fs0 fc0 sc0 ls0 ws0">thus<span class="_ _10"> </span><span class="ff3">ψ<span class="_ _4"></span><span class="ff5">(<span class="ff4">0</span>)<span class="_ _3"> </span><span class="ff6">=<span class="_ _3"> </span></span></span>ψ<span class="_ _a"></span><span class="ff5">(<span class="_ _4"></span><span class="ff2">L<span class="_ _4"></span></span>)<span class="_ _10"> </span><span class="ff6">=<span class="_ _3"> </span><span class="ff4">0</span></span></span></span>.<span class="_ _d"> </span>Applying<span class="_ _10"> </span>that<span class="_ _10"> </span>constraint<span class="_ _3"> </span>we<span class="_ _0"> </span>immediately<span class="_ _0"> </span>see<span class="_ _3"> </span>that<span class="_ _0"> </span><span class="ff2">C<span class="_ _6"> </span><span class="ff6">=<span class="_ _3"> </span><span class="ff4">0</span></span></span></div><div class="t m0 x2 h2 y33 ff1 fs0 fc0 sc0 ls0 ws0">and<span class="_ _10"> </span><span class="ff2">B<span class="_ _0"> </span><span class="ff6">=<span class="_ _11"> </span><span class="ff4">0</span></span></span>.<span class="_ _3"> </span>F<span class="_ _1"></span>urthermor<span class="_ _1"></span>e,<span class="_ _0"> </span>we<span class="_ _2"> </span>can<span class="_ _0"> </span>use<span class="_ _0"> </span>Euler’<span class="_ _1"></span>s<span class="_ _0"> </span>formula<span class="_ _2"> </span>to<span class="_ _2"> </span>expand<span class="_ _0"> </span><span class="ff2">e</span></div><div class="t m0 x1f ha y34 ffc fs2 fc0 sc0 ls0 ws0">i<span class="_ _4"></span>k<span class="_ _a"> </span>x</div><div class="t m0 x20 h2 y33 ff1 fs0 fc0 sc0 ls0 ws0">to<span class="_ _2"> </span>see<span class="_ _0"> </span>that</div><div class="t m0 x21 h3 y35 ff3 fs0 fc0 sc0 ls0 ws0">ψ<span class="_ _4"></span><span class="ff5">(<span class="_ _4"></span><span class="ff2">x<span class="_ _a"></span></span>)<span class="_ _11"> </span><span class="ff6">=<span class="_ _3"> </span><span class="ff2">A</span></span></span></div><div class="t m0 x22 h4 y36 ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 xd h7 y35 ff4 fs0 fc0 sc0 ls0 ws0">cos</div><div class="t m0 x1e h3 y37 ff5 fs0 fc0 sc0 ls0 ws0">(</div><div class="t m0 x23 h5 y35 ff2 fs0 fc0 sc0 ls0 ws0">k<span class="_ _14"> </span>x</div><div class="t m0 x12 h3 y37 ff5 fs0 fc0 sc0 ls0 ws0">)</div><div class="t m0 x24 h7 y35 ff6 fs0 fc0 sc0 ls0 ws0">+<span class="_ _f"> </span><span class="ff2">i<span class="_ _f"> </span><span class="ff4">sin</span></span></div><div class="t m0 x16 h3 y37 ff5 fs0 fc0 sc0 ls0 ws0">(</div><div class="t m0 x17 h5 y35 ff2 fs0 fc0 sc0 ls0 ws0">k<span class="_ _14"> </span>x</div><div class="t m0 x25 h3 y37 ff5 fs0 fc0 sc0 ls0 ws0">)</div><div class="t m0 x26 h4 y36 ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x27 h8 y35 ff3 fs0 fc0 sc0 ls0 ws0">.</div><div class="t m0 x2 h2 y38 ff1 fs0 fc0 sc0 ls0 ws0">No<span class="_ _1"></span>w<span class="_ _2"> </span>note<span class="_ _11"> </span>that<span class="_ _10"> </span><span class="ff2">A<span class="_ _13"> </span></span>is<span class="_ _2"> </span>a<span class="_ _2"> </span>complex<span class="_ _11"> </span>variable<span class="_ _11"> </span>so<span class="_ _11"> </span>we<span class="_ _11"> </span>can<span class="_ _2"> </span>expr<span class="_ _1"></span>ess<span class="_ _11"> </span>it<span class="_ _2"> </span>as<span class="_ _10"> </span><span class="ff2">A<span class="_ _2"> </span><span class="ff6">=<span class="_ _2"> </span><span class="ff3">α<span class="_ _f"> </span><span class="ff5">−<span class="_ _14"></span></span></span></span>i<span class="_ _a"> </span><span class="ff3">β<span class="_ _4"></span></span></span>,<span class="_ _11"> </span>for<span class="_ _11"> </span>real</div><div class="t m0 x2 h2 y39 ff1 fs0 fc0 sc0 ls0 ws0">numbers<span class="_ _0"> </span><span class="ff3">α<span class="_ _1"></span>,<span class="_ _11"> </span>β<span class="_ _0"> </span><span class="ff5">∈<span class="_ _0"> </span><span class="ffd">R<span class="ff1">.<span class="_ _10"> </span>W<span class="_ _1"></span>ith<span class="_ _0"> </span>that<span class="_ _2"> </span>simpliﬁcation<span class="_ _2"> </span>in<span class="_ _0"> </span>hand<span class="_ _0"> </span>we<span class="_ _2"> </span>can<span class="_ _0"> </span>write</span></span></span></span></div><div class="t m0 x28 h3 y3a ff3 fs0 fc0 sc0 ls0 ws0">ψ<span class="_ _4"></span><span class="ff5">(<span class="_ _4"></span><span class="ff2">x<span class="_ _a"></span></span>)<span class="_ _11"> </span><span class="ff6">=<span class="_ _2"> </span></span></span>α<span class="_ _f"> </span><span class="ff4">cos</span></div><div class="t m0 x29 h3 y3b ff5 fs0 fc0 sc0 ls0 ws0">(</div><div class="t m0 x2a h5 y3a ff2 fs0 fc0 sc0 ls0 ws0">k<span class="_ _14"> </span>x</div><div class="t m0 x2b h3 y3b ff5 fs0 fc0 sc0 ls0 ws0">)</div><div class="t m0 x2c h7 y3a ff6 fs0 fc0 sc0 ls0 ws0">+<span class="_ _2"> </span><span class="ff3">β<span class="_ _f"> </span><span class="ff4">sin</span></span></div><div class="t m0 x2d h3 y3b ff5 fs0 fc0 sc0 ls0 ws0">(</div><div class="t m0 x2e h5 y3a ff2 fs0 fc0 sc0 ls0 ws0">k<span class="_ _14"> </span>x</div><div class="t m0 x2f h3 y3b ff5 fs0 fc0 sc0 ls0 ws0">)</div><div class="t m0 x30 h8 y3a ff3 fs0 fc0 sc0 ls0 ws0">.</div><div class="t m0 x23 h2 y3c ff1 fs0 fc0 sc0 ls0 ws0">1</div></div><div class="pi" data-data='{"ctm":[1.000000,0.000000,0.000000,1.000000,0.000000,0.000000]}'></div></div>
+<div id="pf2" class="pf w0 h0" data-page-no="2"><div class="pc pc2 w0 h0"><img class="bi x31 y3d w2 hb" alt="" src="data:image/png;base64,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"/><div class="t m0 x2 h2 y1 ff1 fs0 fc0 sc0 ls0 ws0">No<span class="_ _1"></span>w<span class="_ _3"> </span>applying<span class="_ _3"> </span>our<span class="_ _3"> </span>boundar<span class="_ _4"></span>y<span class="_ _3"> </span>conditions<span class="_ _3"> </span>we<span class="_ _10"> </span>see<span class="_ _3"> </span>that<span class="_ _3"> </span>as<span class="_ _3"> </span><span class="ff4">cos</span></div><div class="t m0 x32 h3 y3e ff5 fs0 fc0 sc0 ls0 ws0">(</div><div class="t m0 x33 h7 y1 ff4 fs0 fc0 sc0 ls0 ws0">0</div><div class="t m0 x34 h3 y3e ff5 fs0 fc0 sc0 ls0 ws0">)</div><div class="t m0 x35 h2 y1 ff6 fs0 fc0 sc0 ls0 ws0">=<span class="_ _9"> </span><span class="ff4">1<span class="_ _3"> </span><span class="ff1">the<span class="_ _3"> </span></span>cos<span class="_ _3"> </span><span class="ff1">term</span></span></div><div class="t m0 x2 h2 y2 ff1 fs0 fc0 sc0 ls0 ws0">must<span class="_ _2"> </span>disappear.</div><div class="t m0 xa h3 y3 ff3 fs0 fc0 sc0 ls0 ws0">ψ<span class="_ _4"></span><span class="ff5">(<span class="ff4">0</span>)<span class="_ _2"> </span><span class="ff6">=<span class="_ _2"> </span></span></span>α<span class="_ _0"> </span><span class="ff6">=<span class="_ _2"> </span><span class="ff4">0<span class="_ _4"></span></span></span>.</div><div class="t m0 x2 h2 y3f ff1 fs0 fc0 sc0 ls0 ws0">The<span class="_ _2"> </span>case<span class="_ _11"> </span>wher<span class="_ _1"></span>e<span class="_ _0"> </span><span class="ff2">x<span class="_ _10"> </span><span class="ff6">=<span class="_ _10"> </span></span>L<span class="_ _0"> </span></span>is<span class="_ _11"> </span>more<span class="_ _11"> </span>inter<span class="_ _1"></span>esting,<span class="_ _11"> </span>for<span class="_ _11"> </span>a<span class="_ _11"> </span>continuous<span class="_ _2"> </span>wa<span class="_ _7"></span>ve<span class="_ _13"> </span>f<span class="_ _4"></span>unction<span class="_ _11"> </span><span class="ff3">ψ<span class="_ _0"> </span></span>must</div><div class="t m0 x2 h2 y40 ff1 fs0 fc0 sc0 ls0 ws0">satisfy</div><div class="t m0 x0 h3 y41 ff3 fs0 fc0 sc0 ls0 ws0">ψ<span class="_ _4"></span><span class="ff5">(<span class="_ _4"></span><span class="ff2">L<span class="_ _4"></span></span>)<span class="_ _2"> </span><span class="ff6">=<span class="_ _0"> </span><span class="ff4">0<span class="_ _2"> </span></span>=<span class="_ _10"> </span></span></span>β<span class="_ _f"> </span><span class="ff4">sin</span></div><div class="t m0 x36 h3 y42 ff5 fs0 fc0 sc0 ls0 ws0">(</div><div class="t m0 x37 h5 y41 ff2 fs0 fc0 sc0 ls0 ws0">k<span class="_ _14"> </span>L</div><div class="t m0 x16 h3 y42 ff5 fs0 fc0 sc0 ls0 ws0">)</div><div class="t m0 x17 h8 y41 ff3 fs0 fc0 sc0 ls0 ws0">.</div><div class="t m0 x2 h2 y43 ff1 fs0 fc0 sc0 ls0 ws0">This<span class="_ _0"> </span>is<span class="_ _0"> </span>true<span class="_ _0"> </span>only<span class="_ _0"> </span>when</div><div class="t m0 x28 h7 y44 ff2 fs0 fc0 sc0 ls0 ws0">k<span class="_ _14"> </span>L<span class="_ _0"> </span><span class="ff6">=<span class="_ _2"> </span></span>n<span class="_ _4"></span><span class="ff3">π,<span class="_ _15"> </span></span>n<span class="_ _2"> </span><span class="ff6">=<span class="_ _2"> </span><span class="ff4">0<span class="_ _7"></span><span class="ff3">,<span class="_ _f"> </span><span class="ff4">1<span class="_ _7"></span><span class="ff3">,<span class="_ _f"> </span><span class="ff4">2<span class="_ _7"></span><span class="ff3">,<span class="_ _f"> </span><span class="ff4">3<span class="_ _f"> </span></span>.<span class="_ _f"> </span>.<span class="_ _f"> </span>.</span></span></span></span></span></span></span></div><div class="t m0 x2 h2 y45 ff1 fs0 fc0 sc0 ls0 ws0">Thus<span class="_ _2"> </span><span class="ff2">k<span class="_ _0"> </span></span>is<span class="_ _13"> </span><span class="ffe">quantized<span class="_ _11"> </span></span>by<span class="_ _13"> </span><span class="ff2">n</span>,<span class="_ _11"> </span>and<span class="_ _13"> </span>since<span class="_ _2"> </span><span class="ff2">k<span class="_ _0"> </span></span>is<span class="_ _13"> </span>determined<span class="_ _13"> </span>by<span class="_ _13"> </span>the<span class="_ _13"> </span>energy<span class="_ _13"> </span>of<span class="_ _f"> </span>the<span class="_ _11"> </span>particle,</div><div class="t m0 x2 h2 y46 ff1 fs0 fc0 sc0 ls0 ws0">this<span class="_ _2"> </span>implies<span class="_ _0"> </span>that<span class="_ _2"> </span>only<span class="_ _0"> </span>certain<span class="_ _0"> </span>energies<span class="_ _2"> </span>can<span class="_ _0"> </span>exist!</div><div class="t m0 x38 h3 y47 ff5 fs0 fc0 sc0 ls0 ws0">√</div><div class="t m0 x39 h7 y48 ff4 fs0 fc0 sc0 ls0 ws0">2<span class="ff2">m<span class="_ _4"></span>E</span></div><div class="t m0 x3a ha y49 ffc fs2 fc0 sc0 ls0 ws0">n</div><div class="t m0 x3b h5 y4a ff8 fs0 fc0 sc0 ls0 ws0">~</div><div class="t m0 x3c h3 y4b ff2 fs0 fc0 sc0 ls0 ws0">L<span class="_ _0"> </span><span class="ff6">=<span class="_ _0"> </span></span>n<span class="_ _4"></span><span class="ff3">π<span class="_ _8"> </span><span class="ff6">=<span class="_ _e"></span><span class="ff5">⇒<span class="_ _8"> </span><span class="ff2">E</span></span></span></span></div><div class="t m0 xd ha y4c ffc fs2 fc0 sc0 ls0 ws0">n</div><div class="t m0 x5 hc y4b ff6 fs0 fc0 sc0 ls0 ws0">=</div><div class="t m0 x23 h5 y48 ff2 fs0 fc0 sc0 ls0 ws0">n</div><div class="t m0 x3d h6 y4d ff9 fs1 fc0 sc0 ls0 ws0">2</div><div class="t m0 x12 h8 y48 ff3 fs0 fc0 sc0 ls0 ws0">π</div><div class="t m0 x24 h6 y4d ff9 fs1 fc0 sc0 ls0 ws0">2</div><div class="t m0 x3e h5 y48 ff8 fs0 fc0 sc0 ls0 ws0">~</div><div class="t m0 xf h6 y4d ff9 fs1 fc0 sc0 ls0 ws0">2</div><div class="t m0 x3d h7 y4a ff4 fs0 fc0 sc0 ls0 ws0">2<span class="ff2">m<span class="_ _4"></span>L</span></div><div class="t m0 x37 h7 y4b ff3 fs0 fc0 sc0 ls0 ws0">,<span class="_ _15"> </span><span class="ff2">n<span class="_ _2"> </span><span class="ff6">=<span class="_ _2"> </span><span class="ff4">0<span class="_ _1"></span><span class="ff3">,<span class="_ _f"> </span><span class="ff4">1<span class="_ _7"></span><span class="ff3">,<span class="_ _f"> </span><span class="ff4">2<span class="_ _7"></span><span class="ff3">,<span class="_ _f"> </span><span class="ff4">3<span class="_ _7"></span><span class="ff3">,<span class="_ _f"> </span>.<span class="_ _f"> </span>.<span class="_ _f"> </span>.</span></span></span></span></span></span></span></span></span></span></div><div class="t m0 x2 h2 y4e ff1 fs0 fc0 sc0 ls0 ws0">This<span class="_ _9"> </span>quantization<span class="_ _3"> </span>is<span class="_ _3"> </span>one<span class="_ _9"> </span>of<span class="_ _3"> </span>the<span class="_ _9"> </span>most<span class="_ _3"> </span>f<span class="_ _4"></span>undamental<span class="_ _3"> </span>results<span class="_ _3"> </span>of<span class="_ _3"> </span>quantum<span class="_ _3"> </span>mechan-</div><div class="t m0 x2 h2 y4f ff1 fs0 fc0 sc0 ls0 ws0">ics,<span class="_ _6"> </span>stating<span class="_ _9"> </span>that<span class="_ _9"> </span>only<span class="_ _9"> </span>certain<span class="_ _9"> </span>energy<span class="_ _9"> </span>lev<span class="_ _1"></span>els<span class="_ _9"> </span>can<span class="_ _6"> </span>exist.<span class="_ _16"> </span>This<span class="_ _9"> </span>simple<span class="_ _9"> </span>model<span class="_ _6"> </span>giv<span class="_ _1"></span>es</div><div class="t m0 x2 h2 y50 ff1 fs0 fc0 sc0 ls0 ws0">quantization<span class="_ _2"> </span>as<span class="_ _0"> </span>predict<span class="_ _1"></span>ed<span class="_ _2"> </span>by<span class="_ _2"> </span>the<span class="_ _0"> </span>Bohr<span class="_ _0"> </span>model<span class="_ _0"> </span>of<span class="_ _2"> </span>the<span class="_ _0"> </span>atom.</div><div class="t m0 x1 h2 y51 ff1 fs0 fc0 sc0 ls0 ws0">Of<span class="_ _9"> </span>course,<span class="_ _6"> </span>we<span class="_ _3"> </span>aren<span class="_ _1"></span>’t<span class="_ _9"> </span>done<span class="_ _9"> </span>yet.<span class="_ _16"> </span>T<span class="_ _17"></span>o<span class="_ _9"> </span>get<span class="_ _3"> </span>the<span class="_ _9"> </span>f<span class="_ _4"></span>ull<span class="_ _9"> </span>solution<span class="_ _9"> </span>we<span class="_ _3"> </span>must<span class="_ _6"> </span>apply<span class="_ _9"> </span>the</div><div class="t m0 x2 h2 y52 ff1 fs0 fc0 sc0 ls0 ws0">conditions<span class="_ _2"> </span>of<span class="_ _0"> </span>normalization,<span class="_ _2"> </span>namely</div><div class="t m0 x3f h4 y53 ff7 fs0 fc0 sc0 ls0 ws0">∫</div><div class="t m0 xc h9 y54 ff5 fs2 fc0 sc0 ls0 ws0">∞</div><div class="t m0 x40 h9 y55 ff5 fs2 fc0 sc0 ls0 ws0">∞</div><div class="t m0 xd h3 y56 ff5 fs0 fc0 sc0 ls0 ws0">|<span class="_ _4"></span><span class="ff3">ψ<span class="_ _4"></span></span>(<span class="_ _4"></span><span class="ff2">x<span class="_ _a"></span></span>)|</div><div class="t m0 x3d h6 y57 ff9 fs1 fc0 sc0 ls0 ws0">2</div><div class="t m0 x41 h7 y56 ff4 fs0 fc0 sc0 ls0 ws0">d<span class="_ _4"></span><span class="ff2">x<span class="_ _10"> </span><span class="ff6">=<span class="_ _2"> </span></span></span>1<span class="ff3">.</span></div><div class="t m0 x2 h2 y58 ff1 fs0 fc0 sc0 ls0 ws0">In<span class="_ _2"> </span>our<span class="_ _0"> </span>case<span class="_ _0"> </span>that<span class="_ _2"> </span>simpliﬁes<span class="_ _0"> </span>to<span class="_ _2"> </span>the<span class="_ _0"> </span>follo<span class="_ _1"></span>wing<span class="_ _0"> </span>formula<span class="_ _2"> </span>for<span class="_ _10"> </span><span class="ff3">β<span class="_ _4"></span></span>,</div><div class="t m0 x42 h4 y59 ff7 fs0 fc0 sc0 ls0 ws0">∫</div><div class="t m0 x43 h9 y5a ff5 fs2 fc0 sc0 ls0 ws0">∞</div><div class="t m0 x44 h9 y5b ff5 fs2 fc0 sc0 ls0 ws0">−∞</div><div class="t m0 x45 h3 y5c ff5 fs0 fc0 sc0 ls0 ws0">|<span class="_ _4"></span><span class="ff3">ψ<span class="_ _4"></span></span>(<span class="_ _4"></span><span class="ff2">x<span class="_ _a"></span></span>)|</div><div class="t m0 x46 h6 y5d ff9 fs1 fc0 sc0 ls0 ws0">2</div><div class="t m0 x47 h7 y5c ff4 fs0 fc0 sc0 ls0 ws0">d<span class="_ _4"></span><span class="ff2">x<span class="_ _10"> </span><span class="ff6">=<span class="_ _10"> </span><span class="ff3">β</span></span></span></div><div class="t m0 x3c h6 y5d ff9 fs1 fc0 sc0 ls0 ws0">2</div><div class="t m0 x48 h4 y59 ff7 fs0 fc0 sc0 ls0 ws0">∫</div><div class="t m0 x21 ha y5a ffc fs2 fc0 sc0 ls0 ws0">L</div><div class="t m0 x49 h6 y5b ff9 fs1 fc0 sc0 ls0 ws0">0</div><div class="t m0 x6 h7 y5c ff4 fs0 fc0 sc0 ls0 ws0">sin</div><div class="t m0 x8 h6 y5d ff9 fs1 fc0 sc0 ls0 ws0">2</div><div class="t m0 x3f h3 y5c ff5 fs0 fc0 sc0 ls0 ws0">(</div><div class="t m0 x40 h5 y5e ff2 fs0 fc0 sc0 ls0 ws0">n<span class="_ _4"></span><span class="ff3">π<span class="_ _a"></span></span>x</div><div class="t m0 xc h5 y5f ff2 fs0 fc0 sc0 ls0 ws0">L</div><div class="t m0 x4 h3 y5c ff5 fs0 fc0 sc0 ls0 ws0">)<span class="_ _18"></span><span class="ff4">d<span class="_ _4"></span><span class="ff2">x<span class="_ _10"> </span><span class="ff6">=<span class="_ _10"> </span><span class="ff3">β</span></span></span></span></div><div class="t m0 xe h6 y5d ff9 fs1 fc0 sc0 ls0 ws0">2</div><div class="t m0 x36 h4 y60 ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x36 h4 y61 ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x36 h4 y62 ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x36 h4 y63 ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x36 h4 y64 ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x36 h4 y65 ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x4a h5 y5e ff2 fs0 fc0 sc0 ls0 ws0">x</div><div class="t m0 x4a h7 y5f ff4 fs0 fc0 sc0 ls0 ws0">2</div><div class="t m0 x16 h3 y5c ff5 fs0 fc0 sc0 ls0 ws0">−</div><div class="t m0 x4b h7 y66 ff2 fs0 fc0 sc0 ls0 ws0">L<span class="_ _13"> </span><span class="ff4">sin</span></div><div class="t m0 x4c h4 y67 ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x4d ha y68 ff9 fs1 fc0 sc0 ls0 ws0">2<span class="ffc fs2">n<span class="_ _4"></span><span class="ffb">π<span class="_ _a"> </span></span>x</span></div><div class="t m0 x4e ha y69 ffc fs2 fc0 sc0 ls0 ws0">L</div><div class="t m0 x34 h4 y67 ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x4f h7 y5f ff4 fs0 fc0 sc0 ls0 ws0">3<span class="ff2">n<span class="_ _4"></span><span class="ff3">π</span></span></div><div class="t m0 x50 h4 y6a ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x50 h4 y6b ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x50 h4 y6c ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x50 h4 y6d ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x50 h4 y6e ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x35 ha y6f ffc fs2 fc0 sc0 ls0 ws0">L</div><div class="t m0 x35 h6 y70 ff9 fs1 fc0 sc0 ls0 ws0">0</div><div class="t m0 x1f h4 y60 ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x1f h4 y61 ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x1f h4 y62 ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x1f h4 y63 ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x1f h4 y64 ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x1f h4 y65 ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x51 hc y5c ff6 fs0 fc0 sc0 ls0 ws0">=</div><div class="t m0 x52 h5 y5e ff2 fs0 fc0 sc0 ls0 ws0">L<span class="_ _14"> </span><span class="ff3">β</span></div><div class="t m0 x53 h6 y71 ff9 fs1 fc0 sc0 ls0 ws0">2</div><div class="t m0 x54 h7 y5f ff4 fs0 fc0 sc0 ls0 ws0">2</div><div class="t m0 x55 h7 y5c ff6 fs0 fc0 sc0 ls0 ws0">=<span class="_ _2"> </span><span class="ff4">1<span class="ff3">.</span></span></div><div class="t m0 x2 h2 y72 ff1 fs0 fc0 sc0 ls0 ws0">Which<span class="_ _2"> </span>implies<span class="_ _0"> </span>that<span class="_ _10"> </span><span class="ff3">β<span class="_ _0"> </span><span class="ff6">=</span></span></div><div class="t m0 x49 h4 y73 ff7 fs0 fc0 sc0 ls0 ws0">p</div><div class="t m0 x56 h2 y72 ff4 fs0 fc0 sc0 ls0 ws0">2<span class="ff5">/<span class="_ _4"></span><span class="ff2">L<span class="_ _4"></span><span class="ff1">.<span class="_ _3"> </span>Thus<span class="_ _0"> </span>our<span class="_ _0"> </span>energy<span class="_ _2"> </span>eigenfunctions<span class="_ _2"> </span>are<span class="_ _2"> </span>given<span class="_ _2"> </span>as</span></span></span></div><div class="t m0 x3 h8 y74 ff3 fs0 fc0 sc0 ls0 ws0">ψ</div><div class="t m0 x8 ha y75 ffc fs2 fc0 sc0 ls0 ws0">n</div><div class="t m0 x9 h3 y74 ff5 fs0 fc0 sc0 ls0 ws0">(<span class="_ _4"></span><span class="ff2">x<span class="_ _4"></span></span>)<span class="_ _2"> </span><span class="ff6">=</span></div><div class="t m0 x57 h4 y76 ff7 fs0 fc0 sc0 ls0 ws0">r</div><div class="t m0 x23 h7 y77 ff4 fs0 fc0 sc0 ls0 ws0">2</div><div class="t m0 x23 h5 y78 ff2 fs0 fc0 sc0 ls0 ws0">L</div><div class="t m0 x2b h7 y74 ff4 fs0 fc0 sc0 ls0 ws0">sin</div><div class="t m0 x58 h4 y79 ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x36 h5 y77 ff2 fs0 fc0 sc0 ls0 ws0">n<span class="_ _4"></span><span class="ff3">π<span class="_ _a"></span></span>x</div><div class="t m0 x4a h5 y78 ff2 fs0 fc0 sc0 ls0 ws0">L</div><div class="t m0 x17 h4 y79 ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x4b h8 y74 ff3 fs0 fc0 sc0 ls0 ws0">.</div><div class="t m0 x2 h2 y7a ff1 fs0 fc0 sc0 ls0 ws0">One<span class="_ _13"> </span>of<span class="_ _13"> </span>the<span class="_ _11"> </span>things<span class="_ _11"> </span>that<span class="_ _13"> </span>can<span class="_ _11"> </span>be<span class="_ _11"> </span>confusing<span class="_ _11"> </span>about<span class="_ _13"> </span>this<span class="_ _11"> </span>solution<span class="_ _11"> </span>is<span class="_ _11"> </span>the<span class="_ _13"> </span>arbitrar<span class="_ _4"></span>y<span class="_ _13"> </span>nature</div><div class="t m0 x2 h2 y7b ff1 fs0 fc0 sc0 ls0 ws0">of<span class="_ _9"> </span>the<span class="_ _6"> </span>coordina<span class="_ _1"></span>tes.<span class="_ _19"> </span>Suppose<span class="_ _6"> </span>instead<span class="_ _9"> </span>of<span class="_ _9"> </span>picking<span class="_ _6"> </span>an<span class="_ _6"> </span>inter<span class="_ _4"></span>v<span class="_ _1"></span>al<span class="_ _6"> </span><span class="ff5">[<span class="ff4">0<span class="_ _1"></span><span class="ff3">,<span class="_ _13"> </span><span class="ff2">L<span class="_ _4"></span><span class="ff5">]<span class="_ _6"> </span><span class="ff1">we<span class="_ _9"> </span>used<span class="_ _6"> </span>the</span></span></span></span></span></span></div><div class="t m0 x2 h2 y7c ff1 fs0 fc0 sc0 ls0 ws0">interval<span class="_ _6"> </span><span class="ff5">[−</span></div><div class="t m0 x31 ha y7d ffc fs2 fc0 sc0 ls0 ws0">L</div><div class="t m0 x31 h6 y7e ff9 fs1 fc0 sc0 ls0 ws0">2</div><div class="t m0 x59 h8 y7c ff3 fs0 fc0 sc0 ls0 ws0">,</div><div class="t m0 x5a ha y7d ffc fs2 fc0 sc0 ls0 ws0">L</div><div class="t m0 x5a h6 y7e ff9 fs1 fc0 sc0 ls0 ws0">2</div><div class="t m0 x5b h2 y7c ff5 fs0 fc0 sc0 ls0 ws0">]<span class="ff1">?<span class="_ _1a"> </span>One<span class="_ _6"> </span>of<span class="_ _6"> </span>the<span class="_ _5"> </span>cornerst<span class="_ _1"></span>ones<span class="_ _5"> </span>of<span class="_ _6"> </span>ph<span class="_ _1"></span>ysics<span class="_ _6"> </span>is<span class="_ _5"> </span>that<span class="_ _9"> </span>the<span class="_ _5"> </span>natural<span class="_ _6"> </span>la<span class="_ _1"></span>ws</span></div><div class="t m0 x2 h2 y7f ff1 fs0 fc0 sc0 ls0 ws0">ar<span class="_ _1"></span>e<span class="_ _0"> </span>independent<span class="_ _0"> </span>of<span class="_ _2"> </span>ref<span class="_ _1"></span>erence<span class="_ _2"> </span>frame,<span class="_ _0"> </span>so<span class="_ _0"> </span>theoretically<span class="_ _2"> </span>the<span class="_ _0"> </span>solution<span class="_ _2"> </span>to<span class="_ _0"> </span>that<span class="_ _2"> </span>formula</div><div class="t m0 x2 h2 y80 ff1 fs0 fc0 sc0 ls0 ws0">should<span class="_ _2"> </span>be<span class="_ _2"> </span>identical.<span class="_ _10"> </span>How<span class="_ _1"></span>ev<span class="_ _1"></span>er,<span class="_ _11"> </span>if<span class="_ _2"> </span>you<span class="_ _11"> </span>solv<span class="_ _1"></span>e<span class="_ _2"> </span>it<span class="_ _2"> </span>explicitly<span class="_ _11"> </span>you<span class="_ _11"> </span>end<span class="_ _2"> </span>up<span class="_ _2"> </span>with<span class="_ _2"> </span>a<span class="_ _2"> </span><span class="ff4">sin<span class="_ _2"> </span><span class="ffe">and</span></span></div><div class="t m0 x2 h2 y81 ff1 fs0 fc0 sc0 ls0 ws0">a<span class="_ _2"> </span><span class="ff4">cos<span class="_ _0"> </span></span>term.</div><div class="t m0 x1 h2 y82 ff1 fs0 fc0 sc0 ls0 ws0">While<span class="_ _10"> </span>this<span class="_ _3"> </span>ma<span class="_ _1"></span>y<span class="_ _3"> </span>look<span class="_ _3"> </span>dierent,<span class="_ _10"> </span>this<span class="_ _3"> </span>is<span class="_ _3"> </span>in<span class="_ _3"> </span>fact<span class="_ _3"> </span>identical<span class="_ _3"> </span>to<span class="_ _10"> </span>our<span class="_ _3"> </span>solution<span class="_ _3"> </span>under</div><div class="t m0 x2 h2 y83 ff1 fs0 fc0 sc0 ls0 ws0">the<span class="_ _2"> </span>transformation<span class="_ _10"> </span><span class="ff2">x</span></div><div class="t m0 x3c h9 y84 ff5 fs2 fc0 sc0 ls0 ws0">0</div><div class="t m0 x5c h3 y83 ff6 fs0 fc0 sc0 ls0 ws0">=<span class="_ _10"> </span><span class="ff2">x<span class="_ _11"> </span><span class="ff5">−</span></span></div><div class="t m0 x3 ha y85 ffc fs2 fc0 sc0 ls0 ws0">L</div><div class="t m0 x3 h6 y86 ff9 fs1 fc0 sc0 ls0 ws0">2</div><div class="t m0 x8 h2 y83 ff1 fs0 fc0 sc0 ls0 ws0">.<span class="_ _10"> </span>Note<span class="_ _2"> </span>that</div><div class="t m0 x21 h8 y87 ff3 fs0 fc0 sc0 ls0 ws0">ψ</div><div class="t m0 x6 ha y88 ffc fs2 fc0 sc0 ls0 ws0">n</div><div class="t m0 x7 h3 y87 ff5 fs0 fc0 sc0 ls0 ws0">(<span class="_ _4"></span><span class="ff2">x</span></div><div class="t m0 x5d h9 y89 ff5 fs2 fc0 sc0 ls0 ws0">0</div><div class="t m0 x3f h3 y87 ff5 fs0 fc0 sc0 ls0 ws0">)<span class="_ _2"> </span><span class="ff6">=</span></div><div class="t m0 x22 h4 y8a ff7 fs0 fc0 sc0 ls0 ws0">r</div><div class="t m0 x57 h7 y8b ff4 fs0 fc0 sc0 ls0 ws0">2</div><div class="t m0 x57 h5 y8c ff2 fs0 fc0 sc0 ls0 ws0">L</div><div class="t m0 x2a h7 y87 ff4 fs0 fc0 sc0 ls0 ws0">sin</div><div class="t m0 x12 h4 y8d ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x24 h5 y8b ff2 fs0 fc0 sc0 ls0 ws0">n<span class="_ _4"></span><span class="ff3">π<span class="_ _a"></span></span>x</div><div class="t m0 x58 h5 y8c ff2 fs0 fc0 sc0 ls0 ws0">L</div><div class="t m0 x13 h3 y87 ff5 fs0 fc0 sc0 ls0 ws0">−</div><div class="t m0 x2e h5 y8b ff2 fs0 fc0 sc0 ls0 ws0">n<span class="_ _4"></span><span class="ff3">π</span></div><div class="t m0 x5e h7 y8c ff4 fs0 fc0 sc0 ls0 ws0">2</div><div class="t m0 x5f h4 y8d ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x27 h8 y87 ff3 fs0 fc0 sc0 ls0 ws0">.</div><div class="t m0 x23 h2 y3c ff1 fs0 fc0 sc0 ls0 ws0">2</div></div><div class="pi" data-data='{"ctm":[1.000000,0.000000,0.000000,1.000000,0.000000,0.000000]}'></div></div>
+<div id="pf3" class="pf w0 h0" data-page-no="3"><div class="pc pc3 w0 h0"><img class="bi x60 y8e w3 hd" alt="" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAJQAAAB7CAIAAAAdTD7UAAAACXBIWXMAABYlAAAWJQFJUiTwAAAA/UlEQVR42u3cMQrEIBBA0Rh2Ou9/UyuFSZE6IYQF3eX9WsTxgaWl9x4R23WZuWnJCpvfbXcF8ARP8OAJnuAJHjzBEzx4gid4ggdP8ARP8OAJnuDBEzzBEzx4gid4ggdP8AQPnuAJnuDBEzzBgyd4gid48ARP8AQPnuAJHjzBEzzBgyd4gid48ARP8OAJnuAJHjzBEzzBgyd4ggdP8ARP8OAJnuDBEzzB09M+fzPJGCMibhZk5pSDtdZqrd/d85ylzBpJnk14gid4ggdP8ARP8OAJnuDBEzzBEzx4gid4ggdP8AQPnuAJnuDBEzzBEzx4gid48LR8PhRY5XgvOgDvUCHyuFyPpQAAAABJRU5ErkJggg=="/><div class="t m0 x2 h2 y1 ff1 fs0 fc0 sc0 ls0 ws0">Recall<span class="_ _10"> </span>that<span class="_ _3"> </span>that<span class="_ _10"> </span><span class="ff4">sin</span></div><div class="t m0 x61 h4 y8f ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x62 h3 y1 ff2 fs0 fc0 sc0 ls0 ws0">x<span class="_ _11"> </span><span class="ff5">−</span></div><div class="t m0 x60 he y90 ffb fs2 fc0 sc0 ls0 ws0">π</div><div class="t m0 x60 h6 y91 ff9 fs1 fc0 sc0 ls0 ws0">2</div><div class="t m0 x28 h4 y8f ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x7 h7 y1 ff6 fs0 fc0 sc0 ls0 ws0">=<span class="_ _9"> </span><span class="ff4">cos</span></div><div class="t m0 x63 h3 y3e ff5 fs0 fc0 sc0 ls0 ws0">(</div><div class="t m0 x22 h5 y1 ff2 fs0 fc0 sc0 ls0 ws0">x</div><div class="t m0 xd h3 y3e ff5 fs0 fc0 sc0 ls0 ws0">)</div><div class="t m0 x64 h2 y1 ff1 fs0 fc0 sc0 ls0 ws0">,<span class="_ _3"> </span>thus<span class="_ _3"> </span>the<span class="_ _3"> </span>pre<span class="_ _1"></span>vious<span class="_ _3"> </span>equation<span class="_ _10"> </span>gives<span class="_ _10"> </span>us<span class="_ _3"> </span><span class="ff4">sin<span class="_ _3"> </span></span>or</div><div class="t m0 x2 h2 y2 ff4 fs0 fc0 sc0 ls0 ws0">cos<span class="_ _2"> </span><span class="ff1">depending<span class="_ _0"> </span>on<span class="_ _0"> </span><span class="ff2">n</span>.</span></div><div class="t m0 x65 h8 y92 ff3 fs0 fc0 sc0 ls0 ws0">ψ</div><div class="t m0 x66 ha y93 ffc fs2 fc0 sc0 ls0 ws0">n</div><div class="t m0 x60 h3 y92 ff5 fs0 fc0 sc0 ls0 ws0">(<span class="_ _4"></span><span class="ff2">x</span></div><div class="t m0 x14 h9 y94 ff5 fs2 fc0 sc0 ls0 ws0">0</div><div class="t m0 x6 h3 y92 ff5 fs0 fc0 sc0 ls0 ws0">)<span class="_ _2"> </span><span class="ff6">=</span></div><div class="t m0 x3f h4 y95 ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x3f h4 y96 ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x3f h4 y97 ff7 fs0 fc0 sc0 ls0 ws0"><span class="_ _b"></span></div><div class="t m0 x3f h4 y98 ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x3f h4 y99 ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x3f h4 y9a ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x67 h6 y9b ff9 fs1 fc0 sc0 ls0 ws0">2</div><div class="t m0 x67 ha y9c ffc fs2 fc0 sc0 ls0 ws0">L</div><div class="t m0 x22 h7 y9d ff4 fs0 fc0 sc0 ls0 ws0">sin</div><div class="t m0 x5 h4 y9e ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x1e ha y9b ffc fs2 fc0 sc0 ls0 ws0">n<span class="_ _4"></span><span class="ffb">π<span class="_ _4"> </span></span>x</div><div class="t m0 x23 ha y9c ffc fs2 fc0 sc0 ls0 ws0">L</div><div class="t m0 x12 h4 y9e ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 xf h7 y9d ff2 fs0 fc0 sc0 ls0 ws0">n<span class="_ _2"> </span><span class="ff6">=<span class="_ _2"> </span><span class="ff4">0<span class="_ _7"></span><span class="ff3">,<span class="_ _f"> </span><span class="ff4">2<span class="_ _7"></span><span class="ff3">,<span class="_ _18"> </span><span class="ff4">4<span class="_ _1"></span><span class="ff3">,<span class="_ _f"> </span>.<span class="_ _f"> </span>.<span class="_ _f"> </span>.</span></span></span></span></span></span></span></div><div class="t m0 x67 h6 y9f ff9 fs1 fc0 sc0 ls0 ws0">2</div><div class="t m0 x67 ha ya0 ffc fs2 fc0 sc0 ls0 ws0">L</div><div class="t m0 x22 h7 ya1 ff4 fs0 fc0 sc0 ls0 ws0">cos</div><div class="t m0 x68 h4 ya2 ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 x1e ha y9f ffc fs2 fc0 sc0 ls0 ws0">n<span class="_ _4"></span><span class="ffb">π<span class="_ _4"> </span></span>x</div><div class="t m0 x69 ha ya0 ffc fs2 fc0 sc0 ls0 ws0">L</div><div class="t m0 x41 h4 ya2 ff7 fs0 fc0 sc0 ls0 ws0"></div><div class="t m0 xf h7 ya1 ff2 fs0 fc0 sc0 ls0 ws0">n<span class="_ _2"> </span><span class="ff6">=<span class="_ _2"> </span><span class="ff4">1<span class="_ _7"></span><span class="ff3">,<span class="_ _f"> </span><span class="ff4">3<span class="_ _7"></span><span class="ff3">,<span class="_ _18"> </span><span class="ff4">5<span class="_ _1"></span><span class="ff3">,<span class="_ _f"> </span>.<span class="_ _f"> </span>.<span class="_ _f"> </span>.</span></span></span></span></span></span></span></div><div class="t m0 x2 h2 ya3 ff1 fs0 fc0 sc0 ls0 ws0">While<span class="_ _3"> </span>this<span class="_ _3"> </span>is<span class="_ _3"> </span>a<span class="_ _3"> </span>minor<span class="_ _9"> </span>point<span class="_ _3"> </span>its<span class="_ _3"> </span>an<span class="_ _3"> </span>important<span class="_ _3"> </span>one.<span class="_ _8"> </span>Oft<span class="_ _1"></span>en<span class="_ _3"> </span>students<span class="_ _3"> </span>ﬁrst<span class="_ _3"> </span>exposed</div><div class="t m0 x2 h2 ya4 ff1 fs0 fc0 sc0 ls0 ws0">to<span class="_ _3"> </span>quantum<span class="_ _6"> </span>mechanics<span class="_ _9"> </span>will<span class="_ _6"> </span>be<span class="_ _9"> </span>conf<span class="_ _4"></span>used<span class="_ _9"> </span>by<span class="_ _9"> </span>the<span class="_ _9"> </span>variety<span class="_ _9"> </span>of<span class="_ _9"> </span>solutions<span class="_ _9"> </span>to<span class="_ _9"> </span>a<span class="_ _6"> </span>giv<span class="_ _1"></span>en</div><div class="t m0 x2 h2 ya5 ff1 fs0 fc0 sc0 ls0 ws0">pr<span class="_ _1"></span>oblem,<span class="_ _10"> </span>when<span class="_ _0"> </span>in<span class="_ _10"> </span>fact<span class="_ _10"> </span>they<span class="_ _0"> </span>are<span class="_ _0"> </span>simply<span class="_ _10"> </span>the<span class="_ _10"> </span>same<span class="_ _0"> </span>solution<span class="_ _10"> </span>in<span class="_ _10"> </span>dierent<span class="_ _0"> </span>coordina<span class="_ _1"></span>te</div><div class="t m0 x2 h2 ya6 ff1 fs0 fc0 sc0 ls0 ws0">syst<span class="_ _1"></span>ems.</div><div class="t m0 x23 h2 y3c ff1 fs0 fc0 sc0 ls0 ws0">3</div></div><div class="pi" data-data='{"ctm":[1.000000,0.000000,0.000000,1.000000,0.000000,0.000000]}'></div></div>
+</div>
+<div class="loading-indicator">
+<img alt="" src="data:image/png;base64,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"/>
+</div>
+</body>
+</html>
