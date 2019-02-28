@@ -11,7 +11,7 @@ const posts = [ 'The Tensor Product'
               , 'Odd and Even Functions'
               , 'The Infinite Square Well'
               , 'The Tensor Product'
-              , 'Change of Variables Forumula' ]
+              , 'The Change of Variables Formula' ]
 
 const routes = posts.reduce((o, key) => ({
   ...o, [key]: key.toLowerCase().split(' ').join('-')
