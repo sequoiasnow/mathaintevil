@@ -6,3 +6,7 @@ posts/*.html
 *.log
 *.aux
 node_modules
+posts/*
+!posts/*.tex
+!posts/images/*
+!posts/images
