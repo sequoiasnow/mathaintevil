@@ -1,0 +1,35 @@
+@import 'variables';
+
+* {
+    box-sizing: border-box
+}
+
+html, body {
+    margin: 0;
+    padding: 0;
+}
+
+body:before {
+    content: '';
+    background-image: url(./assets/background.svg);
+    background-size: cover;
+    opacity: 0.3;
+    z-index: -1;
+
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+body {
+    display: block;
+    position: relative;
+    font-family: $font__main;         /* The standard serif font for the site */
+    line-height: 1.5;
+    min-height: 100vh;
+    widtH: 100%;
+    font-size: $font__normal;
+    padding: 20px;
+}

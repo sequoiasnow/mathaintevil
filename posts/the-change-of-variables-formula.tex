@@ -1,0 +1,283 @@
+\documentclass[10pt, oneside]{extarticle}
+
+\usepackage[12pt]{moresize}
+\usepackage{amsmath}
+\usepackage{amsthm}
+\usepackage{mathrsfs}
+\usepackage{amssymb} 
+\usepackage{mathtools}
+\usepackage{braket}
+\usepackage{physics}
+\usepackage{tikz-cd}
+\usepackage{scalerel}
+\usepackage[bottom]{footmisc}
+\usepackage{cancel}
+\usepackage{todonotes}
+\usepackage{graphics}
+\usepackage{tabularx}
+\usepackage[english]{babel}
+\usepackage{blindtext}
+
+% Set the title
+\def\articletile{Change of Variables Formula}
+
+% Set the margins 
+
+\usepackage
+[
+        a4paper,
+        margin=1.5in
+]
+{geometry}
+
+% Better norm command
+
+\newtheorem*{theorem}{Theorem}
+\newtheorem*{proposition}{Proposition}
+\newtheorem*{corollary}{Corollary}
+\newtheorem*{lemma}{Lemma}
+
+% Better tables
+
+\newcolumntype{C}{>{$}c<{$}} 
+\newcolumntype{L}{>{$}l<{$}} 
+
+% Flip command
+
+\newcommand{\flip}[1]{\reflectbox{\,$#1$\,}}
+
+% Avoid inline equation breaking 
+
+\binoppenalty=999
+\relpenalty=999
+
+% Set the main fonts
+
+%\usepackage{fourier}
+%\usepackage{courier}
+\usepackage{concmath}
+\renewcommand*\familydefault{\ttdefault} 
+\usepackage[T1]{fontenc}
+
+% Create a freespace command
+
+\newcommand{\freespace}[1] {{\F\langle #1 \rangle}}
+
+% Create a vectorspace command 
+
+\newcommand{\vecspace}[1]{{V\langle #1 \rangle}}
+
+\newcommand{\iproduct}[1]{\langle #1 \rangle}
+
+% The best command
+
+\newcommand{\otherwise}[0]{\text{otherwise}}
+
+% Large plus command
+
+\DeclareMathOperator*{\bigplus}{\scalerel*{+}{\textstyle\sum}}
+
+% Create the power set equation
+
+\newcommand{\powerset}[0] {\textbf{P}}
+
+% Create a new environment a
+
+\newenvironment{question}{\begin{it}}{\end{it}}
+
+% Include a hand drawn graphic into the book.
+
+\newcommand{\includedrawngraphic}[1]{
+  \begin{center}
+    \vspace{0.4cm}
+    \includegraphics[width=\textwidth/2]{#1}
+    \vspace{0.4cm}
+    \end{center}
+  }
+  
+% Improve the chapter section
+
+\usepackage{titlesec}
+\titleformat{\chapter}[display]
+{\normalfont\bfseries}
+{\HUGE\thechapter}
+{1ex}
+{\vspace{2ex}%
+\LARGE\uppercase}
+[\vspace{2in}]
+
+\titleformat{\section}[hang]
+{\normalfont\bfseries}
+{}
+{1ex}
+{\large\uppercase}
+[]
+
+% Improve proof environment 
+
+\usepackage{changepage}
+
+\renewcommand{\qedsymbol}{\rule{0.7em}{0.7em}}
+\renewenvironment{proof}
+{\vspace{.5cm}\begin{adjustwidth}{2.7em}{}\noindent{\bfseries Proof \quad}}
+{\qed \end{adjustwidth}\vspace{1cm}}
+
+
+% Better mapsto and \to command
+
+\renewcommand{\mapsto}[0]{\longmapsto}
+\renewcommand{\to}[0]{\longrightarrow}
+
+% Create a category command
+
+\newcommand{\cat}[1]{{\textbf{#1}}}
+
+% Create a Jacobian command
+
+\newcommand{\jac}[0]{{\text{Jac}}}
+
+% Create a better and command 
+
+\newcommand{\writeand}[0]{{\quad \textrm{and} \quad}}
+\newcommand{\writewhere}[0]{{\qquad \textrm{where} \quad}}
+
+% Create a better iff command 
+
+\newcommand{\writeiff}[0]{{\qquad \textrm{iff} \qquad}}
+
+
+% Define common variables
+
+\newcommand{\adj}[0]{\text{adj}}
+\newcommand{\inv}[0]{\text{Inv}}
+\newcommand{\N}{{\mathbb{N}}}
+\newcommand{\Z}{{\mathbb{Z}}}
+\newcommand{\C}{{\mathbb{C}}} 
+\newcommand{\R}{{\mathbb{R}}}
+\newcommand{\Q}{{\mathbb{Q}}}
+\newcommand{\F}{{\mathbb{F}}}
+\newcommand{\A}{{\mathcal{A}}}
+\newcommand{\T}{{\mathcal{T}}}
+\renewcommand{\L}{{\mathcal{L}}}
+\newcommand{\M}{{\mathcal{M}}}
+\newcommand{\U}{{\mathcal{U}}}
+
+% Shorthand for exercises
+\newcommand{\exercise}[1]{\vspace{1cm}\noindent\textbf{Exercise #1}\quad }
+
+% Matrix shorthand
+
+\newcommand{\m}[1]{\begin{bmatrix} #1 \end{bmatrix}}
+
+% Better EmptySet
+
+\let\oldemptyset\emptyset
+\let\emptyset\varnothing
+
+\linespread{1.2}
+
+% Heading
+
+\pagestyle{headings}
+\markright{\textnormal{Sequoia Snow}\hfill \small\textnormal{\uppercase{\articletile}} \hfill}
+
+
+% Define the title separate from the rest of the document
+
+\title{
+\textmd{\textbf{\articletile}}\\
+}
+
+\author{\textbf{Sequoia Snow}}
+
+% Remove the date
+
+\date{}
+
+
+
+\begin{document}
+
+\maketitle
+
+There are few things a ubiquitous in calculus as the $u$-substitution. Its formulation is given as 
+\[
+  \int_{a}^{b} (f \circ u)(x) \dv{u}{x}  \dd{x} = \int_{u(a)}^{u(b)} f(u) \dd{u}.
+\]
+This statement is so common in lower level mathematics that it is almost never accompanied by a proof, a matter which we hope to correct. In fact, we will prove a more generalized notion, known as the change of variables formula. 
+
+\begin{theorem}
+  Let $U \subset \R^n$ be an open subset, and $\phi : U \to \R^n$ an injective differentiable function with a Jacobean that is never zero. Then for any continous function $f$ which is compactly supported in $\phi(U)$, 
+  \[
+    \int_{U} f \circ \phi \abs{\jac\phi} = \int_{\phi(U)} f .  \label{eq:cov} \tag{*}
+  \] 
+\end{theorem}
+
+We will prove this by means of two Lemma's concerning differential forms and stokes theorem. 
+
+\begin{lemma}
+  For $\phi : \R^n \to \R^n$ differentiable, and $h$ differentiable with nonzero Jacobian,
+  \[
+    f^*(h \dd{x_1} \wedge \dots \wedge \dd{x_n}) = \qty(f \circ h) {\jac \phi} \dd{x_1} \wedge \dots \wedge \dd{x_n}.
+  \] 
+\end{lemma}
+
+\begin{proof}
+  The pullback of $f$ has the property that for a function $g$ and a $k$-form $\omega$,
+    \[
+      f^*(g \cdot \omega) = (g \circ f) \cdot f^* \omega.
+    \]
+  Thus, as 
+  \[
+     f^*(h \dd{x_1} \wedge \dots \wedge \dd{x_n}) = \qty(f \circ h) f^*\qty( \dd{x_1} \wedge \dots \wedge \dd{x_n}).
+  \]
+  it is sufficient to show that 
+  \[
+    |\jac f|  \dd{x_1} \wedge \dots \wedge \dd{x_n} = f^*\qty( \dd{x_1} \wedge \dots \wedge \dd{x_n}).
+  \]
+  Let $J_{ij}$ denote the $i,j$th component of the matrix $D\phi$. 
+  \begin{align*}
+    f^*\qty( \dd{x_1} \wedge \dots \wedge \dd{x_n}) &= \dd{f_1} \wedge \dots \wedge \dd{f_n} \\
+    &= \qty( \sum_{j = 1}^n J_{1j} \dd{x_j} ) \wedge \dots \wedge \qty( \sum_{j = 1}^n J_{nj} \dd{x_j} ) \\
+    &= \sum_{j_1, j_2, \dots, j_n = 1}^n J_{1j} \cdots J_{nj} \dd{x_{j_1}} \wedge \dots \wedge \dd{x_{j_n}}.
+  \end{align*}
+  Since all repeated indices cancel out, we are left with all permutations of $\Set{1, \dots, n}$, which we will denote $S_n$. Thus 
+  \begin{align*}
+   f^*\qty( \dd{x_1} \wedge \dots \wedge \dd{x_n}) 
+   &= \sum_{\pi \in S_n} J_{1\pi(1)} \cdots J_{1\pi(n)} \dd{x_{\pi(1)}} \wedge \dots \wedge \dd{x_{\pi(n)}} \\
+   &= \det J  \dd{x_1} \wedge \dots \wedge \dd{x_n}.
+  \end{align*}
+  This follows from the definition of determinant, as $\jac \phi = \det J$ this proves the lemma. 
+\end{proof}
+
+\begin{lemma}
+  For a differentiable function $\phi : \R^n \to \R^n$, a $k$-form $\omega \in \Omega_k(\R^n)$ and a $k$-cell $c \in C_k(\R^n)$,
+  \[
+    \int_c \phi^*\omega  = \int_{\phi_* c} \omega.
+  \]  
+\end{lemma}
+
+\begin{proof}
+    This lemma is inherent if we consider differential forms as acting upon functionals, in which case 
+    \[
+      \qty(\phi^*\omega)(c) = \int_c \phi^* \omega = \omega(\phi_*c) = \int_{\phi_* c} \omega
+    \]
+    by definition.
+\end{proof}
+
+We can now see that the theorem is elementary in this context of differential forms.
+
+\begin{proof}
+  By the fist lemma we see that the integrand of the left hand side of \eqref{eq:cov} is equivalent to 
+  \[
+      f \circ \phi \abs{\jac\phi} \dd{x_1} \wedge \dots \wedge \dd{x_n}
+      = \phi^* \qty( f\dd{x_1} \wedge \dots \wedge \dd{x_n}).
+  \]
+  Now, following the second lemma it is clear that 
+  \[
+    \int_U  \phi^* \qty( f\dd{x_1} \wedge \dots \wedge \dd{x_n}) = \int_{\phi(U)} f\dd{x_1} \wedge \dots \wedge \dd{x_n}.
+  \]
+  This completes the proof.
+\end{proof}
+
+\end{document}

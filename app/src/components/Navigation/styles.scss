@@ -2,7 +2,10 @@
 
 .navigation {
     width: 100%;
-    margin-right: 45px;
+    max-width: 500px;
+    margin-top: -80px;
+    margin-right: auto;
+    margin-left: auto;
     padding: 15px;
     display: flex;
     flex-direction: column;
@@ -24,7 +27,7 @@
 }
 
 $fractal-color : $color__red;
-$fractal-color-hover : $color__purple;
+$fractal-color-hover : $color__white;
 
 .navigation svg path {
     transition: all 0.2s ease;
@@ -44,7 +47,7 @@ $fractal-color-hover : $color__purple;
 
 
 .navigation .title {
-    font-size: $font__Big;
+    font-size: 2em;
     text-align: center;
     width: 100%;
     margin-top: 10px;
@@ -63,6 +66,5 @@ $fractal-color-hover : $color__purple;
 }
 
 .navigation .page-link {
-    border-top: 1px solid $color__black;
     padding: 5px 0;
 }
